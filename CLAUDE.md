@@ -44,6 +44,11 @@ antes de implementar.
 10. **fastapi-supabase-patterns** — Backend Python 3.12 + FastAPI +
     SQLAlchemy 2 + Pydantic v2 + Supabase. JWT/JWKS, tenancy,
     RBAC, Celery, KMS, structlog sin PII.
+11. **tax-rules-versioning** — Versionado de reglas tributarias y
+    mecanismos para absorber cambios legislativos sin redeploy.
+    Schema `tax_rules`, selector por vigencia, evaluador
+    declarativo, snapshot inmutable, doble firma, watchdog
+    legislativo, test `test_no_hardcoded` bloqueante en CI.
 
 ## Reglas no negociables
 
