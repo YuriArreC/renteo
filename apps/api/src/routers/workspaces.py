@@ -7,7 +7,6 @@ flujo canónico vuelve: workspace_id se deriva del JWT y la RLS protege.
 
 from __future__ import annotations
 
-import json
 from typing import Literal
 from uuid import UUID, uuid4
 
