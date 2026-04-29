@@ -101,39 +101,44 @@ async def test_create_workspace_pyme_assigns_owner_role(
 
     ws_id = UUID(data["id"])
     try:
-        # Member fue creado con role correcto y aceptado.
-        result = await admin_session.execute(
-            text(
-                "select role, accepted_at from core.workspace_members "
-                "where workspace_id = :ws and user_id = :uid"
-            ),
-            {"ws": str(ws_id), "uid": str(fresh_user)},
-        )
-        member = result.mappings().one()
-        assert member["role"] == "owner"
-        assert member["accepted_at"] is not None
+        # Envolver verificaciones en async with begin() para que la
+        # auto-transacción se commitee antes del cleanup; de lo contrario
+        # admin_session.begin() del finally falla con "transaction already
+        # begun".
+        async with admin_session.begin():
+            result = await admin_session.execute(
+                text(
+                    "select role, accepted_at from core.workspace_members "
+                    "where workspace_id = :ws and user_id = :uid"
+                ),
+                {"ws": str(ws_id), "uid": str(fresh_user)},
+            )
+            member = result.mappings().one()
+            assert member["role"] == "owner"
+            assert member["accepted_at"] is not None
 
-        # Consentimiento registrado con la versión correcta.
-        result = await admin_session.execute(
-            text(
-                "select version_texto from privacy.consentimientos "
-                "where user_id = :uid "
-                "  and tipo_consentimiento = 'tratamiento_datos'"
-            ),
-            {"uid": str(fresh_user)},
-        )
-        assert result.scalar_one() == "consentimiento-tratamiento-datos-v1"
+            result = await admin_session.execute(
+                text(
+                    "select version_texto from privacy.consentimientos "
+                    "where user_id = :uid "
+                    "  and tipo_consentimiento = 'tratamiento_datos'"
+                ),
+                {"uid": str(fresh_user)},
+            )
+            assert (
+                result.scalar_one()
+                == "consentimiento-tratamiento-datos-v1"
+            )
 
-        # Audit log registrado.
-        result = await admin_session.execute(
-            text(
-                "select count(*) from security.audit_log "
-                "where workspace_id = :ws and action = 'create' "
-                "  and resource_type = 'workspace'"
-            ),
-            {"ws": str(ws_id)},
-        )
-        assert result.scalar_one() == 1
+            result = await admin_session.execute(
+                text(
+                    "select count(*) from security.audit_log "
+                    "where workspace_id = :ws and action = 'create' "
+                    "  and resource_type = 'workspace'"
+                ),
+                {"ws": str(ws_id)},
+            )
+            assert result.scalar_one() == 1
     finally:
         async with admin_session.begin():
             await admin_session.execute(
@@ -169,14 +174,15 @@ async def test_create_workspace_accounting_firm_assigns_lead_role(
 
     ws_id = UUID(data["id"])
     try:
-        result = await admin_session.execute(
-            text(
-                "select role from core.workspace_members "
-                "where workspace_id = :ws and user_id = :uid"
-            ),
-            {"ws": str(ws_id), "uid": str(fresh_user)},
-        )
-        assert result.scalar_one() == "accountant_lead"
+        async with admin_session.begin():
+            result = await admin_session.execute(
+                text(
+                    "select role from core.workspace_members "
+                    "where workspace_id = :ws and user_id = :uid"
+                ),
+                {"ws": str(ws_id), "uid": str(fresh_user)},
+            )
+            assert result.scalar_one() == "accountant_lead"
     finally:
         async with admin_session.begin():
             await admin_session.execute(
