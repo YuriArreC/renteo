@@ -39,8 +39,11 @@ def _skip_if_no_db() -> None:
         pytest.skip("DATABASE_URL not set; integration tests skipped")
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def engine() -> AsyncIterator[AsyncEngine]:
+    # Function-scoped: pytest-asyncio crea un event loop por test y un engine
+    # con scope=session se ata al primer loop, lanzando "Task attached to a
+    # different loop" en los tests siguientes.
     _skip_if_no_db()
     eng = create_async_engine(DATABASE_URL, future=True)
     try:
@@ -68,9 +71,14 @@ async def tenant_session(
         engine, expire_on_commit=False, class_=AsyncSession
     )
     async with factory() as session, session.begin():
-        await session.execute(text("set local role authenticated"))
+        # Postgres NO acepta parámetros bindable en `SET LOCAL`; usamos la
+        # función `set_config(key, value, is_local=true)` que es equivalente
+        # y sí los soporta.
         await session.execute(
-            text("set local request.jwt.claims = :c"),
+            text("select set_config('role', 'authenticated', true)")
+        )
+        await session.execute(
+            text("select set_config('request.jwt.claims', :c, true)"),
             {"c": json.dumps(claims)},
         )
         yield session

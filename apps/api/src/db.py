@@ -55,8 +55,11 @@ async def tenant_session(
     if SessionLocal is None:
         raise RuntimeError("database is not configured (DATABASE_URL missing)")
     async with SessionLocal() as session, session.begin():
+        # Postgres NO acepta parámetros bindable en `SET LOCAL`; usamos la
+        # función `set_config(key, value, is_local=true)` para inyectar los
+        # claims sin caer en `syntax error at or near "$1"`.
         await session.execute(
-            text("set local request.jwt.claims = :claims"),
+            text("select set_config('request.jwt.claims', :claims, true)"),
             {"claims": json.dumps(claims)},
         )
         yield session
