@@ -16,8 +16,8 @@ import pytest
 
 # Patrones prohibidos: cada tupla (regex, descripción del valor real).
 # Si necesitas usar un valor literal por razones legítimas (ej. unidad
-# constante, no tasa), agrega `# noqa: tax-magic-number  motivo` en la línea
-# y ajusta este test con un per-line override.
+# constante, no tasa), agrega `# tax-magic-number-allow: motivo` al final
+# de la línea y este scanner la dejará pasar.
 FORBIDDEN: tuple[tuple[str, str], ...] = (
     (r"0\.27\b", "tasa IDPC 14 A"),
     (r"0\.125\b", "tasa transitoria 14 D N°3"),
@@ -36,7 +36,7 @@ EXEMPT_PATH_PARTS: tuple[str, ...] = (
     "rule_schemas",
 )
 
-NOQA_MARKER = "# noqa: tax-magic-number"
+ALLOW_MARKER = "# tax-magic-number-allow"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TAX_ENGINE = REPO_ROOT / "apps" / "api" / "src" / "domain" / "tax_engine"
@@ -58,7 +58,7 @@ def _scan_for_violations(root: Path) -> list[str]:
             for match in re.finditer(pattern, text):
                 line_no = text[: match.start()].count("\n") + 1
                 line_text = lines[line_no - 1] if line_no <= len(lines) else ""
-                if NOQA_MARKER in line_text:
+                if ALLOW_MARKER in line_text:
                     continue
                 violations.append(
                     f"{path}:{line_no}  {descripcion}  patrón={pattern}"
@@ -117,10 +117,10 @@ def test_scanner_detects_planted_violation(
     )
 
 
-def test_scanner_respects_noqa_marker(tmp_path: Path) -> None:
-    """Una línea con `# noqa: tax-magic-number` queda exenta."""
+def test_scanner_respects_allow_marker(tmp_path: Path) -> None:
+    """Una línea con `# tax-magic-number-allow:` queda exenta."""
     (tmp_path / "exempt.py").write_text(
-        "rate = 0.125  # noqa: tax-magic-number  unit, not a tax rate\n",
+        "rate = 0.125  # tax-magic-number-allow: unit constant, not a tax rate\n",
         encoding="utf-8",
     )
     assert _scan_for_violations(tmp_path) == []

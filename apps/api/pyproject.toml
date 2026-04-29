@@ -69,9 +69,27 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S106"]
+# Tax-domain exception names are fixed by skill 10 (IneligibleForRegime,
+# RedFlagBlocked, etc.); renaming would break the documented contract.
+"src/lib/errors.py" = ["N818"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
+
+# FastAPI dependencies (Depends, Query, Path, Body, ...) intentionally appear
+# as default arguments — that's the framework's canonical injection pattern,
+# not the B008 anti-pattern.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Form",
+    "fastapi.File",
+    "fastapi.Header",
+    "fastapi.Cookie",
+]
 
 # ---------------------------------------------------------------------------
 # mypy — strict global. domain/** is the contract surface.

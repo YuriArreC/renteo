@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import date
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from sqlalchemy import text

@@ -6,6 +6,8 @@ soportados / shapes inválidas (skill 11 anti-patterns).
 
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 
 from src.domain.tax_engine.rule_evaluator import (
@@ -248,5 +250,5 @@ def test_evaluation_result_is_frozen_dataclass() -> None:
     rule = {"field": "x", "op": "eq", "value": 1}
     result = evaluate(rule, {"x": 1})
     assert isinstance(result, EvaluationResult)
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         result.passed = False  # type: ignore[misc]

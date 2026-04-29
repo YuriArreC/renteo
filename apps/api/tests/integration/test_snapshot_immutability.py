@@ -34,7 +34,12 @@ async def _insert_recomendacion(
             )
             """
         ),
-        {"id": str(rec_id), "ws": str(ws_id), "emp": str(emp_id), "engine": engine_version},
+        {
+            "id": str(rec_id),
+            "ws": str(ws_id),
+            "emp": str(emp_id),
+            "engine": engine_version,
+        },
     )
     return rec_id
 
