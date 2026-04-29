@@ -38,8 +38,8 @@ EXEMPT_PATH_PARTS: tuple[str, ...] = (
 
 ALLOW_MARKER = "# tax-magic-number-allow"
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-TAX_ENGINE = REPO_ROOT / "apps" / "api" / "src" / "domain" / "tax_engine"
+HERE = Path(__file__).resolve().parent
+TAX_ENGINE = HERE.parent / "src" / "domain" / "tax_engine"
 
 
 def _scan_for_violations(root: Path) -> list[str]:
