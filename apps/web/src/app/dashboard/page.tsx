@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { LogoutButton } from "@/components/LogoutButton";
-import { fetchApiServer, type MeResponse } from "@/lib/api";
+import { type MeResponse } from "@/lib/api";
+import { fetchApiServer } from "@/lib/api-server";
 
 export default async function DashboardPage() {
   let me: MeResponse;

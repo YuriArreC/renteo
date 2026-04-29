@@ -1,11 +1,8 @@
-// Cliente HTTP minimal para hablar con apps/api.
-// Hay dos variantes: una para Server Components (lee cookies vía Supabase
-// SSR) y otra para Client Components / event handlers (lee del cliente
-// browser). Ambas adjuntan el Authorization Bearer y mapean errores a
-// `ApiError` para que la UI pueda decidir el mensaje.
+// Cliente HTTP para Client Components / event handlers (browser).
+// La variante server-side vive en `api-server.ts` para que esta entrada
+// no arrastre `next/headers` cuando un Client Component la importe.
 
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
-import { createClient as createServerClient } from "@/lib/supabase/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -19,7 +16,7 @@ export class ApiError extends Error {
   }
 }
 
-async function _fetch<T>(
+export async function _fetch<T>(
   path: string,
   token: string | null,
   init?: RequestInit,
@@ -47,17 +44,6 @@ async function _fetch<T>(
     return null as T;
   }
   return (await response.json()) as T;
-}
-
-export async function fetchApiServer<T = unknown>(
-  path: string,
-  init?: RequestInit,
-): Promise<T> {
-  const supabase = await createServerClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return _fetch<T>(path, session?.access_token ?? null, init);
 }
 
 export async function fetchApiClient<T = unknown>(

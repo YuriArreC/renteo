@@ -4,7 +4,8 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { fetchApiServer, type MeResponse } from "@/lib/api";
+import { fetchApiServer } from "@/lib/api-server";
+import { type MeResponse } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
