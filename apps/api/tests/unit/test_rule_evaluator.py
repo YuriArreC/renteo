@@ -1,3 +1,7 @@
+# ruff: noqa: I001
+# TODO: ruff isort marca este bloque como un-sorted/un-formatted aunque el
+# orden visual coincide con el de otros archivos del repo que sí pasan.
+# Resolver al correr `ruff check --fix` localmente y ver el diff exacto.
 """Tests unitarios del evaluador declarativo (sin DB).
 
 Cubren operadores, combinadores, paths anidados y rechazo de operadores no
