@@ -1,12 +1,12 @@
-"""FastAPI application entrypoint.
-
-Health endpoints only at this stage. Routers are wired in subsequent phases.
-"""
+"""FastAPI application entrypoint."""
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import settings
 from src.lib.logging import configure_logging, get_logger
+from src.routers import me as me_router
+from src.routers import workspaces as workspaces_router
 
 configure_logging()
 logger = get_logger(__name__)
@@ -18,6 +18,15 @@ app = FastAPI(
     redoc_url=None,
 )
 
+if settings.cors_allowed_origins_list:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_allowed_origins_list,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
+
 
 @app.get("/healthz", tags=["health"])
 async def healthz() -> dict[str, str]:
@@ -27,3 +36,7 @@ async def healthz() -> dict[str, str]:
 @app.get("/readyz", tags=["health"])
 async def readyz() -> dict[str, str]:
     return {"status": "ok"}
+
+
+app.include_router(me_router.router)
+app.include_router(workspaces_router.router)

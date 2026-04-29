@@ -39,6 +39,15 @@ class Settings(BaseSettings):
 
     sentry_dsn: str = Field(default="")
 
+    # Lista separada por comas (env: CORS_ALLOWED_ORIGINS). Vacío = sin
+    # CORS habilitado (las requests cross-origin fallarán con 403 del
+    # browser, lo que es seguro por default).
+    cors_allowed_origins: str = Field(default="http://localhost:3000")
+
+    @property
+    def cors_allowed_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]
+
 
 @lru_cache
 def get_settings() -> Settings:

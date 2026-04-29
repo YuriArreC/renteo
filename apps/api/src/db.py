@@ -71,3 +71,18 @@ async def get_db_session(
     """FastAPI dependency: yields a tenant-scoped session for authed routes."""
     async with tenant_session(claims) as session:
         yield session
+
+
+@asynccontextmanager
+async def service_session() -> AsyncIterator[AsyncSession]:
+    """Yield a session that bypasses RLS.
+
+    The connection uses the role configured in DATABASE_URL (postgres locally,
+    service_role in production). Use ONLY for operations that must run before
+    a workspace exists (onboarding) or for internal tasks (Celery workers,
+    audit jobs). The caller is responsible for not leaking data across tenants.
+    """
+    if SessionLocal is None:
+        raise RuntimeError("database is not configured (DATABASE_URL missing)")
+    async with SessionLocal() as session, session.begin():
+        yield session

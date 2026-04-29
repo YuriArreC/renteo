@@ -35,6 +35,31 @@ class Tenancy(BaseModel):
     empresa_ids: tuple[UUID, ...] = Field(default_factory=tuple)
 
 
+def current_user(
+    claims: dict[str, Any] = Depends(verify_jwt),
+) -> UUID:
+    """Devuelve solo el user_id del JWT.
+
+    Útil durante onboarding (cuando aún no hay workspace, así que
+    `current_tenancy` rechazaría con 403). Una vez creado el workspace,
+    el frontend refresca la sesión y el flujo normal vuelve a usar
+    `current_tenancy`.
+    """
+    sub = claims.get("sub")
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="missing sub claim",
+        )
+    try:
+        return UUID(str(sub))
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="malformed sub claim",
+        ) from exc
+
+
 def current_tenancy(
     claims: dict[str, Any] = Depends(verify_jwt),
 ) -> Tenancy:

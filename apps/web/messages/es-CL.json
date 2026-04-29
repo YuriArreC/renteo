@@ -1,7 +1,61 @@
 {
   "common": {
     "appName": "Renteo",
-    "tagline": "Optimización tributaria proactiva para Chile."
+    "tagline": "Optimización tributaria proactiva para Chile.",
+    "loading": "Cargando…",
+    "error": "Algo salió mal. Inténtalo de nuevo."
+  },
+  "auth": {
+    "signup": {
+      "title": "Crear cuenta",
+      "subtitle": "Conecta tu empresa con el SII y simula el cierre.",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "passwordHint": "Mínimo 8 caracteres.",
+      "consentLabel": "Acepto la {politica} y los {terminos}, y autorizo el tratamiento de mis datos personales y tributarios bajo la Ley 19.628 y la Ley 21.719.",
+      "consentRequired": "Debes aceptar para continuar.",
+      "submit": "Crear cuenta",
+      "submitting": "Creando…",
+      "haveAccount": "¿Ya tienes cuenta? Inicia sesión",
+      "checkEmailTitle": "Revisa tu correo",
+      "checkEmailBody": "Te enviamos un enlace de confirmación a {email}. Haz clic para activar tu cuenta."
+    },
+    "login": {
+      "title": "Iniciar sesión",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "submit": "Entrar",
+      "submitting": "Entrando…",
+      "noAccount": "¿No tienes cuenta? Crea una"
+    },
+    "links": {
+      "privacidad": "política de privacidad",
+      "terminos": "términos de servicio"
+    }
+  },
+  "onboarding": {
+    "workspace": {
+      "title": "Crea tu espacio de trabajo",
+      "subtitle": "Esto agrupa tu(s) empresa(s) en Renteo. Puedes cambiar el nombre después.",
+      "nameLabel": "Nombre del espacio",
+      "namePlaceholder": "Ej.: Mi Pyme SpA",
+      "typeLabel": "¿Cómo vas a usar Renteo?",
+      "typePyme": "Soy dueño o CFO de mi empresa",
+      "typePymeBody": "Veo el dashboard de mi empresa, simulo escenarios y recibo alertas pre-cierre.",
+      "typeAccountingFirm": "Atiendo una cartera de clientes (contador / estudio)",
+      "typeAccountingFirmBody": "Veo todas las empresas asignadas, ejecuto diagnóstico batch y exporto papeles de trabajo.",
+      "submit": "Continuar",
+      "submitting": "Creando…"
+    }
+  },
+  "dashboard": {
+    "header": {
+      "logout": "Cerrar sesión"
+    },
+    "empty": {
+      "title": "Bienvenido a {name}",
+      "body": "Pronto verás aquí el estado tributario de tu empresa, escenarios simulados y alertas. Por ahora estamos preparando los datos."
+    }
   },
   "landing": {
     "hero": {
