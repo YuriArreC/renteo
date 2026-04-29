@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
   const t = useTranslations("auth.signup");
-  const tLinks = useTranslations("auth.links");
   const router = useRouter();
 
   const [email, setEmail] = useState("");

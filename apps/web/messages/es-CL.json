@@ -12,7 +12,7 @@
       "email": "Correo electrónico",
       "password": "Contraseña",
       "passwordHint": "Mínimo 8 caracteres.",
-      "consentLabel": "Acepto la {politica} y los {terminos}, y autorizo el tratamiento de mis datos personales y tributarios bajo la Ley 19.628 y la Ley 21.719.",
+      "consentLabel": "Acepto la <politica>política de privacidad</politica> y los <terminos>términos de servicio</terminos>, y autorizo el tratamiento de mis datos personales y tributarios bajo la Ley 19.628 y la Ley 21.719.",
       "consentRequired": "Debes aceptar para continuar.",
       "submit": "Crear cuenta",
       "submitting": "Creando…",
@@ -27,10 +27,6 @@
       "submit": "Entrar",
       "submitting": "Entrando…",
       "noAccount": "¿No tienes cuenta? Crea una"
-    },
-    "links": {
-      "privacidad": "política de privacidad",
-      "terminos": "términos de servicio"
     }
   },
   "onboarding": {
