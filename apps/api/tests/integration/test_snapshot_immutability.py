@@ -91,13 +91,16 @@ async def test_snapshot_rule_set_snapshot_is_immutable(
 
         with pytest.raises((DBAPIError, InternalError)):
             async with admin_session.begin():
+                # El JSON va como bind parameter; un literal inline con
+                # `:true` lo parsea SQLAlchemy como bind name llamado `true`
+                # y rompe la query.
                 await admin_session.execute(
                     text(
                         "update core.recomendaciones "
-                        "set rule_set_snapshot = cast('{\"tampered\":true}' as jsonb) "
+                        "set rule_set_snapshot = cast(:tampered as jsonb) "
                         "where id = :id"
                     ),
-                    {"id": str(rec_id)},
+                    {"id": str(rec_id), "tampered": '{"tampered":true}'},
                 )
     finally:
         if rec_id is not None:
