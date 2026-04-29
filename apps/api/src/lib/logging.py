@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Any
+from collections.abc import MutableMapping
+from typing import Any, cast
 
 import structlog
 
@@ -33,8 +34,10 @@ SENSITIVE_KEYS: frozenset[str] = frozenset(
 
 
 def filter_sensitive(
-    _logger: Any, _method: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+    _logger: Any,
+    _method: str,
+    event_dict: MutableMapping[str, Any],
+) -> MutableMapping[str, Any]:
     for k in list(event_dict):
         if k.lower() in SENSITIVE_KEYS:
             event_dict[k] = "***"
@@ -62,4 +65,4 @@ def configure_logging(level: int = logging.INFO) -> None:
 
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
-    return structlog.get_logger(name)
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(name))

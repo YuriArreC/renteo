@@ -75,17 +75,17 @@ def _eval_clause(
     if "any_of" in clause:
         items = clause["any_of"]
         _require_list(items, "any_of")
-        local: list[FailedClause] = []
+        any_of_failures: list[FailedClause] = []
         for sub in items:
-            if _eval_clause(sub, ctx, local):
+            if _eval_clause(sub, ctx, any_of_failures):
                 return True
-        failed.extend(local)
+        failed.extend(any_of_failures)
         return False
 
     if "not" in clause:
         # `not` invierte el resultado; los failures internos no se propagan.
-        local: list[FailedClause] = []
-        return not _eval_clause(clause["not"], ctx, local)
+        not_failures: list[FailedClause] = []
+        return not _eval_clause(clause["not"], ctx, not_failures)
 
     if "field" in clause and "op" in clause:
         return _eval_predicate(clause, ctx, failed)
@@ -134,9 +134,9 @@ def _resolve_field(ctx: dict[str, Any], path: str) -> Any:
 
 def _apply_op(op: str, lhs: Any, rhs: Any) -> bool:
     if op == "eq":
-        return lhs == rhs
+        return bool(lhs == rhs)
     if op == "neq":
-        return lhs != rhs
+        return bool(lhs != rhs)
     if op == "lt":
         return lhs is not None and rhs is not None and lhs < rhs
     if op == "lte":

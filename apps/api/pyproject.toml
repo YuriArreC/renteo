@@ -110,9 +110,9 @@ strict_equality = true
 module = "src.domain.*"
 strict = true
 
-[[tool.mypy.overrides]]
-module = ["boto3.*", "botocore.*", "celery.*"]
-ignore_missing_imports = true
+# boto3 / botocore / celery: reaparecen cuando esos módulos se importen
+# en src/ (fase 1+ con KMS adapters y Celery workers). warn_unused_configs
+# se quejaría hoy porque ningún archivo del repo importa nada de eso.
 
 # ---------------------------------------------------------------------------
 # Pytest
