@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://renteo.cl/schemas/tax_rules/credit_imputation_order.json",
+  "title": "Orden de imputación de créditos contra IDPC",
+  "description": "Lista ordenada de identificadores de crédito (IPE, SENCE, I+D, donaciones, etc.) que el motor imputa secuencialmente contra el IDPC. Cambia con reformas tributarias.",
+  "type": "object",
+  "required": ["orden"],
+  "additionalProperties": false,
+  "properties": {
+    "orden": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+      "uniqueItems": true
+    }
+  }
+}

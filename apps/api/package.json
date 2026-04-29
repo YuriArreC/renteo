@@ -1,0 +1,13 @@
+{
+  "name": "@renteo/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Renteo backend (FastAPI + SQLAlchemy 2 + Supabase).",
+  "scripts": {
+    "dev": "uvicorn src.main:app --reload --port 8000",
+    "lint": "ruff check src tests",
+    "typecheck": "mypy src",
+    "test": "pytest",
+    "build": "echo 'no build step for python'"
+  }
+}

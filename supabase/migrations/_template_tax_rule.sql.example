@@ -1,0 +1,121 @@
+-- =============================================================================
+-- Plantilla: insertar / publicar una regla en tax_rules (Opción B confirmada
+-- en CLAUDE.md). Copiar este archivo como una migración nueva con timestamp:
+--
+--   supabase/migrations/YYYYMMDDHHMMSS_publish_<dominio>_<key>_v<version>.sql
+--
+-- y completar los placeholders. La PR debe incluir:
+--   1. Esta migración con INSERT en rule_sets + legal_dependencies +
+--      rule_golden_cases (mínimo 3 casos por regla).
+--   2. Actualización de apps/api/legal-dependencies.yaml.
+--   3. Commit firmado por el contador socio + merge por admin técnico
+--      (la doble firma del workflow Git materializa la doble firma SQL:
+--       published_by_contador y published_by_admin = uuid en auth.users).
+--
+-- El CHECK constraint de B10 valida que published_by_contador <>
+-- published_by_admin y que published_at no sea null cuando status='published'.
+-- =============================================================================
+
+begin;
+
+-- 1) Crear el rule_set en estado 'published' con doble firma.
+with new_rule as (
+    insert into tax_rules.rule_sets (
+        domain,
+        key,
+        version,
+        vigencia_desde,
+        vigencia_hasta,
+        rules,
+        fuente_legal,
+        status,
+        published_by_contador,
+        published_by_admin,
+        published_at
+    ) values (
+        '<DOMAIN>',                       -- ej. 'regime_eligibility'
+        '<KEY>',                          -- ej. '14_d_3'
+        1,                                -- version
+        '2026-01-01',                     -- vigencia_desde
+        null,                             -- vigencia_hasta (null = abierta)
+        cast($$
+            {
+                "all_of": [
+                    {
+                        "field": "ingresos_promedio_uf",
+                        "op": "lte",
+                        "value": 75000,
+                        "message": "Promedio ingresos últimos 3 años > 75.000 UF",
+                        "fundamento": "art. 14 D N°3 inc. 1° LIR"
+                    }
+                ]
+            }
+        $$ as jsonb),
+        cast($$
+            [
+                {"tipo": "ley", "id": "21.210"},
+                {"tipo": "circular_sii", "id": "62/2020"}
+            ]
+        $$ as jsonb),
+        'published',
+        '<UUID_CONTADOR_SOCIO>',          -- distinto de admin
+        '<UUID_ADMIN_TECNICO>',           -- distinto de contador
+        now()
+    )
+    returning id
+)
+
+-- 2) Registrar dependencias legales en formato relacional.
+, deps as (
+    insert into tax_rules.legal_dependencies (
+        rule_set_id, fuente_tipo, fuente_id, articulo
+    )
+    select id, 'ley', '21.210', '' from new_rule
+    union all
+    select id, 'circular_sii', '62/2020', '' from new_rule
+    returning rule_set_id
+)
+
+-- 3) Casos golden (mínimo 3). Si alguno falla en CI, no se publica.
+, goldens as (
+    insert into tax_rules.rule_golden_cases (
+        rule_set_id, name, inputs, expected_output, fundamento
+    )
+    select
+        new_rule.id,
+        'pyme_50000_uf_califica',
+        cast('{"ingresos_promedio_uf": 50000}' as jsonb),
+        cast('{"passed": true}' as jsonb),
+        'PYME comercio dentro de tope.'
+    from new_rule
+    union all
+    select
+        new_rule.id,
+        'pyme_80000_uf_no_califica',
+        cast('{"ingresos_promedio_uf": 80000}' as jsonb),
+        cast('{"passed": false}' as jsonb),
+        'Excede tope de 75.000 UF.'
+    from new_rule
+    union all
+    select
+        new_rule.id,
+        'pyme_75000_uf_borde',
+        cast('{"ingresos_promedio_uf": 75000}' as jsonb),
+        cast('{"passed": true}' as jsonb),
+        'Borde inclusivo del tope.'
+    from new_rule
+    returning id
+)
+
+-- 4) Changelog: dejar entrada explícita.
+insert into tax_rules.rule_set_changelog (
+    rule_set_id, action, performed_by, comment
+)
+select
+    new_rule.id,
+    'published',
+    '<UUID_ADMIN_TECNICO>',
+    'Publicación inicial de <DOMAIN>/<KEY> v1. PR: <link>.'
+from new_rule;
+
+commit;

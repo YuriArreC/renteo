@@ -1,0 +1,135 @@
+{
+  "common": {
+    "appName": "Renteo",
+    "tagline": "Optimización tributaria proactiva para Chile."
+  },
+  "landing": {
+    "hero": {
+      "headline": "Decide tu cierre tributario antes que cierre el año.",
+      "subheadline": "Renteo conecta a tu empresa con el SII y muestra escenarios lícitos de optimización para que diciembre no sea una sorpresa."
+    },
+    "cta": {
+      "primary": "Crear cuenta",
+      "secondary": "Iniciar sesión"
+    },
+    "features": {
+      "title": "Qué resuelve",
+      "items": {
+        "diagnostico": {
+          "title": "Diagnóstico de régimen",
+          "body": "Comparamos 14 A, 14 D N°3, 14 D N°8 y renta presunta con tu información del SII y proyectamos tres años."
+        },
+        "simulador": {
+          "title": "Simulador de cierre",
+          "body": "Ajustá palancas lícitas (depreciación instantánea, SENCE, rebaja 14 E, retiros, sueldo empresarial) y mirá el impacto en vivo."
+        },
+        "alertas": {
+          "title": "Alertas pre-cierre",
+          "body": "Avisos accionables antes del 31-dic con plan de acción concreto y fundamento legal."
+        }
+      }
+    },
+    "complianceNote": "Renteo entrega información y simulación, no asesoría individualizada. Trabajamos con tu contador, no en su lugar."
+  },
+  "footer": {
+    "links": {
+      "privacidad": "Política de privacidad",
+      "terminos": "Términos de servicio",
+      "contacto": "Contacto"
+    },
+    "copyright": "© {year} Renteo. Todos los derechos reservados.",
+    "version": "v{version}"
+  },
+  "legal": {
+    "placeholderBanner": "Versión preliminar (v1) pendiente de revisión y firma por estudio jurídico antes del go-live público.",
+    "lastUpdated": "Última actualización: {date}",
+    "privacidad": {
+      "title": "Política de privacidad",
+      "intro": "Esta política describe cómo Renteo trata tus datos personales y los datos tributarios de tu empresa, conforme a la Ley 19.628 y a la Ley 21.719 (vigencia plena el 1 de diciembre de 2026).",
+      "sections": {
+        "responsable": {
+          "title": "Identidad del responsable y del DPO",
+          "body": "Por completar antes del go-live: razón social, RUT, dirección y datos de contacto del responsable y del Delegado de Protección de Datos."
+        },
+        "bases": {
+          "title": "Bases de licitud por finalidad",
+          "body": "Tratamos tus datos sobre la base del contrato (entrega del servicio), del consentimiento expreso (para conexión con SII y procesamiento de información tributaria) y de obligaciones legales aplicables."
+        },
+        "datos": {
+          "title": "Categorías de datos tratados",
+          "body": "Datos de identificación (nombre, email, RUT del usuario y de la empresa), datos tributarios sincronizados desde el SII (DTEs, RCV, F29, F22, BHE), y metadatos del certificado digital. El binario del certificado digital se almacena cifrado con AWS KMS y nunca se persiste en claro."
+        },
+        "finalidades": {
+          "title": "Finalidades específicas",
+          "body": "Diagnóstico de régimen tributario, simulación de escenarios de cierre, alertas proactivas, generación de informes ejecutivos y cumplimiento de obligaciones legales del producto."
+        },
+        "destinatarios": {
+          "title": "Destinatarios y encargados de tratamiento",
+          "body": "Trabajamos con encargados que firman DPA: Supabase (base de datos y autenticación), AWS (almacenamiento cifrado y KMS), proveedores autorizados de integración con el SII (SimpleAPI, BaseAPI, ApiGateway), Resend o equivalente para correos transaccionales y Sentry para observabilidad sin PII."
+        },
+        "transferencias": {
+          "title": "Transferencias internacionales",
+          "body": "Para reducir latencia con el SII privilegiamos infraestructura en sa-east-1 (São Paulo). Si llegaran a existir tratamientos en otras regiones, evaluamos cláusulas contractuales tipo o consentimiento explícito conforme a la Ley 21.719."
+        },
+        "retencion": {
+          "title": "Plazos de conservación",
+          "body": "Retenemos los datos tributarios el tiempo mínimo exigido por el artículo 17 del Código Tributario (6 años) y los datos de cuenta mientras dure la relación contractual. Una purga nocturna elimina lo que excede los plazos legales."
+        },
+        "derechos": {
+          "title": "Derechos ARCOP",
+          "body": "Podés ejercer tus derechos de acceso, rectificación, cancelación, oposición y portabilidad enviando una solicitud desde tu portal de privacidad. Respondemos dentro de 30 días corridos."
+        },
+        "automatizadas": {
+          "title": "Decisiones automatizadas",
+          "body": "Algunas recomendaciones se generan con tratamiento automatizado. Tenés derecho a solicitar revisión humana antes de tomar la decisión final; la respuesta máxima es de 5 días hábiles."
+        },
+        "brechas": {
+          "title": "Notificación de brechas",
+          "body": "Si detectamos un incidente que pueda afectar tus derechos, notificamos a la Agencia de Protección de Datos sin dilación indebida (estándar de 72 horas) y a las personas titulares cuando el riesgo sea alto."
+        },
+        "contacto": {
+          "title": "Contacto del DPO",
+          "body": "Por completar antes del go-live: canal único para ejercer derechos ARCOP, reportar brechas y contactar al Delegado de Protección de Datos."
+        }
+      }
+    },
+    "terminos": {
+      "title": "Términos de servicio",
+      "intro": "Estos términos rigen el uso de Renteo. Al crear una cuenta aceptás las condiciones descritas a continuación.",
+      "sections": {
+        "responsable": {
+          "title": "Identificación del responsable",
+          "body": "Por completar antes del go-live: razón social, RUT, dirección y canal de contacto."
+        },
+        "alcance": {
+          "title": "Naturaleza del servicio",
+          "body": "Renteo entrega información tributaria y simulaciones financieras a partir de los datos que el usuario o usuaria sincroniza desde el SII. No es un servicio de asesoría tributaria personalizada ni reemplaza al contador. Las decisiones tributarias y la responsabilidad asociada son del contribuyente."
+        },
+        "responsabilidad": {
+          "title": "Limitación de responsabilidad",
+          "body": "Renteo se basa en información tributaria general vigente. Cambios en la ley, oficios del SII o jurisprudencia pueden alterar los resultados. No nos hacemos responsables de errores en la información del SII ni de caídas del portal del SII."
+        },
+        "cumplimiento": {
+          "title": "Cumplimiento tributario",
+          "body": "Renteo solo opera dentro del nivel de economía de opción (artículo 4 del Código Tributario y Circular SII N° 65/2015). No sugerimos estructuras que puedan calificar como elusivas conforme a los artículos 4 bis, 4 ter o 4 quáter del Código Tributario, ni patrones presentes en el Catálogo de Esquemas Tributarios del SII."
+        },
+        "datos": {
+          "title": "Tratamiento de datos",
+          "body": "El tratamiento de tus datos personales y tributarios se rige por la Política de Privacidad. Los datos tributarios están protegidos por la reserva tributaria del artículo 35 del Código Tributario."
+        },
+        "propiedad": {
+          "title": "Propiedad intelectual",
+          "body": "El software, las marcas y los contenidos son propiedad de Renteo o de sus licenciantes. Recibís una licencia limitada, no exclusiva y revocable para usar el servicio durante la vigencia del contrato."
+        },
+        "terminacion": {
+          "title": "Suspensión y terminación",
+          "body": "Podemos suspender o terminar el servicio por incumplimiento de estos términos, riesgo a la integridad del sistema o exigencia legal, con aviso razonable cuando sea posible. Podés cerrar tu cuenta en cualquier momento desde la configuración."
+        },
+        "conflictos": {
+          "title": "Resolución de conflictos",
+          "body": "Estos términos se rigen por la legislación chilena. Las controversias se intentan resolver mediante mediación previa; subsidiariamente quedan sometidas a los tribunales ordinarios de Santiago de Chile."
+        }
+      }
+    }
+  }
+}

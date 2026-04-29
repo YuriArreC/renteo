@@ -46,9 +46,24 @@ antes de implementar.
     RBAC, Celery, KMS, structlog sin PII.
 11. **tax-rules-versioning** — Versionado de reglas tributarias y
     mecanismos para absorber cambios legislativos sin redeploy.
-    Schema `tax_rules`, selector por vigencia, evaluador
-    declarativo, snapshot inmutable, doble firma, watchdog
-    legislativo, test `test_no_hardcoded` bloqueante en CI.
+    Schema `tax_rules` (tablas `rule`, `rule_version`, `rule_param`,
+    `rule_publication`) con vigencia temporal `[vigencia_desde,
+    vigencia_hasta)` y resolución determinista por fecha de
+    devengo / año tributario. Evaluador **declarativo**: las reglas
+    viven como JSON/DSL versionado, nunca como código; el motor
+    interpreta la versión vigente al momento del cálculo. Cada
+    cálculo persiste **snapshot inmutable** (hash SHA-256 del set
+    de reglas + parámetros usados) para reproducibilidad y
+    auditoría posterior. Publicación con **doble firma**
+    obligatoria (CONTADOR_SOCIO + ESTUDIO_JURIDICO) y rollback
+    atómico por versión. **Watchdog legislativo** monitorea DOF,
+    SII (circulares, oficios, resoluciones) y Ley de Presupuestos;
+    abre ticket con diff propuesto para revisión humana. Test
+    `test_no_hardcoded` (AST scan sobre `domain/tax_engine`)
+    bloqueante en CI: falla si detecta literales numéricos
+    tributarios fuera de `tax_rules`. Cambios de tasas, tramos o
+    topes se despliegan como **nueva versión de regla**, no como
+    release de código.
 
 ## Reglas no negociables
 

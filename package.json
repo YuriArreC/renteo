@@ -1,0 +1,24 @@
+{
+  "name": "renteo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Renteo — optimización tributaria proactiva para PYMEs y contadores en Chile.",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  }
+}

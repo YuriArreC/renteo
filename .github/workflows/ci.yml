@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9"
+
+# Coverage gate de skill 10: ≥85% sobre apps/api/src/domain/tax_engine.
+# En fase 0 corre como `--cov-report=term` informativo; subir a
+# `--cov-fail-under=85` cuando el motor tenga seeds + funciones suficientes
+# para que la cifra sea estable (fase 1+).
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Backend (Python)
+  # ---------------------------------------------------------------------------
+
+  lint-api:
+    name: api · ruff + mypy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install api with dev extras
+        run: pip install -e "apps/api[dev]"
+      - name: ruff
+        working-directory: apps/api
+        run: ruff check src tests tools
+      - name: mypy
+        working-directory: apps/api
+        run: mypy src
+
+  test-no-hardcoded:
+    name: api · test_no_hardcoded (skill 11)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -e "apps/api[dev]"
+      - working-directory: apps/api
+        run: pytest tests/test_no_hardcoded.py -v
+
+  test-api-unit:
+    name: api · pytest unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -e "apps/api[dev]"
+      - working-directory: apps/api
+        run: |
+          pytest tests/unit -v \
+            --cov=src/domain/tax_engine \
+            --cov-report=term
+
+  test-api-integration:
+    name: api · integration + RLS + validate-rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start Supabase local (applies migrations)
+        run: supabase start --workdir .
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -e "apps/api[dev]"
+      - name: Run integration + RLS tests
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          pytest tests/integration -v \
+            -m "integration or rls" \
+            --cov=src/domain/tax_engine \
+            --cov-report=term
+      - name: Validate published rules
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: python tools/validate_rules.py
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --workdir . || true
+
+  # ---------------------------------------------------------------------------
+  # Frontend (Next.js)
+  # ---------------------------------------------------------------------------
+
+  lint-web:
+    name: web · eslint + tsc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @renteo/web lint
+      - run: pnpm --filter @renteo/web typecheck
+
+  build-web:
+    name: web · next build
+    runs-on: ubuntu-latest
+    needs: lint-web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build web (placeholder env vars)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: pnpm --filter @renteo/web build

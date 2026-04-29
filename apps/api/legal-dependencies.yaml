@@ -1,0 +1,49 @@
+# =============================================================================
+# legal-dependencies.yaml — mantenido por el contador socio.
+# =============================================================================
+#
+# Mapeo bidireccional regla ↔ fuentes legales que la sustentan. Cuando se
+# publica una ley/circular nueva, el watchdog legislativo (fase 5) cruza este
+# archivo para responder en menos de 1 minuto:
+#
+#   "Esta semana publicaron Circular SII N° X. Reglas potencialmente afectadas:"
+#   → [...]
+#
+# Espejado en la tabla tax_rules.legal_dependencies. La fuente de verdad es
+# este archivo (controlado en git con review por contador socio); la tabla se
+# refresca via migración versionada al actualizarlo.
+#
+# Estructura de cada entrada:
+#
+#   - rule_set:
+#       domain: regime_eligibility | palanca_definition | red_flag
+#               | rli_formula | credit_imputation_order | idpc_rate | ...
+#       key:    identificador estable dentro del dominio
+#               (ej. "14_d_3", "dep_instantanea")
+#     depends_on:
+#       - tipo: ley | decreto | circular_sii | oficio_sii | resolucion_sii
+#               | jurisprudencia_tta | cs
+#         id:   identificador (número de ley/circular/oficio)
+#         articulo: opcional, "art. 31 N°5 bis"
+#
+# Ejemplo (NO cargar como real hasta firma de contador socio):
+#
+#   - rule_set:
+#       domain: regime_eligibility
+#       key: 14_d_3
+#     depends_on:
+#       - { tipo: ley, id: "21.210" }
+#       - { tipo: ley, id: "21.713" }
+#       - { tipo: circular_sii, id: "62/2020" }
+#
+#   - rule_set:
+#       domain: idpc_rate
+#       key: 14_d_3_at2026
+#     depends_on:
+#       - { tipo: ley, id: "21.755" }
+#       - { tipo: circular_sii, id: "53/2025" }
+#       - { tipo: ley, id: "21.735", articulo: "art. 4° transitorio" }
+#
+# =============================================================================
+
+dependencies: []

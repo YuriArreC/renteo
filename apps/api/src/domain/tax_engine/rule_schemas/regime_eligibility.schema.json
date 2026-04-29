@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://renteo.cl/schemas/tax_rules/regime_eligibility.json",
+  "title": "Regime eligibility rule",
+  "description": "Reglas declarativas que evalúan si un contribuyente califica para un régimen tributario (14 A / 14 D N°3 / 14 D N°8 / renta presunta). Skill 7 + skill 11.",
+  "$ref": "#/$defs/clause",
+  "$defs": {
+    "clause": {
+      "anyOf": [
+        { "$ref": "#/$defs/predicate" },
+        { "$ref": "#/$defs/all_of" },
+        { "$ref": "#/$defs/any_of" },
+        { "$ref": "#/$defs/not" }
+      ]
+    },
+    "predicate": {
+      "type": "object",
+      "required": ["field", "op"],
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string", "minLength": 1 },
+        "op": {
+          "enum": [
+            "eq", "neq", "lt", "lte", "gt", "gte",
+            "between", "in", "not_in",
+            "exists", "not_exists",
+            "matches_regex"
+          ]
+        },
+        "value": {},
+        "message": { "type": "string" },
+        "fundamento": { "type": "string" }
+      }
+    },
+    "all_of": {
+      "type": "object",
+      "required": ["all_of"],
+      "additionalProperties": false,
+      "properties": {
+        "all_of": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/clause" }
+        }
+      }
+    },
+    "any_of": {
+      "type": "object",
+      "required": ["any_of"],
+      "additionalProperties": false,
+      "properties": {
+        "any_of": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/clause" }
+        }
+      }
+    },
+    "not": {
+      "type": "object",
+      "required": ["not"],
+      "additionalProperties": false,
+      "properties": {
+        "not": { "$ref": "#/$defs/clause" }
+      }
+    }
+  }
+}

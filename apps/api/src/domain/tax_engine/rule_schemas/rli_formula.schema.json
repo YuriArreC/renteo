@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://renteo.cl/schemas/tax_rules/rli_formula.json",
+  "title": "Composición de la RLI por ejercicio",
+  "description": "Componentes (signo + identificador + fundamento) que el motor suma o resta para calcular la Renta Líquida Imponible. Cambiar la fórmula = nueva versión de regla con vigencia, no código.",
+  "type": "object",
+  "required": ["componentes"],
+  "additionalProperties": false,
+  "properties": {
+    "componentes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "signo", "fundamento"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "signo": { "enum": ["+", "-"] },
+          "fundamento": { "type": "string", "minLength": 1 },
+          "descripcion": { "type": "string" },
+          "opcional": { "type": "boolean", "default": false }
+        }
+      }
+    }
+  }
+}

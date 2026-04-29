@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://renteo.cl/schemas/tax_rules/palanca_definition.json",
+  "title": "Palanca del simulador de cierre",
+  "description": "Definición de una palanca del simulador (skill 8) con elegibilidad, banderas rojas y fórmula de impacto. La UI renderiza sliders dinámicamente desde estas reglas.",
+  "type": "object",
+  "required": ["id", "nombre_humano", "tipo_input", "elegibilidad", "impacto", "fundamento"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "nombre_humano": { "type": "string", "minLength": 1 },
+    "tipo_input": {
+      "enum": [
+        "monto_clp", "monto_uf", "porcentaje", "boolean",
+        "asset_list", "select"
+      ]
+    },
+    "rango": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "step": { "type": "number" },
+        "unidad": { "type": "string" }
+      }
+    },
+    "elegibilidad": { "$ref": "#/$defs/clause" },
+    "red_flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "condicion", "accion", "mensaje_educativo"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "severidad": { "enum": ["info", "warning", "block"] },
+          "condicion": { "$ref": "#/$defs/clause" },
+          "accion": { "enum": ["block", "warn"] },
+          "mensaje_educativo": { "type": "string" },
+          "fundamento": { "type": "string" }
+        }
+      }
+    },
+    "impacto": {
+      "type": "object",
+      "required": ["tipo", "formula"],
+      "additionalProperties": false,
+      "properties": {
+        "tipo": {
+          "enum": [
+            "deduccion_rli", "credito_idpc",
+            "ajuste_retiros", "rebaja_base_igc",
+            "timing_only"
+          ]
+        },
+        "formula": { "type": "string", "minLength": 1 }
+      }
+    },
+    "fundamento": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["tipo"],
+        "additionalProperties": false,
+        "properties": {
+          "tipo": {
+            "enum": [
+              "ley", "decreto",
+              "circular_sii", "oficio_sii", "resolucion_sii",
+              "jurisprudencia_tta", "cs"
+            ]
+          },
+          "id": { "type": "string" },
+          "articulo": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "clause": {
+      "anyOf": [
+        { "$ref": "#/$defs/predicate" },
+        { "$ref": "#/$defs/all_of" },
+        { "$ref": "#/$defs/any_of" },
+        { "$ref": "#/$defs/not" }
+      ]
+    },
+    "predicate": {
+      "type": "object",
+      "required": ["field", "op"],
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string", "minLength": 1 },
+        "op": {
+          "enum": [
+            "eq", "neq", "lt", "lte", "gt", "gte",
+            "between", "in", "not_in",
+            "exists", "not_exists",
+            "matches_regex"
+          ]
+        },
+        "value": {},
+        "message": { "type": "string" },
+        "fundamento": { "type": "string" }
+      }
+    },
+    "all_of": {
+      "type": "object",
+      "required": ["all_of"],
+      "additionalProperties": false,
+      "properties": {
+        "all_of": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/clause" }
+        }
+      }
+    },
+    "any_of": {
+      "type": "object",
+      "required": ["any_of"],
+      "additionalProperties": false,
+      "properties": {
+        "any_of": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/clause" }
+        }
+      }
+    },
+    "not": {
+      "type": "object",
+      "required": ["not"],
+      "additionalProperties": false,
+      "properties": {
+        "not": { "$ref": "#/$defs/clause" }
+      }
+    }
+  }
+}
