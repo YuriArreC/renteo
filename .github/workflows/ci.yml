@@ -13,7 +13,6 @@ concurrency:
 env:
   PYTHON_VERSION: "3.12"
   NODE_VERSION: "20"
-  PNPM_VERSION: "9"
 
 # Coverage gate de skill 10: ≥85% sobre apps/api/src/domain/tax_engine.
 # En fase 0 corre como `--cov-report=term` informativo; subir a
@@ -115,8 +114,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+        # Versión tomada de `packageManager` en package.json.
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -132,8 +130,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
+        # Versión tomada de `packageManager` en package.json.
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
