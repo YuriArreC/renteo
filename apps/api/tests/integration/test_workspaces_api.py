@@ -48,6 +48,25 @@ async def http_client() -> AsyncIterator[AsyncClient]:
     app.dependency_overrides.clear()
 
 
+async def _delete_bypassing_triggers(
+    session: AsyncSession, sql: str, params: dict[str, Any]
+) -> None:
+    """Cleanup helper que desactiva triggers para esta transacción.
+
+    El trigger anti-modificación de security.audit_log bloquea no solo
+    DELETEs directos sino también UPDATEs/DELETEs en cascada (ej. el
+    SET NULL desde auth.users.id, o el cascade desde core.workspaces.id).
+    `session_replication_role = 'replica'` desactiva los triggers
+    regulares en la transacción actual; el postgres local de Supabase es
+    superuser y permite el cambio.
+    """
+    async with session.begin():
+        await session.execute(
+            text("set local session_replication_role = 'replica'")
+        )
+        await session.execute(text(sql), params)
+
+
 @pytest_asyncio.fixture
 async def fresh_user(admin_session: AsyncSession) -> AsyncIterator[UUID]:
     user_id = uuid4()
@@ -61,11 +80,11 @@ async def fresh_user(admin_session: AsyncSession) -> AsyncIterator[UUID]:
     try:
         yield user_id
     finally:
-        async with admin_session.begin():
-            await admin_session.execute(
-                text("delete from auth.users where id = :id"),
-                {"id": str(user_id)},
-            )
+        await _delete_bypassing_triggers(
+            admin_session,
+            "delete from auth.users where id = :id",
+            {"id": str(user_id)},
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -140,11 +159,11 @@ async def test_create_workspace_pyme_assigns_owner_role(
             )
             assert result.scalar_one() == 1
     finally:
-        async with admin_session.begin():
-            await admin_session.execute(
-                text("delete from core.workspaces where id = :id"),
-                {"id": str(ws_id)},
-            )
+        await _delete_bypassing_triggers(
+            admin_session,
+            "delete from core.workspaces where id = :id",
+            {"id": str(ws_id)},
+        )
 
 
 @pytest.mark.integration
@@ -184,11 +203,11 @@ async def test_create_workspace_accounting_firm_assigns_lead_role(
             )
             assert result.scalar_one() == "accountant_lead"
     finally:
-        async with admin_session.begin():
-            await admin_session.execute(
-                text("delete from core.workspaces where id = :id"),
-                {"id": str(ws_id)},
-            )
+        await _delete_bypassing_triggers(
+            admin_session,
+            "delete from core.workspaces where id = :id",
+            {"id": str(ws_id)},
+        )
 
 
 @pytest.mark.integration
@@ -253,11 +272,11 @@ async def test_create_workspace_rejects_when_user_already_has_one(
         )
         assert response.status_code == 409
     finally:
-        async with admin_session.begin():
-            await admin_session.execute(
-                text("delete from core.workspaces where id = :id"),
-                {"id": str(ws_id)},
-            )
+        await _delete_bypassing_triggers(
+            admin_session,
+            "delete from core.workspaces where id = :id",
+            {"id": str(ws_id)},
+        )
 
 
 # ---------------------------------------------------------------------------
