@@ -41,5 +41,12 @@ enable_signup = true
 double_confirm_changes = true
 enable_confirmations = true
 
+# Custom Access Token Hook: puebla app_metadata.{workspace_id, workspace_type,
+# role, empresa_ids} en el JWT al firmar/refrescar tokens. Definido en
+# migrations/20260429120000_auth_hook.sql.
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/public/custom_access_token_hook"
+
 [edge_runtime]
 enabled = false
