@@ -2,12 +2,24 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, Suspense, useState } from "react";
 
 import { ApiError, fetchApiClient, type MeResponse } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupVerifyPage() {
+  // Next 15 requiere que useSearchParams viva dentro de un <Suspense>
+  // boundary para que la generación estática no falle. El fallback es
+  // intencionalmente mínimo — la página solo es relevante con la query
+  // string presente.
+  return (
+    <Suspense fallback={null}>
+      <SignupVerifyForm />
+    </Suspense>
+  );
+}
+
+function SignupVerifyForm() {
   const t = useTranslations("auth.verify");
   const router = useRouter();
   const searchParams = useSearchParams();
