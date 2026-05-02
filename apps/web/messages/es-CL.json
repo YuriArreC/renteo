@@ -20,7 +20,7 @@
     },
     "verify": {
       "title": "Confirma tu correo",
-      "subtitle": "Te enviamos un código de 6 dígitos a {email}. Pégalo aquí para activar tu cuenta.",
+      "subtitle": "Te enviamos un código a {email}. Pégalo aquí para activar tu cuenta.",
       "codeLabel": "Código",
       "codeHint": "Solo números. El código vence en 60 minutos.",
       "submit": "Verificar",

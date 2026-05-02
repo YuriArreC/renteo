@@ -110,12 +110,16 @@ function SignupVerifyForm() {
             type="text"
             required
             inputMode="numeric"
-            pattern="[0-9]{6}"
-            maxLength={6}
+            // Supabase puede mandar OTP de 6 u 8 dígitos según la config
+            // del proyecto. Aceptamos rango 6-10 para no quedar pegados
+            // si Supabase cambia el default.
+            pattern="[0-9]{6,10}"
+            minLength={6}
+            maxLength={10}
             autoComplete="one-time-code"
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            placeholder="123456"
+            placeholder="••••••"
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-center font-mono text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <p className="mt-1 text-xs text-muted-foreground">
@@ -137,7 +141,7 @@ function SignupVerifyForm() {
 
         <button
           type="submit"
-          disabled={submitting || code.length !== 6}
+          disabled={submitting || code.length < 6}
           className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary font-medium text-primary-foreground disabled:opacity-50"
         >
           {submitting ? t("submitting") : t("submit")}
