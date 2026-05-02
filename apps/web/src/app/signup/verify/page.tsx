@@ -43,10 +43,13 @@ function SignupVerifyForm() {
     }
 
     const supabase = createClient();
+    // En supabase-js v2, el type para confirmar email tras signup es
+    // "email" (cubre signup confirmation y email change). El antiguo
+    // "signup" está deprecated y devuelve "invalid token" silenciosamente.
     const { error: verifyError } = await supabase.auth.verifyOtp({
       email,
       token: code,
-      type: "signup",
+      type: "email",
     });
 
     if (verifyError) {
