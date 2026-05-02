@@ -59,6 +59,11 @@ supabase/.temp/
 *.key
 .aws/
 
+# Notas locales con secretos del usuario
+renteo-secrets*.txt
+secrets*.txt
+*.secrets
+
 # IDE
 .vscode/
 .idea/

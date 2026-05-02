@@ -16,9 +16,19 @@
       "consentRequired": "Debes aceptar para continuar.",
       "submit": "Crear cuenta",
       "submitting": "Creando…",
-      "haveAccount": "¿Ya tienes cuenta? Inicia sesión",
-      "checkEmailTitle": "Revisa tu correo",
-      "checkEmailBody": "Te enviamos un enlace de confirmación a {email}. Haz clic para activar tu cuenta."
+      "haveAccount": "¿Ya tienes cuenta? Inicia sesión"
+    },
+    "verify": {
+      "title": "Confirma tu correo",
+      "subtitle": "Te enviamos un código de 6 dígitos a {email}. Pégalo aquí para activar tu cuenta.",
+      "codeLabel": "Código",
+      "codeHint": "Solo números. El código vence en 60 minutos.",
+      "submit": "Verificar",
+      "submitting": "Verificando…",
+      "resend": "¿No te llegó? Reenviar código",
+      "resending": "Reenviando…",
+      "resent": "Código reenviado. Revisa tu correo.",
+      "missingEmail": "Falta el correo en la URL. Vuelve al paso anterior."
     },
     "login": {
       "title": "Iniciar sesión",

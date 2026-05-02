@@ -16,7 +16,6 @@ export default function SignupPage() {
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -29,12 +28,13 @@ export default function SignupPage() {
 
     setSubmitting(true);
     const supabase = createClient();
+    // Sin `emailRedirectTo` Supabase manda solo el código OTP en el email
+    // (no link PKCE). El flujo siguiente es /signup/verify donde el user
+    // pega el código de 6 dígitos. Esto es robusto contra Gmail prefetch
+    // y no depende de cookies entre tabs.
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
     setSubmitting(false);
 
@@ -42,21 +42,8 @@ export default function SignupPage() {
       setError(signUpError.message);
       return;
     }
-    setSubmittedEmail(email);
+    router.push(`/signup/verify?email=${encodeURIComponent(email)}`);
     router.refresh();
-  }
-
-  if (submittedEmail) {
-    return (
-      <main className="container max-w-md py-16">
-        <h1 className="mb-3 text-2xl font-semibold tracking-tight">
-          {t("checkEmailTitle")}
-        </h1>
-        <p className="text-muted-foreground">
-          {t("checkEmailBody", { email: submittedEmail })}
-        </p>
-      </main>
-    );
   }
 
   return (
