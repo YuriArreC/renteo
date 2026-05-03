@@ -520,17 +520,27 @@ async def _persist(
         "banderas": [json.loads(b.model_dump_json()) for b in banderas],
     }
 
+    # rule_set_snapshot y tax_year_params_snapshot son NOT NULL desde
+    # B11 (skill 11). En track 9 MVP escribimos un placeholder mínimo
+    # que marca el cálculo como pre-fase 6; track 11 los reemplaza por
+    # dumps reales del rule_set + tax_params usados.
+    snapshot_placeholder = json.dumps(
+        {"placeholder": True, "engine_version": ENGINE_VERSION}
+    )
+
     result = await session.execute(
         text(
             """
             insert into core.escenarios_simulacion
                 (workspace_id, empresa_id, tax_year, nombre,
                  regimen, inputs, outputs,
-                 engine_version, created_by)
+                 engine_version, created_by,
+                 rule_set_snapshot, tax_year_params_snapshot)
             values
                 (:ws, null, :year, :nombre,
                  :regimen, cast(:inputs as jsonb), cast(:outputs as jsonb),
-                 :ver, :uid)
+                 :ver, :uid,
+                 cast(:snap as jsonb), cast(:snap as jsonb))
             returning id
             """
         ),
@@ -543,6 +553,7 @@ async def _persist(
             "outputs": _serialize_jsonb(outputs_payload),
             "ver": ENGINE_VERSION,
             "uid": str(user_id),
+            "snap": snapshot_placeholder,
         },
     )
     row = result.scalar_one()
