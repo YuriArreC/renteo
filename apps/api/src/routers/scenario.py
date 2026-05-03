@@ -691,16 +691,25 @@ def _default_nombre(regimen: Regimen, tax_year: int) -> str:
 
 
 async def _assert_empresa_in_workspace(
-    session: AsyncSession, empresa_id: UUID
+    session: AsyncSession,
+    empresa_id: UUID,
+    workspace_id: UUID,
 ) -> None:
-    """Bajo RLS, ver una empresa implica pertenecer al workspace activo.
+    """Verifica que `empresa_id` pertenezca al workspace activo.
 
-    Si el SELECT vuelve vacío la empresa no existe (en este workspace) o
-    no se tiene acceso por rol — en ambos casos rechazamos con 422.
+    Defensa en profundidad: además de RLS, chequeamos workspace_id
+    explícitamente. Si el SELECT vuelve vacío rechazamos con 422.
     """
     result = await session.execute(
-        text("select 1 from core.empresas where id = :id and deleted_at is null"),
-        {"id": str(empresa_id)},
+        text(
+            """
+            select 1 from core.empresas
+             where id = :id
+               and workspace_id = :ws
+               and deleted_at is null
+            """
+        ),
+        {"id": str(empresa_id), "ws": str(workspace_id)},
     )
     if result.first() is None:
         raise HTTPException(
@@ -878,7 +887,9 @@ async def simulate(
     )
 
     if payload.empresa_id is not None:
-        await _assert_empresa_in_workspace(session, payload.empresa_id)
+        await _assert_empresa_in_workspace(
+            session, payload.empresa_id, tenancy.workspace_id
+        )
 
     topes = await _load_topes(session, payload.tax_year)
     result = _apply_palancas(payload, topes)
@@ -974,8 +985,8 @@ async def list_scenarios(
              where regimen is not null
                and tax_year = coalesce(:year, tax_year)
                and (
-                    :empresa::uuid is null
-                    or empresa_id = :empresa::uuid
+                    cast(:empresa as uuid) is null
+                    or empresa_id = cast(:empresa as uuid)
                )
              order by created_at desc
              limit :limit

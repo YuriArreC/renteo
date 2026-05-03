@@ -365,12 +365,21 @@ def _riesgos_para(
 
 
 async def _assert_empresa_in_workspace(
-    session: AsyncSession, empresa_id: UUID
+    session: AsyncSession,
+    empresa_id: UUID,
+    workspace_id: UUID,
 ) -> None:
-    """Bajo RLS, ver una empresa implica pertenecer al workspace activo."""
+    """Verifica que `empresa_id` pertenezca al workspace activo."""
     result = await session.execute(
-        text("select 1 from core.empresas where id = :id and deleted_at is null"),
-        {"id": str(empresa_id)},
+        text(
+            """
+            select 1 from core.empresas
+             where id = :id
+               and workspace_id = :ws
+               and deleted_at is null
+            """
+        ),
+        {"id": str(empresa_id), "ws": str(workspace_id)},
     )
     if result.first() is None:
         raise HTTPException(
@@ -389,7 +398,9 @@ async def diagnose(
     session: AsyncSession = Depends(get_db_session),
 ) -> DiagnoseResponse:
     if payload.empresa_id is not None:
-        await _assert_empresa_in_workspace(session, payload.empresa_id)
+        await _assert_empresa_in_workspace(
+            session, payload.empresa_id, tenancy.workspace_id
+        )
 
     elig_inputs = _to_eligibility_inputs(payload)
 
@@ -642,8 +653,8 @@ async def list_recomendaciones(
              where tipo = 'cambio_regimen'
                and tax_year = coalesce(:year, tax_year)
                and (
-                    :empresa::uuid is null
-                    or empresa_id = :empresa::uuid
+                    cast(:empresa as uuid) is null
+                    or empresa_id = cast(:empresa as uuid)
                )
              order by created_at desc
              limit :limit
