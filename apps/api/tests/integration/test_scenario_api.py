@@ -153,9 +153,12 @@ async def test_simulate_no_palancas_persists_with_zero_ahorro(
     aplicadas = {p["palanca_id"] for p in data["palancas_aplicadas"]}
     assert aplicadas == {
         "dep_instantanea",
+        "sence",
         "rebaja_14e",
         "retiros_adicionales",
         "sueldo_empresarial",
+        "credito_id",
+        "apv",
     }
 
 
@@ -229,6 +232,130 @@ async def test_simulate_p3_only_in_14d3(
 
     assert response.status_code == 422
     assert "14 E" in response.json()["detail"]
+
+
+@pytest.mark.integration
+async def test_simulate_sence_credits_idpc(
+    http_client_sim: AsyncClient, workspace_ctx: dict[str, UUID]
+) -> None:
+    """SENCE crea crédito directo contra IDPC sin alterar la RLI."""
+    app.dependency_overrides[verify_jwt] = _override_jwt(
+        _claims(workspace_ctx["user_id"], workspace_ctx["workspace_id"])
+    )
+
+    response = await http_client_sim.post(
+        "/api/scenario/simulate",
+        json={
+            "regimen": "14_d_3",
+            "tax_year": 2026,
+            "rli_base": "30000000",
+            "planilla_anual_pesos": "100000000",
+            "palancas": {"sence_monto": "500000"},
+        },
+        headers={"Authorization": "Bearer fake"},
+    )
+
+    assert response.status_code == 200, response.text
+    data = response.json()
+    # RLI no cambia: SENCE no es deducción.
+    assert Decimal(data["simulado"]["rli"]) == Decimal(
+        data["base"]["rli"]
+    )
+    # IDPC sí: el crédito reduce IDPC bruto.
+    assert Decimal(data["simulado"]["idpc"]) < Decimal(
+        data["base"]["idpc"]
+    )
+    sence = next(
+        p
+        for p in data["palancas_aplicadas"]
+        if p["palanca_id"] == "sence"
+    )
+    # 1% de planilla 100M = 1M; tope 9 UTM 70.000 = 630.000; max(1M, 630k) = 1M.
+    # Monto pedido 500k <= 1M → todo se imputa.
+    assert Decimal(sence["monto_aplicado"]) == Decimal("500000")
+
+
+@pytest.mark.integration
+async def test_simulate_credito_id_combines_credit_and_gasto(
+    http_client_sim: AsyncClient, workspace_ctx: dict[str, UUID]
+) -> None:
+    """P6: 35% crédito IDPC + 65% gasto que baja RLI."""
+    app.dependency_overrides[verify_jwt] = _override_jwt(
+        _claims(workspace_ctx["user_id"], workspace_ctx["workspace_id"])
+    )
+
+    response = await http_client_sim.post(
+        "/api/scenario/simulate",
+        json={
+            "regimen": "14_d_3",
+            "tax_year": 2026,
+            "rli_base": "30000000",
+            "palancas": {"credito_id_monto": "10000000"},
+        },
+        headers={"Authorization": "Bearer fake"},
+    )
+
+    assert response.status_code == 200, response.text
+    data = response.json()
+    # 65% de 10M = 6,5M de gasto deducible → RLI 23,5M.
+    assert Decimal(data["simulado"]["rli"]) == Decimal("23500000")
+    assert Decimal(data["ahorro_total"]) > Decimal("0")
+
+
+@pytest.mark.integration
+async def test_simulate_apv_reduces_igc_base(
+    http_client_sim: AsyncClient, workspace_ctx: dict[str, UUID]
+) -> None:
+    """P9 APV reduce la base IGC del dueño."""
+    app.dependency_overrides[verify_jwt] = _override_jwt(
+        _claims(workspace_ctx["user_id"], workspace_ctx["workspace_id"])
+    )
+
+    response = await http_client_sim.post(
+        "/api/scenario/simulate",
+        json={
+            "regimen": "14_a",
+            "tax_year": 2026,
+            "rli_base": "50000000",
+            "retiros_base": "30000000",
+            "palancas": {"apv_monto": "5000000"},
+        },
+        headers={"Authorization": "Bearer fake"},
+    )
+
+    assert response.status_code == 200, response.text
+    data = response.json()
+    # IGC simulado debe ser menor (la base se redujo en 5M).
+    assert Decimal(data["simulado"]["igc_dueno"]) <= Decimal(
+        data["base"]["igc_dueno"]
+    )
+
+
+@pytest.mark.integration
+async def test_simulate_apv_warns_when_above_tope(
+    http_client_sim: AsyncClient, workspace_ctx: dict[str, UUID]
+) -> None:
+    """Aporte APV sobre 600 UF placeholder dispara warning."""
+    app.dependency_overrides[verify_jwt] = _override_jwt(
+        _claims(workspace_ctx["user_id"], workspace_ctx["workspace_id"])
+    )
+
+    response = await http_client_sim.post(
+        "/api/scenario/simulate",
+        json={
+            "regimen": "14_a",
+            "tax_year": 2026,
+            "rli_base": "100000000",
+            "retiros_base": "10000000",
+            "palancas": {"apv_monto": "100000000"},
+        },
+        headers={"Authorization": "Bearer fake"},
+    )
+
+    assert response.status_code == 200, response.text
+    data = response.json()
+    palancas_banderas = [b["palanca_id"] for b in data["banderas"]]
+    assert "apv" in palancas_banderas
 
 
 @pytest.mark.integration

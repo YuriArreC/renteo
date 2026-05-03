@@ -169,9 +169,12 @@ export type SimulatorRegimen = "14_a" | "14_d_3" | "14_d_8";
 
 export interface SimulatorPalancas {
   dep_instantanea?: string;
+  sence_monto?: string;
   rebaja_14e_pct?: string;
   retiros_adicionales?: string;
   sueldo_empresarial_mensual?: string;
+  credito_id_monto?: string;
+  apv_monto?: string;
 }
 
 export interface ScenarioRequest {
@@ -179,6 +182,7 @@ export interface ScenarioRequest {
   tax_year: number;
   rli_base: string;
   retiros_base?: string;
+  planilla_anual_pesos?: string;
   palancas: SimulatorPalancas;
   nombre?: string;
 }

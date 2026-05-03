@@ -60,7 +60,7 @@ PLACEHOLDER_DISCLAIMER = (
 # Identifica la versión del motor que produjo el escenario. En track 11
 # pasa a derivarse del rules_snapshot_hash; por ahora viaja como string
 # constante para soportar la columna NOT NULL de la tabla.
-ENGINE_VERSION = "track-11b-mvp-001"
+ENGINE_VERSION = "track-8b-mvp-001"
 
 # Cantidad máxima de escenarios que el comparador acepta lado a lado.
 _COMPARE_MAX = 4
@@ -68,12 +68,25 @@ _COMPARE_MAX = 4
 
 @dataclass(frozen=True)
 class PalancaTopes:
-    """Topes paramétricos vigentes para `tax_year` (track 11b)."""
+    """Topes paramétricos vigentes para `tax_year` (tracks 11b + 8b)."""
 
+    # P3 — Rebaja 14 E
     pct_max_14e: Decimal
     tope_14e_uf: Decimal
+    # P5 — Sueldo empresarial
     sueldo_emp_tope_mensual_uf: Decimal
+    # P6 — Crédito I+D
+    credito_id_pct_credito: Decimal
+    credito_id_pct_gasto: Decimal
+    credito_id_tope_utm: Decimal
+    # P2 — SENCE
+    sence_pct_planilla: Decimal
+    sence_tope_minimo_utm: Decimal
+    # P9 — APV
+    apv_tope_anual_uf: Decimal
+    # Conversiones
     uf_valor_clp: Decimal
+    utm_valor_clp: Decimal
 
     @property
     def tope_14e_pesos(self) -> Decimal:
@@ -83,25 +96,53 @@ class PalancaTopes:
     def sueldo_emp_tope_mensual_pesos(self) -> Decimal:
         return self.sueldo_emp_tope_mensual_uf * self.uf_valor_clp
 
+    @property
+    def credito_id_tope_pesos(self) -> Decimal:
+        return self.credito_id_tope_utm * self.utm_valor_clp
+
+    @property
+    def sence_tope_minimo_pesos(self) -> Decimal:
+        return self.sence_tope_minimo_utm * self.utm_valor_clp
+
+    @property
+    def apv_tope_anual_pesos(self) -> Decimal:
+        return self.apv_tope_anual_uf * self.uf_valor_clp
+
 
 async def _load_topes(
     session: AsyncSession, tax_year: int
 ) -> PalancaTopes:
+    keys = [
+        "rebaja_14e_porcentaje",
+        "rebaja_14e_uf",
+        "sueldo_empresarial_tope_mensual_uf",
+        "credito_id_porcentaje_credito",
+        "credito_id_porcentaje_gasto",
+        "credito_id_tope_utm",
+        "sence_porcentaje_planilla",
+        "sence_tope_minimo_utm",
+        "apv_tope_anual_uf",
+        "uf_valor_clp",
+        "utm_valor_clp",
+    ]
+    values = {
+        k: await get_beneficio(session, key=k, tax_year=tax_year)
+        for k in keys
+    }
     return PalancaTopes(
-        pct_max_14e=await get_beneficio(
-            session, key="rebaja_14e_porcentaje", tax_year=tax_year
-        ),
-        tope_14e_uf=await get_beneficio(
-            session, key="rebaja_14e_uf", tax_year=tax_year
-        ),
-        sueldo_emp_tope_mensual_uf=await get_beneficio(
-            session,
-            key="sueldo_empresarial_tope_mensual_uf",
-            tax_year=tax_year,
-        ),
-        uf_valor_clp=await get_beneficio(
-            session, key="uf_valor_clp", tax_year=tax_year
-        ),
+        pct_max_14e=values["rebaja_14e_porcentaje"],
+        tope_14e_uf=values["rebaja_14e_uf"],
+        sueldo_emp_tope_mensual_uf=values[
+            "sueldo_empresarial_tope_mensual_uf"
+        ],
+        credito_id_pct_credito=values["credito_id_porcentaje_credito"],
+        credito_id_pct_gasto=values["credito_id_porcentaje_gasto"],
+        credito_id_tope_utm=values["credito_id_tope_utm"],
+        sence_pct_planilla=values["sence_porcentaje_planilla"],
+        sence_tope_minimo_utm=values["sence_tope_minimo_utm"],
+        apv_tope_anual_uf=values["apv_tope_anual_uf"],
+        uf_valor_clp=values["uf_valor_clp"],
+        utm_valor_clp=values["utm_valor_clp"],
     )
 
 
@@ -122,6 +163,14 @@ class Palancas(BaseModel):
         default=None,
         ge=0,
         description="P1 — Monto del activo fijo a depreciar 100% en CLP.",
+    )
+    sence_monto: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "P2 — Gasto en capacitación SENCE en CLP. Genera crédito "
+            "directo contra IDPC dentro del tope max(1% planilla, 9 UTM)."
+        ),
     )
     rebaja_14e_pct: Decimal | None = Field(
         default=None,
@@ -145,6 +194,23 @@ class Palancas(BaseModel):
             "meses como gasto aceptado."
         ),
     )
+    credito_id_monto: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "P6 — Desembolso I+D certificado por CORFO en CLP. 35% se "
+            "imputa como crédito IDPC (tope 15.000 UTM); 65% se reconoce "
+            "como gasto deducible RLI."
+        ),
+    )
+    apv_monto: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "P9 — Aporte APV anual del dueño en CLP. Reduce la base "
+            "imponible del IGC dentro del tope anual."
+        ),
+    )
 
 
 class ScenarioRequest(BaseModel):
@@ -157,6 +223,14 @@ class ScenarioRequest(BaseModel):
         default=Decimal("0"),
         ge=0,
         description="Retiros del dueño ya realizados en el año.",
+    )
+    planilla_anual_pesos: Decimal = Field(
+        default=Decimal("0"),
+        ge=0,
+        description=(
+            "Planilla anual de remuneraciones imponibles en CLP. Sirve "
+            "para calcular el tope SENCE (max 1% planilla, mínimo 9 UTM)."
+        ),
     )
     palancas: Palancas = Field(default_factory=Palancas)
     nombre: str | None = Field(
@@ -305,15 +379,30 @@ def _validate_eligibility(
 # ---------------------------------------------------------------------------
 
 
+@dataclass(frozen=True)
+class PalancasResult:
+    """Resultado consolidado de aplicar las palancas a un escenario."""
+
+    rli_ajustada: Decimal
+    retiros_total: Decimal
+    creditos_idpc: Decimal
+    deduccion_igc: Decimal
+    impactos: list[PalancaImpacto]
+    banderas: list[BanderaRoja]
+
+
 def _apply_palancas(
     req: ScenarioRequest, topes: PalancaTopes
-) -> tuple[Decimal, Decimal, list[PalancaImpacto], list[BanderaRoja]]:
-    """Devuelve (rli_ajustada, retiros_total, impactos, banderas).
+) -> PalancasResult:
+    """Aplica las palancas activas y devuelve los efectos consolidados.
 
-    Orden:
-      1. Gastos directos: P1 dep_instantanea, P5 sueldo empresarial.
-      2. Rebajas RLI: P3 rebaja 14 E.
-      3. Retiros: P4 (afecta IGC, no RLI).
+    Orden (skill 8 §"Cálculo de impacto"):
+      1. Gastos directos que bajan RLI: P1 (depreciación), P5 (sueldo
+         empresarial), P6 (65% del desembolso I+D).
+      2. Rebajas RLI: P3 (rebaja 14 E).
+      3. Créditos contra IDPC: P2 (SENCE), P6 (35% del desembolso I+D).
+      4. Retiros: P4 (afecta IGC, no RLI).
+      5. Deducción base IGC: P9 (APV).
     """
     p = req.palancas
     rli = req.rli_base
@@ -375,6 +464,20 @@ def _apply_palancas(
         )
     )
 
+    # --- P6 — Crédito I+D (gasto 65% baja RLI) -------------------------
+    cid_monto = p.credito_id_monto or Decimal("0")
+    cid_gasto = Decimal("0")
+    cid_credito = Decimal("0")
+    if cid_monto > 0:
+        cid_gasto = (cid_monto * topes.credito_id_pct_gasto).quantize(
+            Decimal("0.01")
+        )
+        rli = max(Decimal("0"), rli - cid_gasto)
+        cid_credito_bruto = (
+            cid_monto * topes.credito_id_pct_credito
+        ).quantize(Decimal("0.01"))
+        cid_credito = min(cid_credito_bruto, topes.credito_id_tope_pesos)
+
     # --- P3 — Rebaja 14 E ----------------------------------------------
     pct = p.rebaja_14e_pct or Decimal("0")
     rebaja_aplicada = Decimal("0")
@@ -400,6 +503,64 @@ def _apply_palancas(
         )
     )
 
+    # --- P6 — Reportar I+D una vez la RLI quedó ajustada ---------------
+    impactos.append(
+        PalancaImpacto(
+            palanca_id="credito_id",
+            label="P6 — Crédito I+D + gasto 65%",
+            aplicada=cid_monto > 0,
+            monto_aplicado=cid_credito + cid_gasto,
+            fuente_legal="Ley 20.241; extensión Ley 21.755",
+            nota=(
+                "35% del desembolso certificado por CORFO se imputa "
+                "como crédito IDPC (tope 15.000 UTM); el 65% restante "
+                "se reconoce como gasto deducible RLI."
+            )
+            if cid_monto > 0
+            else None,
+        )
+    )
+
+    # --- P2 — SENCE: crédito directo IDPC -------------------------------
+    sence_monto = p.sence_monto or Decimal("0")
+    sence_credito = Decimal("0")
+    if sence_monto > 0:
+        tope_sence = max(
+            (req.planilla_anual_pesos * topes.sence_pct_planilla).quantize(
+                Decimal("0.01")
+            ),
+            topes.sence_tope_minimo_pesos,
+        )
+        sence_credito = min(sence_monto, tope_sence)
+        if sence_monto > tope_sence:
+            banderas.append(
+                BanderaRoja(
+                    severidad="warning",
+                    palanca_id="sence",
+                    mensaje=(
+                        "Gasto SENCE excede el tope max(1% planilla, "
+                        f"{topes.sence_tope_minimo_utm} UTM). Solo se "
+                        "imputa hasta el tope; el exceso no genera "
+                        "crédito IDPC. Verifica con OTEC acreditada."
+                    ),
+                )
+            )
+    impactos.append(
+        PalancaImpacto(
+            palanca_id="sence",
+            label="P2 — Franquicia SENCE",
+            aplicada=sence_credito > 0,
+            monto_aplicado=sence_credito,
+            fuente_legal="Ley 19.518",
+            nota=(
+                "Crédito directo contra IDPC (no baja RLI). Requiere "
+                "OTEC acreditada y asistencia efectiva del trabajador."
+            )
+            if sence_credito > 0
+            else None,
+        )
+    )
+
     # --- P4 — Retiros adicionales --------------------------------------
     retiros_adic = p.retiros_adicionales or Decimal("0")
     retiros_total = req.retiros_base + retiros_adic
@@ -419,6 +580,40 @@ def _apply_palancas(
         )
     )
 
+    # --- P9 — APV: deduce base IGC del dueño ---------------------------
+    apv_monto = p.apv_monto or Decimal("0")
+    apv_aplicado = Decimal("0")
+    if apv_monto > 0:
+        apv_aplicado = min(apv_monto, topes.apv_tope_anual_pesos)
+        if apv_monto > topes.apv_tope_anual_pesos:
+            banderas.append(
+                BanderaRoja(
+                    severidad="warning",
+                    palanca_id="apv",
+                    mensaje=(
+                        "Aporte APV excede el tope anual "
+                        f"{topes.apv_tope_anual_uf} UF (PLACEHOLDER). "
+                        "Solo se deduce hasta el tope; el exceso queda "
+                        "fuera del beneficio del art. 42 bis."
+                    ),
+                )
+            )
+    impactos.append(
+        PalancaImpacto(
+            palanca_id="apv",
+            label="P9 — APV régimen A del dueño",
+            aplicada=apv_aplicado > 0,
+            monto_aplicado=apv_aplicado,
+            fuente_legal="art. 42 bis LIR; DL 3.500",
+            nota=(
+                "Reduce la base imponible del IGC del dueño (no IDPC, "
+                "no RLI). Monto se ajusta al tope anual placeholder."
+            )
+            if apv_aplicado > 0
+            else None,
+        )
+    )
+
     # Bandera global: capacidad real -----------------------------------
     if retiros_total + sueldo_anual > req.rli_base * Decimal("1.5"):
         banderas.append(
@@ -433,7 +628,14 @@ def _apply_palancas(
             )
         )
 
-    return rli, retiros_total, impactos, banderas
+    return PalancasResult(
+        rli_ajustada=rli,
+        retiros_total=retiros_total,
+        creditos_idpc=cid_credito + sence_credito,
+        deduccion_igc=apv_aplicado,
+        impactos=impactos,
+        banderas=banderas,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -448,12 +650,23 @@ async def _carga(
     tax_year: int,
     rli: Decimal,
     retiros_total: Decimal,
+    creditos_idpc: Decimal = Decimal("0"),
+    deduccion_igc: Decimal = Decimal("0"),
 ) -> ScenarioResultado:
-    """Calcula RLI, IDPC, IGC del dueño y carga total para un estado."""
-    idpc = await compute_idpc(
+    """Calcula RLI, IDPC neto, IGC del dueño y carga total.
+
+    `creditos_idpc` (P2 SENCE + P6 35% I+D) se imputa contra IDPC con
+    piso 0. `deduccion_igc` (P9 APV) reduce la base IGC con piso 0.
+    Para 14 D N°8 (transparente) IDPC=0, así que los créditos no
+    cambian la carga: el dueño consume el beneficio en IGC sólo si la
+    palanca lo modela explícitamente (P9). Trato simétrico aquí.
+    """
+    idpc_bruto = await compute_idpc(
         session, regimen=regimen, tax_year=tax_year, rli=rli
     )
-    base_igc = rli if regimen == "14_d_8" else retiros_total
+    idpc = max(Decimal("0"), idpc_bruto - creditos_idpc)
+    base_igc_full = rli if regimen == "14_d_8" else retiros_total
+    base_igc = max(Decimal("0"), base_igc_full - deduccion_igc)
     igc = await compute_igc(session, tax_year=tax_year, base_pesos=base_igc)
     return ScenarioResultado(
         rli=rli,
@@ -482,6 +695,10 @@ def _plan_accion_for(
             "Adquirir y poner en uso el activo fijo dentro del ejercicio. "
             "Conservar factura de compra y evidencia de uso."
         ),
+        "sence": (
+            "Inscribir cursos con OTEC acreditada y obtener certificación "
+            "de asistencia antes del 31-dic. Conservar comprobantes."
+        ),
         "rebaja_14e": (
             "Reinvertir el monto en la empresa antes del cierre. No retirar "
             "el equivalente en los 12 meses siguientes."
@@ -493,6 +710,14 @@ def _plan_accion_for(
         "sueldo_empresarial": (
             "Formalizar contrato y cotizaciones del socio activo, mantener "
             "evidencia de presencia efectiva y razonabilidad del monto."
+        ),
+        "credito_id": (
+            "Coordinar certificación CORFO del proyecto I+D y mantener "
+            "trazabilidad del desembolso (35% crédito + 65% gasto)."
+        ),
+        "apv": (
+            "Realizar el aporte APV antes del cierre del ejercicio del "
+            "dueño. Conservar comprobante de la AFP/AGF."
         ),
     }
     items: list[PlanAccionItem] = []
@@ -618,10 +843,10 @@ async def simulate(
     )
 
     topes = await _load_topes(session, payload.tax_year)
-    rli_sim, retiros_sim, impactos, banderas = _apply_palancas(payload, topes)
+    result = _apply_palancas(payload, topes)
 
     # Skill 1: cada palanca aplicada debe estar en la lista blanca.
-    for impacto in impactos:
+    for impacto in result.impactos:
         if impacto.aplicada and not await is_recomendacion_whitelisted(
             session, impacto.palanca_id, payload.tax_year
         ):
@@ -634,8 +859,10 @@ async def simulate(
         session,
         regimen=payload.regimen,
         tax_year=payload.tax_year,
-        rli=rli_sim,
-        retiros_total=retiros_sim,
+        rli=result.rli_ajustada,
+        retiros_total=result.retiros_total,
+        creditos_idpc=result.creditos_idpc,
+        deduccion_igc=result.deduccion_igc,
     )
 
     ahorro = base.carga_total - simulado.carga_total
@@ -652,8 +879,8 @@ async def simulate(
         base=base,
         simulado=simulado,
         ahorro=ahorro,
-        impactos=impactos,
-        banderas=banderas,
+        impactos=result.impactos,
+        banderas=result.banderas,
     )
 
     legal = await get_legal_text(session, "disclaimer-simulacion")
@@ -665,8 +892,8 @@ async def simulate(
         base=base,
         simulado=simulado,
         ahorro_total=ahorro,
-        palancas_aplicadas=impactos,
-        banderas=banderas,
+        palancas_aplicadas=result.impactos,
+        banderas=result.banderas,
         disclaimer=legal.body,
     )
 

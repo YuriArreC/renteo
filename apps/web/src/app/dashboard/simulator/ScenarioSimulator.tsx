@@ -48,10 +48,14 @@ const schema = z.object({
   tax_year: z.coerce.number().int().min(2024).max(2030),
   rli_base: z.coerce.number().min(0),
   retiros_base: z.coerce.number().min(0),
+  planilla_anual_pesos: z.coerce.number().min(0),
   dep_instantanea: z.coerce.number().min(0),
+  sence_monto: z.coerce.number().min(0),
   rebaja_14e_pct: z.coerce.number().min(0).max(1),
   retiros_adicionales: z.coerce.number().min(0),
   sueldo_empresarial_mensual: z.coerce.number().min(0),
+  credito_id_monto: z.coerce.number().min(0),
+  apv_monto: z.coerce.number().min(0),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -59,11 +63,15 @@ type FormValues = z.infer<typeof schema>;
 function buildPalancas(v: FormValues): SimulatorPalancas {
   const p: SimulatorPalancas = {};
   if (v.dep_instantanea > 0) p.dep_instantanea = String(v.dep_instantanea);
+  if (v.sence_monto > 0) p.sence_monto = String(v.sence_monto);
   if (v.rebaja_14e_pct > 0) p.rebaja_14e_pct = String(v.rebaja_14e_pct);
   if (v.retiros_adicionales > 0)
     p.retiros_adicionales = String(v.retiros_adicionales);
   if (v.sueldo_empresarial_mensual > 0)
     p.sueldo_empresarial_mensual = String(v.sueldo_empresarial_mensual);
+  if (v.credito_id_monto > 0)
+    p.credito_id_monto = String(v.credito_id_monto);
+  if (v.apv_monto > 0) p.apv_monto = String(v.apv_monto);
   return p;
 }
 
@@ -81,10 +89,14 @@ export function ScenarioSimulator() {
       tax_year: 2026,
       rli_base: 30_000_000,
       retiros_base: 0,
+      planilla_anual_pesos: 0,
       dep_instantanea: 0,
+      sence_monto: 0,
       rebaja_14e_pct: 0,
       retiros_adicionales: 0,
       sueldo_empresarial_mensual: 0,
+      credito_id_monto: 0,
+      apv_monto: 0,
     },
   });
 
@@ -117,6 +129,7 @@ export function ScenarioSimulator() {
                   tax_year: v.tax_year,
                   rli_base: String(v.rli_base),
                   retiros_base: String(v.retiros_base),
+                  planilla_anual_pesos: String(v.planilla_anual_pesos),
                   palancas: buildPalancas(v),
                 }),
               )}
@@ -188,6 +201,22 @@ export function ScenarioSimulator() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="planilla_anual_pesos"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{tForm("planilla")}</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={0} {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        {tForm("planillaHint")}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <div className="space-y-4 rounded-md border border-border p-4">
@@ -205,6 +234,20 @@ export function ScenarioSimulator() {
                           <Input type="number" min={0} {...field} />
                         </FormControl>
                         <FormDescription>{tForm("p1Hint")}</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="sence_monto"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{tForm("p2Label")}</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} {...field} />
+                        </FormControl>
+                        <FormDescription>{tForm("p2Hint")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -253,6 +296,34 @@ export function ScenarioSimulator() {
                           <Input type="number" min={0} {...field} />
                         </FormControl>
                         <FormDescription>{tForm("p5Hint")}</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="credito_id_monto"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{tForm("p6Label")}</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} {...field} />
+                        </FormControl>
+                        <FormDescription>{tForm("p6Hint")}</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="apv_monto"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{tForm("p9Label")}</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} {...field} />
+                        </FormControl>
+                        <FormDescription>{tForm("p9Hint")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
