@@ -24,6 +24,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.tenancy import Tenancy, current_tenancy
@@ -48,11 +49,43 @@ PLACEHOLDER_DISCLAIMER = (
     "NO usar para decidir cambio de régimen sin revisión humana."
 )
 
-# Tasa permanente 14 D N°3 cuando se rompe la condicionalidad de Ley
-# 21.735 (art. 4° transitorio). Vive en el router (no en
-# domain/tax_engine) — no es un parámetro paramétrico anual sino una
-# regla de reversión condicional. Track 11 la lleva a un rule_set.
-_TASA_14D3_REVERTIDA: Decimal = Decimal("0.25")
+_FLAG_14D3_REVERTIDA = "idpc_14d3_revertida_rate"
+
+
+async def _get_revertida_rate(
+    session: AsyncSession, tax_year: int
+) -> Decimal:
+    """Lee el feature flag publicado para `tax_year` y devuelve la tasa.
+
+    Track 11: la tasa permanente 14 D N°3 cuando se rompe la
+    condicionalidad de Ley 21.735 art. 4° transitorio vive en
+    `tax_rules.feature_flags_by_year` con vigencia por effective_from.
+    """
+    from datetime import date
+
+    target_date = date(tax_year, 12, 31)
+    result = await session.execute(
+        text(
+            """
+            select value
+              from tax_rules.feature_flags_by_year
+             where flag_key = :k
+               and effective_from <= :t
+             order by effective_from desc
+             limit 1
+            """
+        ),
+        {"k": _FLAG_14D3_REVERTIDA, "t": target_date},
+    )
+    row = result.first()
+    if row is None:
+        # Sin flag publicado para el año: se respeta la promesa de skill 11
+        # (motor jamás opera con valores asumidos en silencio) propagando
+        # 0 — el escenario revertido queda señalizado como vacío y la UI
+        # muestra que no hay flag aplicable.
+        return Decimal("0")
+    return Decimal(str(row[0]))
+
 
 # UF placeholder mientras tax_params no exponga `uf_valor` por año.
 # Track 11 reemplaza por lookup paramétrico.
@@ -306,10 +339,18 @@ async def diagnose(
 ) -> DiagnoseResponse:
     elig_inputs = _to_eligibility_inputs(payload)
 
-    ok_14a, req_14a = evaluar_14_a(elig_inputs)
-    ok_14d3, req_14d3 = evaluar_14_d_3(elig_inputs)
-    ok_14d8, req_14d8 = evaluar_14_d_8(elig_inputs)
-    ok_rp, req_rp = evaluar_renta_presunta(elig_inputs)
+    ok_14a, req_14a = await evaluar_14_a(
+        session, elig_inputs, payload.tax_year
+    )
+    ok_14d3, req_14d3 = await evaluar_14_d_3(
+        session, elig_inputs, payload.tax_year
+    )
+    ok_14d8, req_14d8 = await evaluar_14_d_8(
+        session, elig_inputs, payload.tax_year
+    )
+    ok_rp, req_rp = await evaluar_renta_presunta(
+        session, elig_inputs, payload.tax_year
+    )
 
     elegibilidad = [
         EligibilityOut(
@@ -372,13 +413,14 @@ async def diagnose(
                 ),
             }
         )
+        revertida_rate = await _get_revertida_rate(session, payload.tax_year)
         revertido = await _projection_for(
             session,
             regimen="14_d_3",
             tax_year_start=payload.tax_year,
             rli_anual_clp=rli_clp,
             plan_retiros_pct=payload.plan_retiros_pct,
-            forced_idpc_rate=_TASA_14D3_REVERTIDA,
+            forced_idpc_rate=revertida_rate,
         )
         revertido = revertido.model_copy(
             update={

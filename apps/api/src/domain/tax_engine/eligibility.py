@@ -1,24 +1,22 @@
-"""Motor de elegibilidad por régimen tributario (skill 7).
+"""Motor de elegibilidad por régimen tributario (skill 7 + skill 11).
 
-Cada función retorna `(elegible, requisitos)`:
+Cada función `evaluar_<regimen>` consulta la regla declarativa
+publicada en `tax_rules.rule_sets` para el `tax_year` dado, evalúa
+el contexto del contribuyente con el `rule_evaluator` (sin eval, sin
+lambdas, set finito de operadores) y mapea el resultado a una lista
+de `Requisito` con texto humano + estado + fundamento legal — el
+mismo shape que consume el router del wizard.
 
-- `elegible: bool`
-- `requisitos: list[Requisito]` — texto humano + estado (`ok`) por
-  cada condición evaluada. Permite mostrar una tabla "✓ / ✗" en la UI
-  con el detalle de qué se cumplió y qué no.
+Track 7 introdujo umbrales como constantes locales (P1); track 11 los
+saca a `tax_rules` con vigencia temporal y doble firma.
 
-Los umbrales en UF (ingresos promedio, ingresos pico anual, capital
-inicial, % pasivos máximo, % participación, topes renta presunta)
-viven en constantes locales porque son **cualitativos** del régimen
-— no son tasas, tramos ni topes monetarios sujetos a cambio
-paramétrico anual. Si la ley los modifica, se publica nueva versión
-del módulo (track 11 los subirá a un rule_set declarativo). Este
-módulo evalúa estructura, no calcula impuestos.
+Si la regla no está publicada para el año pedido, `resolve_rule` lanza
+`MissingRuleError` y el endpoint la traduce a 503: el motor jamás
+calcula sin regla vigente.
 
-Fundamento legal:
+Fundamento legal por dominio:
 - LIR arts. 14 A, 14 D N°3, 14 D N°8, 34.
-- Ley 21.210 (estructura de regímenes).
-- Ley 21.713 (modificaciones recientes).
+- Ley 21.210, Ley 21.713 (estructura y modificaciones recientes).
 """
 
 from __future__ import annotations
@@ -26,16 +24,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
-# Umbrales estructurales 14 D (art. 14 D LIR; track 11 los lleva a rule_set):
-_UMBRAL_INGRESOS_PROMEDIO_UF = Decimal("75000")  # tax-magic-number-allow
-_UMBRAL_INGRESOS_MAX_ANUAL_UF = Decimal("85000")  # tax-magic-number-allow
-_UMBRAL_CAPITAL_INICIAL_UF = Decimal("85000")  # tax-magic-number-allow
-_UMBRAL_PCT_PASIVOS_MAX = Decimal("0.35")
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# Topes estructurales renta presunta (art. 34 LIR):
-_TOPE_RP_AGRICOLA_UF = Decimal("9000")
-_TOPE_RP_TRANSPORTE_UF = Decimal("5000")  # tax-magic-number-allow
-_TOPE_RP_MINERIA_UF = Decimal("17000")
+from src.domain.tax_engine.rule_evaluator import EvaluationResult, evaluate
+from src.domain.tax_engine.rule_resolver import resolve_rule
 
 
 @dataclass(frozen=True)
@@ -47,11 +39,7 @@ class Requisito:
 
 @dataclass(frozen=True)
 class EligibilityInputs:
-    """Subset normalizado del wizard usado por la elegibilidad.
-
-    Las entradas del wizard se traducen a este dataclass en el router;
-    así las funciones de elegibilidad son testeables sin FastAPI.
-    """
+    """Contexto del contribuyente que el evaluador consume."""
 
     ingresos_promedio_3a_uf: Decimal
     ingresos_max_anual_uf: Decimal
@@ -59,166 +47,160 @@ class EligibilityInputs:
     pct_ingresos_pasivos: Decimal
     todos_duenos_personas_naturales_chile: bool
     participacion_empresas_no_14d_sobre_10pct: bool
-    sector: str  # comercio, servicios, agricola, transporte, mineria, otro
+    sector: str
     ventas_anuales_uf: Decimal
 
 
-def evaluar_14_a(_inputs: EligibilityInputs) -> tuple[bool, list[Requisito]]:
-    """14 A es el régimen general supletorio: siempre elegible.
+def _to_ctx(inputs: EligibilityInputs) -> dict[str, object]:
+    """Normaliza el dataclass a dict para el evaluador.
 
-    Fundamento: art. 14 A LIR.
+    Decimal se convierte a float porque el evaluador compara con
+    literales JSON (que llegan como int/float). La conversión es
+    determinista para los rangos en juego (≤ 100.000 UF).
     """
-    return True, [
-        Requisito(
-            texto="Régimen general supletorio: aplica por defecto.",
-            ok=True,
-            fundamento="art. 14 A LIR",
+    return {
+        "ingresos_promedio_3a_uf": float(inputs.ingresos_promedio_3a_uf),
+        "ingresos_max_anual_uf": float(inputs.ingresos_max_anual_uf),
+        "capital_efectivo_inicial_uf": float(
+            inputs.capital_efectivo_inicial_uf
+        ),
+        "pct_ingresos_pasivos": float(inputs.pct_ingresos_pasivos),
+        "todos_duenos_personas_naturales_chile": (
+            inputs.todos_duenos_personas_naturales_chile
+        ),
+        "participacion_empresas_no_14d_sobre_10pct": (
+            inputs.participacion_empresas_no_14d_sobre_10pct
+        ),
+        "sector": inputs.sector,
+        "ventas_anuales_uf": float(inputs.ventas_anuales_uf),
+        # 14 A es supletorio: el contexto siempre viaja con `supletorio=True`.
+        "supletorio": True,
+    }
+
+
+def _result_to_requisitos(
+    rule: dict[str, object], result: EvaluationResult
+) -> list[Requisito]:
+    """Convierte cláusulas declarativas en `Requisito` para la UI.
+
+    Recorremos las cláusulas raíz (`all_of` / `any_of`) y emitimos un
+    `Requisito` por cada predicado simple. Si el predicado falló según
+    `result.failed_clauses`, marcamos `ok=False` y mostramos el
+    `message` declarado; si pasó, mostramos un texto positivo derivado
+    del `fundamento`.
+    """
+    failed_keys = {
+        (fc.field, fc.op) for fc in result.failed_clauses
+    }
+    requisitos: list[Requisito] = []
+    for clause in _flatten_predicates(rule):
+        field = clause.get("field")
+        op = clause.get("op")
+        ok = (field, op) not in failed_keys
+        message = str(clause.get("message") or "Requisito cumplido.")
+        fundamento = str(clause.get("fundamento") or "")
+        texto = (
+            message
+            if not ok
+            else _positive_text_for(field, op, clause.get("value"))
         )
-    ]
+        requisitos.append(
+            Requisito(texto=texto, ok=ok, fundamento=fundamento)
+        )
+    return requisitos
 
 
-def evaluar_14_d_3(
-    inputs: EligibilityInputs,
-) -> tuple[bool, list[Requisito]]:
-    """Pro PyME General: cinco condiciones cumulativas (art. 14 D N°3 LIR).
+def _flatten_predicates(clause: object) -> list[dict[str, object]]:
+    """Devuelve la lista de predicados simples bajo una cláusula raíz.
 
-    No incluye chequeo de 'sin observaciones SII' ni de fusión / división
-    activa — eso se modela como bandera en el router para no mezclar
-    elegibilidad estructural con estado operativo de la empresa.
+    Un `all_of` se aplana en sus hijos directos; un `any_of` también
+    (cada rama es un predicado o un `all_of` interno cuyas cláusulas
+    se aplanan recursivamente). El `not` no se utiliza por ahora en
+    `regime_eligibility`, pero se respeta si aparece.
     """
-    fund = "art. 14 D N°3 LIR; Ley 21.210"
-
-    requisitos = [
-        Requisito(
-            texto=(
-                "Promedio de ingresos del giro últimos 3 años "
-                f"≤ {_UMBRAL_INGRESOS_PROMEDIO_UF:.0f} UF"
-            ),
-            ok=inputs.ingresos_promedio_3a_uf
-            <= _UMBRAL_INGRESOS_PROMEDIO_UF,
-            fundamento=fund,
-        ),
-        Requisito(
-            texto=(
-                "Ningún año individual supera "
-                f"{_UMBRAL_INGRESOS_MAX_ANUAL_UF:.0f} UF "
-                "en los últimos 3 años"
-            ),
-            ok=inputs.ingresos_max_anual_uf
-            <= _UMBRAL_INGRESOS_MAX_ANUAL_UF,
-            fundamento=fund,
-        ),
-        Requisito(
-            texto=(
-                "Capital efectivo inicial ≤ "
-                f"{_UMBRAL_CAPITAL_INICIAL_UF:.0f} UF "
-                "(empresas en inicio de actividades)"
-            ),
-            ok=inputs.capital_efectivo_inicial_uf
-            <= _UMBRAL_CAPITAL_INICIAL_UF,
-            fundamento=fund,
-        ),
-        Requisito(
-            texto=(
-                "Ingresos pasivos no superan "
-                f"{_UMBRAL_PCT_PASIVOS_MAX * 100:.0f}% del total"
-            ),
-            ok=inputs.pct_ingresos_pasivos <= _UMBRAL_PCT_PASIVOS_MAX,
-            fundamento=fund,
-        ),
-        Requisito(
-            texto=(
-                "No participa por más del 10% en empresas no acogidas "
-                "a 14 D"
-            ),
-            ok=not inputs.participacion_empresas_no_14d_sobre_10pct,
-            fundamento=fund,
-        ),
-    ]
-    return all(r.ok for r in requisitos), requisitos
+    if not isinstance(clause, dict):
+        return []
+    if "all_of" in clause:
+        items: list[dict[str, object]] = []
+        for sub in clause["all_of"]:
+            items.extend(_flatten_predicates(sub))
+        return items
+    if "any_of" in clause:
+        items = []
+        for sub in clause["any_of"]:
+            items.extend(_flatten_predicates(sub))
+        return items
+    if "not" in clause:
+        return _flatten_predicates(clause["not"])
+    if "field" in clause and "op" in clause:
+        return [clause]
+    return []
 
 
-def evaluar_14_d_8(
-    inputs: EligibilityInputs,
+_OP_HUMAN: dict[str, str] = {
+    "lte": "≤",
+    "lt": "<",
+    "gte": "≥",
+    "gt": ">",
+    "eq": "=",
+    "neq": "≠",
+}
+
+
+def _positive_text_for(
+    field: object, op: object, value: object
+) -> str:
+    """Texto cuando el requisito se cumple — derivado del predicado."""
+    if not isinstance(field, str) or not isinstance(op, str):
+        return "Requisito cumplido."
+    symbol = _OP_HUMAN.get(op, op)
+    return f"{field} {symbol} {value} ✓"
+
+
+async def _evaluate_rule(
+    session: AsyncSession,
+    *,
+    key: str,
+    tax_year: int,
+    ctx: dict[str, object],
 ) -> tuple[bool, list[Requisito]]:
-    """Pro PyME Transparente: requisitos de 14 D N°3 + dueños chilenos.
+    rule_set = await resolve_rule(
+        session, "regime_eligibility", key, tax_year
+    )
+    result = evaluate(rule_set.rules, ctx)
+    return result.passed, _result_to_requisitos(rule_set.rules, result)
 
-    Fundamento: art. 14 D N°8 LIR.
-    """
-    base_ok, base_reqs = evaluar_14_d_3(inputs)
 
-    extra = Requisito(
-        texto=(
-            "Todos los dueños son personas naturales con domicilio o "
-            "residencia en Chile (o sin domicilio en Chile, sujetos a "
-            "Adicional)"
-        ),
-        ok=inputs.todos_duenos_personas_naturales_chile,
-        fundamento="art. 14 D N°8 LIR",
+async def evaluar_14_a(
+    session: AsyncSession, inputs: EligibilityInputs, tax_year: int
+) -> tuple[bool, list[Requisito]]:
+    return await _evaluate_rule(
+        session, key="14_a", tax_year=tax_year, ctx=_to_ctx(inputs)
     )
 
-    requisitos = [*base_reqs, extra]
-    return base_ok and extra.ok, requisitos
 
-
-def evaluar_renta_presunta(
-    inputs: EligibilityInputs,
+async def evaluar_14_d_3(
+    session: AsyncSession, inputs: EligibilityInputs, tax_year: int
 ) -> tuple[bool, list[Requisito]]:
-    """Renta presunta (art. 34 LIR) — orientativo, sin proyección.
+    return await _evaluate_rule(
+        session, key="14_d_3", tax_year=tax_year, ctx=_to_ctx(inputs)
+    )
 
-    Solo se sugiere si la empresa opera en sector elegible y respeta
-    el tope de ventas anuales correspondiente. La elección final
-    requiere validación de contador (capital propio inicial,
-    participación en otras sociedades, etc.).
-    """
-    sector = inputs.sector.lower()
-    ventas = inputs.ventas_anuales_uf
-    fund = "art. 34 LIR"
 
-    if sector == "agricola":
-        ok = ventas <= _TOPE_RP_AGRICOLA_UF
-        return ok, [
-            Requisito(
-                texto=(
-                    "Sector agrícola: ventas anuales ≤ "
-                    f"{_TOPE_RP_AGRICOLA_UF:.0f} UF"
-                ),
-                ok=ok,
-                fundamento=fund,
-            )
-        ]
-    if sector == "transporte":
-        ok = ventas <= _TOPE_RP_TRANSPORTE_UF
-        return ok, [
-            Requisito(
-                texto=(
-                    "Transporte terrestre de carga: ventas anuales ≤ "
-                    f"{_TOPE_RP_TRANSPORTE_UF:.0f} UF"
-                ),
-                ok=ok,
-                fundamento=fund,
-            )
-        ]
-    if sector == "mineria":
-        ok = ventas <= _TOPE_RP_MINERIA_UF
-        return ok, [
-            Requisito(
-                texto=(
-                    "Minería: ventas anuales ≤ "
-                    f"{_TOPE_RP_MINERIA_UF:.0f} UF"
-                ),
-                ok=ok,
-                fundamento=fund,
-            )
-        ]
+async def evaluar_14_d_8(
+    session: AsyncSession, inputs: EligibilityInputs, tax_year: int
+) -> tuple[bool, list[Requisito]]:
+    return await _evaluate_rule(
+        session, key="14_d_8", tax_year=tax_year, ctx=_to_ctx(inputs)
+    )
 
-    return False, [
-        Requisito(
-            texto=(
-                "Renta presunta solo aplica a sectores agrícola, "
-                "transporte terrestre de carga o minería."
-            ),
-            ok=False,
-            fundamento=fund,
-        )
-    ]
+
+async def evaluar_renta_presunta(
+    session: AsyncSession, inputs: EligibilityInputs, tax_year: int
+) -> tuple[bool, list[Requisito]]:
+    return await _evaluate_rule(
+        session,
+        key="renta_presunta",
+        tax_year=tax_year,
+        ctx=_to_ctx(inputs),
+    )

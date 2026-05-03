@@ -33,6 +33,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.tenancy import current_user
@@ -51,11 +52,31 @@ PLACEHOLDER_DISCLAIMER = (
     "tributarias reales."
 )
 
-# Tasa permanente 14 D N°3 fuera del periodo transitorio (Ley 21.755 +
-# Ley 21.735 art. 4° transitorio). Vive aquí (no en domain/tax_engine)
-# para no romper test_no_hardcoded del motor; el comparador ofrece esta
-# proyección como referencia educativa.
-_TASA_14D3_REVERTIDA: Decimal = Decimal("0.25")
+_FLAG_14D3_REVERTIDA = "idpc_14d3_revertida_rate"
+
+
+async def _get_revertida_rate(
+    session: AsyncSession, tax_year: int
+) -> Decimal:
+    """Lee la tasa revertida del feature flag publicado (skill 11)."""
+    from datetime import date
+
+    target_date = date(tax_year, 12, 31)
+    result = await session.execute(
+        text(
+            """
+            select value
+              from tax_rules.feature_flags_by_year
+             where flag_key = :k
+               and effective_from <= :t
+             order by effective_from desc
+             limit 1
+            """
+        ),
+        {"k": _FLAG_14D3_REVERTIDA, "t": target_date},
+    )
+    row = result.first()
+    return Decimal(str(row[0])) if row else Decimal("0")
 
 
 # ---------------------------------------------------------------------------
@@ -132,8 +153,9 @@ async def comparador_regimen(
     )
     carga_14d3_base = idpc_14d3_base + igc_sobre_retiros
 
-    # 14 D N°3 — revertido (forzado a 25%)
-    idpc_14d3_rev = (_TASA_14D3_REVERTIDA * rli).quantize(Decimal("0.01"))
+    # 14 D N°3 — revertido (tasa del feature flag, skill 11)
+    revertida_rate = await _get_revertida_rate(session, year)
+    idpc_14d3_rev = (revertida_rate * rli).quantize(Decimal("0.01"))
     carga_14d3_rev = idpc_14d3_rev + igc_sobre_retiros
 
     # 14 D N°8 — transparente
