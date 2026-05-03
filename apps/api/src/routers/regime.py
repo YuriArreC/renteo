@@ -38,6 +38,7 @@ from src.domain.tax_engine.guardrails import is_recomendacion_whitelisted
 from src.domain.tax_engine.idpc import compute_idpc
 from src.domain.tax_engine.igc import compute_igc
 from src.domain.tax_engine.snapshot import build_snapshots
+from src.lib.audit import log_audit
 from src.lib.errors import RedFlagBlocked
 from src.lib.legal_texts import get_legal_text
 
@@ -612,6 +613,23 @@ async def diagnose(
         },
     )
     rec_id = UUID(str(result.scalar_one()))
+
+    await log_audit(
+        session,
+        workspace_id=tenancy.workspace_id,
+        user_id=tenancy.user_id,
+        action="diagnose",
+        resource_type="recomendacion",
+        resource_id=rec_id,
+        empresa_id=payload.empresa_id,
+        metadata={
+            "tipo": "cambio_regimen",
+            "regimen_actual": actual,
+            "regimen_recomendado": recomendado_proj.regimen,
+            "ahorro_3a_clp": str(ahorro_clp),
+            "tax_year": payload.tax_year,
+        },
+    )
 
     return DiagnoseResponse(
         id=rec_id,

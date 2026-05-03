@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.tenancy import Tenancy, current_tenancy
 from src.db import get_db_session
+from src.lib.audit import log_audit, mask_rut
 from src.lib.rut import InvalidRutError, validate_rut
 
 router = APIRouter(prefix="/api/empresas", tags=["empresas"])
@@ -147,7 +148,21 @@ async def create_empresa(
         raise
 
     row = result.mappings().one()
-    return _row_to_empresa(dict(row))
+    empresa = _row_to_empresa(dict(row))
+    await log_audit(
+        session,
+        workspace_id=tenancy.workspace_id,
+        user_id=tenancy.user_id,
+        action="create",
+        resource_type="empresa",
+        resource_id=empresa.id,
+        empresa_id=empresa.id,
+        metadata={
+            "rut_masked": mask_rut(payload.rut),
+            "regimen_actual": payload.regimen_actual,
+        },
+    )
+    return empresa
 
 
 @router.get("", response_model=EmpresasListResponse)

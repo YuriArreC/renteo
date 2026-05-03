@@ -36,6 +36,7 @@ from src.domain.tax_engine.guardrails import is_recomendacion_whitelisted
 from src.domain.tax_engine.idpc import compute_idpc
 from src.domain.tax_engine.igc import compute_igc
 from src.domain.tax_engine.snapshot import build_snapshots
+from src.lib.audit import log_audit
 from src.lib.errors import RedFlagBlocked
 from src.lib.legal_texts import get_legal_text
 
@@ -934,6 +935,23 @@ async def simulate(
     )
 
     legal = await get_legal_text(session, "disclaimer-simulacion")
+    await log_audit(
+        session,
+        workspace_id=tenancy.workspace_id,
+        user_id=tenancy.user_id,
+        action="simulate",
+        resource_type="escenario",
+        resource_id=scenario_id,
+        empresa_id=payload.empresa_id,
+        metadata={
+            "regimen": payload.regimen,
+            "tax_year": payload.tax_year,
+            "palancas_aplicadas": [
+                i.palanca_id for i in result.impactos if i.aplicada
+            ],
+            "ahorro_clp": str(ahorro),
+        },
+    )
     return ScenarioResponse(
         id=scenario_id,
         nombre=nombre,
@@ -1031,7 +1049,7 @@ async def list_scenarios(
 @router.post("/compare", response_model=CompareResponse)
 async def compare(
     payload: CompareRequest,
-    _tenancy: Tenancy = Depends(current_tenancy),
+    tenancy: Tenancy = Depends(current_tenancy),
     session: AsyncSession = Depends(get_db_session),
 ) -> CompareResponse:
     """Compara hasta 4 escenarios lado a lado y consolida plan de acción.
@@ -1101,6 +1119,18 @@ async def compare(
     # escenario recomendado (si hay) o del primero pasado.
     pivot = next((c for c in cards if c.es_recomendado), cards[0])
     plan = _plan_accion_for(pivot.palancas_aplicadas)
+
+    await log_audit(
+        session,
+        workspace_id=tenancy.workspace_id,
+        user_id=tenancy.user_id,
+        action="compare",
+        resource_type="escenario",
+        metadata={
+            "ids": [str(i) for i in payload.ids],
+            "recomendado_id": str(pivot.id),
+        },
+    )
 
     return CompareResponse(scenarios=cards, plan_accion=plan)
 
