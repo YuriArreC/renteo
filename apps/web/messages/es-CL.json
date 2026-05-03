@@ -53,6 +53,28 @@
       "typeAccountingFirmBody": "Veo todas las empresas asignadas, ejecuto diagnóstico batch y exporto papeles de trabajo.",
       "submit": "Continuar",
       "submitting": "Creando…"
+    },
+    "empresa": {
+      "title": "Registra tu primera empresa",
+      "subtitle": "Necesitamos el RUT y la razón social del contribuyente. Más adelante usaremos estos datos para sincronizar con el SII.",
+      "rut": "RUT del contribuyente",
+      "rutPlaceholder": "12345678-5",
+      "rutHint": "Formato cuerpo-DV. Validamos con módulo 11.",
+      "razonSocial": "Razón social",
+      "razonSocialPlaceholder": "Mi Pyme SpA",
+      "giro": "Giro principal (opcional)",
+      "giroPlaceholder": "Comercio al por menor",
+      "regimen": "Régimen actual",
+      "regimenOptions": {
+        "desconocido": "Aún no lo sé / lo sincronizaré con SII",
+        "14_a": "14 A — Régimen general",
+        "14_d_3": "14 D N°3 — Pro PyME General",
+        "14_d_8": "14 D N°8 — Pro PyME Transparente",
+        "presunta": "Renta presunta"
+      },
+      "submit": "Registrar empresa",
+      "submitting": "Registrando…",
+      "skip": "Saltar por ahora"
     }
   },
   "dashboard": {
@@ -66,7 +88,21 @@
       "playgroundCta": "Probar el motor (placeholder)",
       "comparadorCta": "Comparar régimen tributario",
       "simulatorCta": "Simular cierre con palancas",
-      "regimeCta": "Diagnóstico de régimen"
+      "regimeCta": "Diagnóstico de régimen",
+      "registerEmpresaCta": "Registrar mi primera empresa",
+      "addEmpresaCta": "Agregar empresa",
+      "empresasHeader": "Empresas registradas",
+      "empresasEmpty": "Aún no has registrado ninguna empresa.",
+      "empresaRut": "RUT",
+      "empresaRazonSocial": "Razón social",
+      "empresaRegimen": "Régimen",
+      "regimenLabel": {
+        "desconocido": "Sin sincronizar",
+        "14_a": "14 A",
+        "14_d_3": "14 D N°3",
+        "14_d_8": "14 D N°8",
+        "presunta": "Presunta"
+      }
     }
   },
   "regime": {

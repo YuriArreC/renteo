@@ -267,6 +267,39 @@ export interface CompareResponse {
   disclaimer: string;
 }
 
+// Empresas.
+
+export type RegimenActual =
+  | "14_a"
+  | "14_d_3"
+  | "14_d_8"
+  | "presunta"
+  | "desconocido";
+
+export interface CreateEmpresaRequest {
+  rut: string;
+  razon_social: string;
+  giro?: string;
+  regimen_actual?: RegimenActual;
+  fecha_inicio_actividades?: string;
+  capital_inicial_uf?: string;
+}
+
+export interface EmpresaResponse {
+  id: string;
+  rut: string;
+  razon_social: string;
+  giro: string | null;
+  regimen_actual: RegimenActual;
+  fecha_inicio_actividades: string | null;
+  capital_inicial_uf: string | null;
+  created_at: string;
+}
+
+export interface EmpresasListResponse {
+  empresas: EmpresaResponse[];
+}
+
 // Diagnóstico de régimen (skill 7).
 
 export type RegimeKey = "14_a" | "14_d_3" | "14_d_8" | "renta_presunta";
