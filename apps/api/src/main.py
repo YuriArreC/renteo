@@ -13,6 +13,7 @@ from src.routers import comparador as comparador_router
 from src.routers import empresas as empresas_router
 from src.routers import legal as legal_router
 from src.routers import me as me_router
+from src.routers import privacy as privacy_router
 from src.routers import regime as regime_router
 from src.routers import scenario as scenario_router
 from src.routers import workspaces as workspaces_router
@@ -96,3 +97,4 @@ app.include_router(regime_router.router)
 app.include_router(legal_router.router)
 app.include_router(legal_router.public_router)
 app.include_router(empresas_router.router)
+app.include_router(privacy_router.router)

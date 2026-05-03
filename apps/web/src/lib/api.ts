@@ -75,6 +75,40 @@ export interface LegalTextResponse {
   effective_from: string;
 }
 
+// ARCOP (skill 5).
+
+export type ArcopTipo =
+  | "acceso"
+  | "rectificacion"
+  | "cancelacion"
+  | "oposicion"
+  | "portabilidad";
+
+export type ArcopEstado =
+  | "recibida"
+  | "en_proceso"
+  | "cumplida"
+  | "rechazada";
+
+export interface CreateArcopRequest {
+  tipo: ArcopTipo;
+  descripcion?: string;
+}
+
+export interface ArcopResponse {
+  id: string;
+  tipo: ArcopTipo;
+  estado: ArcopEstado;
+  descripcion: string | null;
+  recibida_at: string;
+  respondida_at: string | null;
+  respuesta: string | null;
+}
+
+export interface ArcopListResponse {
+  solicitudes: ArcopResponse[];
+}
+
 // ---------------------------------------------------------------------------
 // Tipos manuales del API mientras el pipeline shared-types no esté listo
 // (fase 1+). Mantener sincronizado con apps/api/src/routers/*.

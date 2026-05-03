@@ -89,6 +89,7 @@
       "comparadorCta": "Comparar régimen tributario",
       "simulatorCta": "Simular cierre con palancas",
       "regimeCta": "Diagnóstico de régimen",
+      "privacidadCta": "Mis derechos ARCOP",
       "registerEmpresaCta": "Registrar mi primera empresa",
       "addEmpresaCta": "Agregar empresa",
       "empresasHeader": "Empresas registradas",
@@ -103,6 +104,47 @@
         "14_d_8": "14 D N°8",
         "presunta": "Presunta"
       }
+    }
+  },
+  "privacy": {
+    "title": "Mis derechos ARCOP",
+    "subtitle": "Solicita acceso, rectificación, cancelación, oposición o portabilidad de tus datos. Renteo responde en hasta 30 días corridos (Ley 21.719).",
+    "form": {
+      "header": "Nueva solicitud",
+      "tipo": "Tipo de derecho",
+      "tipoOptions": {
+        "acceso": "Acceso — quiero saber qué datos tienes míos",
+        "rectificacion": "Rectificación — corrige un dato incorrecto",
+        "cancelacion": "Cancelación — borra mis datos",
+        "oposicion": "Oposición — no quiero un tratamiento específico",
+        "portabilidad": "Portabilidad — exporta mis datos en formato reutilizable"
+      },
+      "descripcion": "Descripción (opcional)",
+      "descripcionPlaceholder": "Cuéntanos qué necesitas. Para rectificación incluye el dato y el valor solicitado.",
+      "submit": "Enviar solicitud",
+      "submitting": "Enviando…",
+      "saved": "Solicitud {tipo} registrada. Te responderemos en hasta 30 días."
+    },
+    "list": {
+      "header": "Mis solicitudes",
+      "empty": "No has enviado solicitudes ARCOP todavía.",
+      "tipo": "Tipo",
+      "estado": "Estado",
+      "recibida": "Recibida",
+      "respuesta": "Respuesta"
+    },
+    "estadoLabel": {
+      "recibida": "Recibida",
+      "en_proceso": "En proceso",
+      "cumplida": "Cumplida",
+      "rechazada": "Rechazada"
+    },
+    "tipoShort": {
+      "acceso": "Acceso",
+      "rectificacion": "Rectificación",
+      "cancelacion": "Cancelación",
+      "oposicion": "Oposición",
+      "portabilidad": "Portabilidad"
     }
   },
   "regime": {

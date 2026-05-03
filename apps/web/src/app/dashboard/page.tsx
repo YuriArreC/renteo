@@ -88,6 +88,11 @@ export default async function DashboardPage() {
             <Button asChild variant="outline">
               <Link href="/dashboard/calc">{t("empty.playgroundCta")}</Link>
             </Button>
+            <Button asChild variant="ghost">
+              <Link href="/dashboard/privacidad">
+                {t("empty.privacidadCta")}
+              </Link>
+            </Button>
           </div>
         </div>
 
