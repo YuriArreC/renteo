@@ -19,6 +19,7 @@ Auth: tenancy completa requerida (workspace activo).
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID
@@ -30,6 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.tenancy import Tenancy, current_tenancy
 from src.db import get_db_session
+from src.domain.tax_engine.beneficios import get_beneficio
 from src.domain.tax_engine.idpc import compute_idpc
 from src.domain.tax_engine.igc import compute_igc
 
@@ -44,28 +46,61 @@ PLACEHOLDER_DISCLAIMER = (
     "pendiente. NO usar para decisiones tributarias reales."
 )
 
-# Tope absoluto de la rebaja por reinversión (art. 14 E LIR). Se modela
-# en CLP usando un factor UF placeholder. Vive aquí (no en
-# domain/tax_engine) para no romper test_no_hardcoded; reemplazar por
-# lookup de tax_params.uf_valor cuando se incorpore la tabla UF.
-_TOPE_14E_UF: Decimal = Decimal("5000")
-_UF_PLACEHOLDER_CLP: Decimal = Decimal("38000")
-_TOPE_14E_PESOS_PLACEHOLDER: Decimal = _TOPE_14E_UF * _UF_PLACEHOLDER_CLP
-
-# Pct máximo de RLI rebajable por reinversión (art. 14 E LIR).
-_PCT_MAX_14E: Decimal = Decimal("0.50")
-
-# Heurística MVP para sueldo empresarial razonable: tope mensual UF.
-# TODO(contador): reemplazar por rango razonable por industria/función.
-_SUELDO_EMP_TOPE_MENSUAL_UF: Decimal = Decimal("250")
+# Track 11b: los topes paramétricos del simulador viven en
+# tax_params.beneficios_topes con vigencia anual. Las keys consultadas:
+#   * `rebaja_14e_uf` — tope absoluto rebaja 14 E.
+#   * `rebaja_14e_porcentaje` — fracción máxima de RLI.
+#   * `sueldo_empresarial_tope_mensual_uf` — heurística rango razonable P5.
+#   * `uf_valor_clp` — UF estimada para conversiones.
+# El motor no asume valores: si la fila no existe para tax_year,
+# `MissingTaxYearParams` interrumpe el cálculo.
 
 # Identifica la versión del motor que produjo el escenario. En track 11
 # pasa a derivarse del rules_snapshot_hash; por ahora viaja como string
 # constante para soportar la columna NOT NULL de la tabla.
-ENGINE_VERSION = "track-9-mvp-001"
+ENGINE_VERSION = "track-11b-mvp-001"
 
 # Cantidad máxima de escenarios que el comparador acepta lado a lado.
 _COMPARE_MAX = 4
+
+
+@dataclass(frozen=True)
+class PalancaTopes:
+    """Topes paramétricos vigentes para `tax_year` (track 11b)."""
+
+    pct_max_14e: Decimal
+    tope_14e_uf: Decimal
+    sueldo_emp_tope_mensual_uf: Decimal
+    uf_valor_clp: Decimal
+
+    @property
+    def tope_14e_pesos(self) -> Decimal:
+        return self.tope_14e_uf * self.uf_valor_clp
+
+    @property
+    def sueldo_emp_tope_mensual_pesos(self) -> Decimal:
+        return self.sueldo_emp_tope_mensual_uf * self.uf_valor_clp
+
+
+async def _load_topes(
+    session: AsyncSession, tax_year: int
+) -> PalancaTopes:
+    return PalancaTopes(
+        pct_max_14e=await get_beneficio(
+            session, key="rebaja_14e_porcentaje", tax_year=tax_year
+        ),
+        tope_14e_uf=await get_beneficio(
+            session, key="rebaja_14e_uf", tax_year=tax_year
+        ),
+        sueldo_emp_tope_mensual_uf=await get_beneficio(
+            session,
+            key="sueldo_empresarial_tope_mensual_uf",
+            tax_year=tax_year,
+        ),
+        uf_valor_clp=await get_beneficio(
+            session, key="uf_valor_clp", tax_year=tax_year
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -269,7 +304,7 @@ def _validate_eligibility(
 
 
 def _apply_palancas(
-    req: ScenarioRequest,
+    req: ScenarioRequest, topes: PalancaTopes
 ) -> tuple[Decimal, Decimal, list[PalancaImpacto], list[BanderaRoja]]:
     """Devuelve (rli_ajustada, retiros_total, impactos, banderas).
 
@@ -309,15 +344,14 @@ def _apply_palancas(
     sueldo_anual = sueldo_mensual * Decimal("12")
     if sueldo_anual > 0:
         rli = max(Decimal("0"), rli - sueldo_anual)
-        tope_mensual_pesos = _SUELDO_EMP_TOPE_MENSUAL_UF * _UF_PLACEHOLDER_CLP
-        if sueldo_mensual > tope_mensual_pesos:
+        if sueldo_mensual > topes.sueldo_emp_tope_mensual_pesos:
             banderas.append(
                 BanderaRoja(
                     severidad="warning",
                     palanca_id="sueldo_empresarial",
                     mensaje=(
                         "Sueldo mensual sobre el rango razonable PLACEHOLDER "
-                        f"({_SUELDO_EMP_TOPE_MENSUAL_UF} UF). Requiere "
+                        f"({topes.sueldo_emp_tope_mensual_uf} UF). Requiere "
                         "justificación documental por contador socio "
                         "(art. 31 N°6 inc. 3° LIR)."
                     ),
@@ -343,9 +377,9 @@ def _apply_palancas(
     pct = p.rebaja_14e_pct or Decimal("0")
     rebaja_aplicada = Decimal("0")
     if pct > 0:
-        pct_efectivo = min(pct, _PCT_MAX_14E)
+        pct_efectivo = min(pct, topes.pct_max_14e)
         bruto = rli * pct_efectivo
-        rebaja_aplicada = min(bruto, _TOPE_14E_PESOS_PLACEHOLDER)
+        rebaja_aplicada = min(bruto, topes.tope_14e_pesos)
         rli = max(Decimal("0"), rli - rebaja_aplicada)
     impactos.append(
         PalancaImpacto(
@@ -581,7 +615,8 @@ async def simulate(
         retiros_total=payload.retiros_base,
     )
 
-    rli_sim, retiros_sim, impactos, banderas = _apply_palancas(payload)
+    topes = await _load_topes(session, payload.tax_year)
+    rli_sim, retiros_sim, impactos, banderas = _apply_palancas(payload, topes)
 
     simulado = await _carga(
         session,

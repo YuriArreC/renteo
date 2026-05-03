@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.tenancy import Tenancy, current_tenancy
 from src.db import get_db_session
+from src.domain.tax_engine.beneficios import get_beneficio
 from src.domain.tax_engine.eligibility import (
     EligibilityInputs,
     Requisito,
@@ -87,9 +88,8 @@ async def _get_revertida_rate(
     return Decimal(str(row[0]))
 
 
-# UF placeholder mientras tax_params no exponga `uf_valor` por año.
-# Track 11 reemplaza por lookup paramétrico.
-_UF_PLACEHOLDER_CLP: Decimal = Decimal("38000")
+# UF estimada se lee de tax_params.beneficios_topes (track 11b).
+_UF_KEY = "uf_valor_clp"
 
 # Horizonte de la proyección (3 años — fijo en skill 7).
 _HORIZONTE_AÑOS: int = 3
@@ -379,7 +379,10 @@ async def diagnose(
         ),
     ]
 
-    rli_clp = (payload.rli_proyectada_anual_uf * _UF_PLACEHOLDER_CLP).quantize(
+    uf_clp = await get_beneficio(
+        session, key=_UF_KEY, tax_year=payload.tax_year
+    )
+    rli_clp = (payload.rli_proyectada_anual_uf * uf_clp).quantize(
         Decimal("0.01")
     )
 
@@ -443,7 +446,7 @@ async def diagnose(
         (p for p in proyecciones if p.regimen == actual), proyecciones[0]
     )
     ahorro_clp = actual_proj.total_3a - recomendado_proj.total_3a
-    ahorro_uf = (ahorro_clp / _UF_PLACEHOLDER_CLP).quantize(Decimal("0.01"))
+    ahorro_uf = (ahorro_clp / uf_clp).quantize(Decimal("0.01"))
 
     veredicto = DiagnoseVeredicto(
         regimen_actual=actual,
