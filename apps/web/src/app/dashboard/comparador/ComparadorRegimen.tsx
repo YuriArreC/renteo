@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { DecisionRibbon } from "@/components/DecisionRibbon";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -249,6 +250,10 @@ export function ComparadorRegimen() {
           <p className="rounded border border-yellow-300 bg-yellow-50 p-3 text-xs text-yellow-900">
             {mutation.data.disclaimer}
           </p>
+
+          <DecisionRibbon
+            context={`Comparador multi-régimen AT ${mutation.data.tax_year}, RLI ${mutation.data.rli}`}
+          />
         </>
       )}
     </div>

@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { ScenarioHistorial } from "@/app/dashboard/simulator/ScenarioHistorial";
+import { DecisionRibbon } from "@/components/DecisionRibbon";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -577,6 +578,10 @@ function ResultPanels({ data, tResult, tSeverity }: ResultPanelsProps) {
       <p className="rounded border border-yellow-300 bg-yellow-50 p-3 text-xs text-yellow-900">
         {data.disclaimer}
       </p>
+
+      <DecisionRibbon
+        context={`Escenario simulado #${data.id} (${data.regimen}, AT ${data.tax_year})`}
+      />
     </>
   );
 }

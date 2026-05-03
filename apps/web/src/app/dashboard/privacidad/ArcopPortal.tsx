@@ -7,6 +7,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -60,17 +62,41 @@ function formatDate(iso: string): string {
 }
 
 export function ArcopPortal() {
+  return (
+    <Suspense fallback={null}>
+      <ArcopPortalInner />
+    </Suspense>
+  );
+}
+
+function ArcopPortalInner() {
   const tForm = useTranslations("privacy.form");
   const tList = useTranslations("privacy.list");
   const tEstado = useTranslations("privacy.estadoLabel");
   const tTipo = useTranslations("privacy.tipoShort");
 
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const presetTipo = searchParams.get("tipo");
+  const presetDescripcion = searchParams.get("descripcion");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { tipo: "acceso", descripcion: "" },
   });
+
+  useEffect(() => {
+    if (
+      presetTipo &&
+      (TIPOS as readonly string[]).includes(presetTipo)
+    ) {
+      form.setValue("tipo", presetTipo as FormValues["tipo"]);
+    }
+    if (presetDescripcion) {
+      form.setValue("descripcion", presetDescripcion);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetTipo, presetDescripcion]);
 
   const listQuery = useQuery<ArcopListResponse>({
     queryKey: ["arcop-list"],

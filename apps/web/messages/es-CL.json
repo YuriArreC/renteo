@@ -5,6 +5,9 @@
     "loading": "Cargando…",
     "error": "Algo salió mal. Inténtalo de nuevo."
   },
+  "decisionRibbon": {
+    "cta": "Solicitar revisión humana"
+  },
   "auth": {
     "signup": {
       "title": "Crear cuenta",

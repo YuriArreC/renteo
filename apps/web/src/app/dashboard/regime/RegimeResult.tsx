@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import { DecisionRibbon } from "@/components/DecisionRibbon";
 import {
   Card,
   CardContent,
@@ -195,6 +196,10 @@ export function RegimeResult({ data }: { data: DiagnoseResponse }) {
       <p className="rounded border border-yellow-300 bg-yellow-50 p-3 text-xs text-yellow-900">
         {data.disclaimer}
       </p>
+
+      <DecisionRibbon
+        context={`Diagnóstico régimen #${data.id} (${data.veredicto.regimen_actual} → ${data.veredicto.regimen_recomendado}, AT ${data.tax_year})`}
+      />
     </div>
   );
 }
