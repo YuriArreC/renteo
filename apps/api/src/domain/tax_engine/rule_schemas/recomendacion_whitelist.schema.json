@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://renteo.cl/schemas/tax_rules/recomendacion_whitelist.json",
+  "title": "Recomendacion whitelist",
+  "description": "Lista blanca declarativa de recomendaciones tributarias lícitas (skill 1, items 1-12). El motor del simulador y del wizard de régimen consulta esta regla antes de aceptar una palanca o emitir un veredicto de cambio de régimen.",
+  "type": "object",
+  "required": ["items"],
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "fundamento"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "fundamento": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
