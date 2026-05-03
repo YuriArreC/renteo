@@ -35,6 +35,7 @@ from src.domain.tax_engine.beneficios import get_beneficio
 from src.domain.tax_engine.guardrails import is_recomendacion_whitelisted
 from src.domain.tax_engine.idpc import compute_idpc
 from src.domain.tax_engine.igc import compute_igc
+from src.domain.tax_engine.snapshot import build_snapshots
 from src.lib.errors import RedFlagBlocked
 from src.lib.legal_texts import get_legal_text
 
@@ -781,12 +782,9 @@ async def _persist(
         "banderas": [json.loads(b.model_dump_json()) for b in banderas],
     }
 
-    # rule_set_snapshot y tax_year_params_snapshot son NOT NULL desde
-    # B11 (skill 11). En track 9 MVP escribimos un placeholder mínimo
-    # que marca el cálculo como pre-fase 6; track 11 los reemplaza por
-    # dumps reales del rule_set + tax_params usados.
-    snapshot_placeholder = json.dumps(
-        {"placeholder": True, "engine_version": ENGINE_VERSION}
+    # Track 11c: snapshots reales del rule_set + tax_year_params usados.
+    rule_snap, params_snap, snap_hash = await build_snapshots(
+        session, tax_year=tax_year
     )
 
     result = await session.execute(
@@ -796,12 +794,15 @@ async def _persist(
                 (workspace_id, empresa_id, tax_year, nombre,
                  regimen, inputs, outputs,
                  engine_version, created_by,
-                 rule_set_snapshot, tax_year_params_snapshot)
+                 rule_set_snapshot, tax_year_params_snapshot,
+                 rules_snapshot_hash)
             values
                 (:ws, null, :year, :nombre,
                  :regimen, cast(:inputs as jsonb), cast(:outputs as jsonb),
                  :ver, :uid,
-                 cast(:snap as jsonb), cast(:snap as jsonb))
+                 cast(:rule_snap as jsonb),
+                 cast(:params_snap as jsonb),
+                 :hash)
             returning id
             """
         ),
@@ -814,7 +815,9 @@ async def _persist(
             "outputs": _serialize_jsonb(outputs_payload),
             "ver": ENGINE_VERSION,
             "uid": str(user_id),
-            "snap": snapshot_placeholder,
+            "rule_snap": _serialize_jsonb(rule_snap),
+            "params_snap": _serialize_jsonb(params_snap),
+            "hash": snap_hash,
         },
     )
     row = result.scalar_one()

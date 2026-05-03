@@ -37,6 +37,7 @@ from src.domain.tax_engine.eligibility import (
 from src.domain.tax_engine.guardrails import is_recomendacion_whitelisted
 from src.domain.tax_engine.idpc import compute_idpc
 from src.domain.tax_engine.igc import compute_igc
+from src.domain.tax_engine.snapshot import build_snapshots
 from src.lib.errors import RedFlagBlocked
 from src.lib.legal_texts import get_legal_text
 
@@ -519,8 +520,8 @@ async def diagnose(
         "fuente_legal": fuente,
     }
     fundamento_payload = [{"texto": f} for f in fuente]
-    snapshot_placeholder = json.dumps(
-        {"placeholder": True, "engine_version": ENGINE_VERSION}
+    rule_snap, params_snap, snap_hash = await build_snapshots(
+        session, tax_year=payload.tax_year
     )
 
     result = await session.execute(
@@ -533,6 +534,7 @@ async def diagnose(
                  disclaimer_version, engine_version,
                  inputs_snapshot, outputs,
                  rule_set_snapshot, tax_year_params_snapshot,
+                 rules_snapshot_hash,
                  created_by)
             values
                 (:ws, null, :year,
@@ -540,7 +542,9 @@ async def diagnose(
                  :ahorro,
                  :disc_v, :ver,
                  cast(:inp as jsonb), cast(:out as jsonb),
-                 cast(:snap as jsonb), cast(:snap as jsonb),
+                 cast(:rule_snap as jsonb),
+                 cast(:params_snap as jsonb),
+                 :hash,
                  :uid)
             returning id
             """
@@ -555,7 +559,9 @@ async def diagnose(
             "ver": ENGINE_VERSION,
             "inp": json.dumps(inputs_payload, default=str),
             "out": json.dumps(outputs_payload, default=str),
-            "snap": snapshot_placeholder,
+            "rule_snap": json.dumps(rule_snap, default=str),
+            "params_snap": json.dumps(params_snap, default=str),
+            "hash": snap_hash,
             "uid": str(tenancy.user_id),
         },
     )
