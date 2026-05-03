@@ -2,25 +2,24 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { ScenarioSimulator } from "@/app/dashboard/simulator/ScenarioSimulator";
 import { LogoutButton } from "@/components/LogoutButton";
-import { Button } from "@/components/ui/button";
 import { type MeResponse } from "@/lib/api";
 import { fetchApiServer } from "@/lib/api-server";
 
-export default async function DashboardPage() {
+export default async function DashboardSimulatorPage() {
   let me: MeResponse;
   try {
     me = await fetchApiServer<MeResponse>("/api/me");
   } catch {
     redirect("/login");
   }
-
   if (!me.workspace) {
     redirect("/onboarding/workspace");
   }
 
   const tCommon = await getTranslations("common");
-  const t = await getTranslations("dashboard");
+  const t = await getTranslations("simulator");
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -38,28 +37,15 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="container flex-1 py-16">
-        <h1 className="mb-3 text-3xl font-semibold tracking-tight">
-          {t("empty.title", { name: me.workspace.name })}
+      <main className="container flex-1 py-12">
+        <h1 className="mb-2 text-3xl font-semibold tracking-tight">
+          {t("title")}
         </h1>
-        <p className="mb-6 max-w-2xl text-muted-foreground">
-          {t("empty.body")}
+        <p className="mb-10 max-w-3xl text-sm text-muted-foreground">
+          {t("subtitle")}
         </p>
-        <div className="flex flex-wrap gap-3">
-          <Button asChild>
-            <Link href="/dashboard/simulator">
-              {t("empty.simulatorCta")}
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/dashboard/comparador">
-              {t("empty.comparadorCta")}
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/dashboard/calc">{t("empty.playgroundCta")}</Link>
-          </Button>
-        </div>
+
+        <ScenarioSimulator />
       </main>
     </div>
   );

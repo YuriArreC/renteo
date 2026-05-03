@@ -64,7 +64,55 @@
       "title": "Bienvenido a {name}",
       "body": "Pronto verás aquí el estado tributario de tu empresa, escenarios simulados y alertas. Por ahora estamos preparando los datos.",
       "playgroundCta": "Probar el motor (placeholder)",
-      "comparadorCta": "Comparar régimen tributario"
+      "comparadorCta": "Comparar régimen tributario",
+      "simulatorCta": "Simular cierre con palancas"
+    }
+  },
+  "simulator": {
+    "title": "Simulador de cierre",
+    "subtitle": "Activa palancas lícitas y mira el impacto en RLI, IDPC e IGC del dueño antes del 31-dic. Versión PLACEHOLDER pendiente firma del contador socio.",
+    "form": {
+      "regimen": "Régimen tributario actual",
+      "regimenOptions": {
+        "14_a": "14 A — Régimen general",
+        "14_d_3": "14 D N°3 — Pro PyME General",
+        "14_d_8": "14 D N°8 — Pro PyME Transparente"
+      },
+      "year": "Año tributario",
+      "rliBase": "RLI proyectada del año (CLP)",
+      "retirosBase": "Retiros del dueño ya realizados (CLP)",
+      "palancasHeader": "Palancas a activar",
+      "p1Label": "P1 — Depreciación instantánea (CLP)",
+      "p1Hint": "Monto del activo fijo a depreciar 100% (régimen 14 D).",
+      "p3Label": "P3 — Rebaja por reinversión (% de RLI)",
+      "p3Hint": "0 a 0,5. Tope absoluto 5.000 UF (PLACEHOLDER). Solo 14 D N°3.",
+      "p4Label": "P4 — Retiros adicionales antes del 31-dic (CLP)",
+      "p4Hint": "Aumenta IGC del dueño en el año.",
+      "p5Label": "P5 — Sueldo empresarial mensual al socio (CLP)",
+      "p5Hint": "Anualizado por 12 meses como gasto aceptado.",
+      "submit": "Simular escenario",
+      "submitting": "Simulando…"
+    },
+    "result": {
+      "header": "Resultado de la simulación",
+      "metric": "Métrica",
+      "base": "Estado base",
+      "simulado": "Con palancas",
+      "delta": "Δ",
+      "rli": "RLI",
+      "idpc": "IDPC empresa",
+      "retiros": "Retiros del año",
+      "igc": "IGC dueño",
+      "carga": "Carga total",
+      "ahorro": "Ahorro total",
+      "palancasHeader": "Palancas aplicadas",
+      "banderasHeader": "Banderas",
+      "noBanderas": "Sin banderas rojas activas en este escenario.",
+      "noPalancas": "Ninguna palanca activada — el escenario simulado iguala al base."
+    },
+    "severity": {
+      "warning": "Advertencia",
+      "block": "Bloqueo"
     }
   },
   "comparador": {

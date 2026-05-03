@@ -162,3 +162,56 @@ export interface ComparadorResponse {
   scenarios: RegimenScenario[];
   disclaimer: string;
 }
+
+// Simulador de cierre.
+
+export type SimulatorRegimen = "14_a" | "14_d_3" | "14_d_8";
+
+export interface SimulatorPalancas {
+  dep_instantanea?: string;
+  rebaja_14e_pct?: string;
+  retiros_adicionales?: string;
+  sueldo_empresarial_mensual?: string;
+}
+
+export interface ScenarioRequest {
+  regimen: SimulatorRegimen;
+  tax_year: number;
+  rli_base: string;
+  retiros_base?: string;
+  palancas: SimulatorPalancas;
+}
+
+export interface ScenarioResultado {
+  rli: string;
+  idpc: string;
+  retiros_total: string;
+  igc_dueno: string;
+  carga_total: string;
+}
+
+export interface PalancaImpacto {
+  palanca_id: string;
+  label: string;
+  aplicada: boolean;
+  monto_aplicado: string;
+  fuente_legal: string;
+  nota: string | null;
+}
+
+export interface BanderaRoja {
+  severidad: "warning" | "block";
+  palanca_id: string;
+  mensaje: string;
+}
+
+export interface ScenarioResponse {
+  tax_year: number;
+  regimen: SimulatorRegimen;
+  base: ScenarioResultado;
+  simulado: ScenarioResultado;
+  ahorro_total: string;
+  palancas_aplicadas: PalancaImpacto[];
+  banderas: BanderaRoja[];
+  disclaimer: string;
+}
