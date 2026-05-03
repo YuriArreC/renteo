@@ -367,6 +367,8 @@
   },
   "legal": {
     "placeholderBanner": "Versión preliminar (v1) pendiente de revisión y firma por estudio jurídico antes del go-live público.",
+    "versionInfo": "Versión {version} vigente desde {date}",
+    "loadFailed": "No se pudo cargar el texto. Inténtalo más tarde.",
     "lastUpdated": "Última actualización: {date}",
     "privacidad": {
       "title": "Política de privacidad",

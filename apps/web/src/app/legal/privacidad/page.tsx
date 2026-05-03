@@ -3,34 +3,34 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { Footer_Shared } from "@/components/Footer_Shared";
-
-const SECTIONS = [
-  "responsable",
-  "bases",
-  "datos",
-  "finalidades",
-  "destinatarios",
-  "transferencias",
-  "retencion",
-  "derechos",
-  "automatizadas",
-  "brechas",
-  "contacto",
-] as const;
-
-const LAST_UPDATED = "2026-04-28";
+import { fetchApiPublic, type LegalTextResponse } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Política de privacidad — Renteo",
   description:
-    "Política de privacidad versión preliminar (v1) — pendiente de revisión por estudio jurídico.",
+    "Política de privacidad versión preliminar — pendiente de revisión por estudio jurídico.",
   robots: { index: false, follow: false },
 };
 
+// El cuerpo se sirve desde privacy.legal_texts vía /api/public/legal/...
+// No hay nada que prerender en build: forzar SSR para evitar fetch a un
+// backend que aún no existe durante `next build`.
+export const dynamic = "force-dynamic";
+
 export default async function PrivacidadPage() {
-  const t = await getTranslations("legal.privacidad");
   const tLegal = await getTranslations("legal");
+  const tPrivacidad = await getTranslations("legal.privacidad");
   const tCommon = await getTranslations("common");
+
+  let legal: LegalTextResponse | null = null;
+  let loadError = false;
+  try {
+    legal = await fetchApiPublic<LegalTextResponse>(
+      "/api/public/legal/politica-privacidad",
+    );
+  } catch {
+    loadError = true;
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -48,24 +48,25 @@ export default async function PrivacidadPage() {
             {tLegal("placeholderBanner")}
           </div>
           <h1 className="mb-2 text-3xl font-semibold tracking-tight">
-            {t("title")}
+            {tPrivacidad("title")}
           </h1>
-          <p className="mb-8 text-sm text-muted-foreground">
-            {tLegal("lastUpdated", { date: LAST_UPDATED })}
-          </p>
-          <p className="mb-10 text-base leading-relaxed">{t("intro")}</p>
-          <div className="space-y-8">
-            {SECTIONS.map((key) => (
-              <section key={key}>
-                <h2 className="mb-2 text-xl font-medium">
-                  {t(`sections.${key}.title`)}
-                </h2>
-                <p className="text-base leading-relaxed text-muted-foreground">
-                  {t(`sections.${key}.body`)}
-                </p>
-              </section>
-            ))}
-          </div>
+          {legal && (
+            <p className="mb-8 text-xs text-muted-foreground">
+              {tLegal("versionInfo", {
+                version: legal.version,
+                date: legal.effective_from,
+              })}
+            </p>
+          )}
+          {loadError ? (
+            <p className="rounded border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+              {tLegal("loadFailed")}
+            </p>
+          ) : (
+            <div className="whitespace-pre-line text-base leading-relaxed">
+              {legal?.body}
+            </div>
+          )}
         </article>
       </main>
 

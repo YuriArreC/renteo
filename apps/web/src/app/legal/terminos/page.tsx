@@ -3,31 +3,31 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { Footer_Shared } from "@/components/Footer_Shared";
-
-const SECTIONS = [
-  "responsable",
-  "alcance",
-  "responsabilidad",
-  "cumplimiento",
-  "datos",
-  "propiedad",
-  "terminacion",
-  "conflictos",
-] as const;
-
-const LAST_UPDATED = "2026-04-28";
+import { fetchApiPublic, type LegalTextResponse } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Términos de servicio — Renteo",
   description:
-    "Términos de servicio versión preliminar (v1) — pendiente de revisión por estudio jurídico.",
+    "Términos de servicio versión preliminar — pendiente de revisión por estudio jurídico.",
   robots: { index: false, follow: false },
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function TerminosPage() {
-  const t = await getTranslations("legal.terminos");
   const tLegal = await getTranslations("legal");
+  const tTerminos = await getTranslations("legal.terminos");
   const tCommon = await getTranslations("common");
+
+  let legal: LegalTextResponse | null = null;
+  let loadError = false;
+  try {
+    legal = await fetchApiPublic<LegalTextResponse>(
+      "/api/public/legal/terminos-servicio",
+    );
+  } catch {
+    loadError = true;
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -45,24 +45,25 @@ export default async function TerminosPage() {
             {tLegal("placeholderBanner")}
           </div>
           <h1 className="mb-2 text-3xl font-semibold tracking-tight">
-            {t("title")}
+            {tTerminos("title")}
           </h1>
-          <p className="mb-8 text-sm text-muted-foreground">
-            {tLegal("lastUpdated", { date: LAST_UPDATED })}
-          </p>
-          <p className="mb-10 text-base leading-relaxed">{t("intro")}</p>
-          <div className="space-y-8">
-            {SECTIONS.map((key) => (
-              <section key={key}>
-                <h2 className="mb-2 text-xl font-medium">
-                  {t(`sections.${key}.title`)}
-                </h2>
-                <p className="text-base leading-relaxed text-muted-foreground">
-                  {t(`sections.${key}.body`)}
-                </p>
-              </section>
-            ))}
-          </div>
+          {legal && (
+            <p className="mb-8 text-xs text-muted-foreground">
+              {tLegal("versionInfo", {
+                version: legal.version,
+                date: legal.effective_from,
+              })}
+            </p>
+          )}
+          {loadError ? (
+            <p className="rounded border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+              {tLegal("loadFailed")}
+            </p>
+          ) : (
+            <div className="whitespace-pre-line text-base leading-relaxed">
+              {legal?.body}
+            </div>
+          )}
         </article>
       </main>
 

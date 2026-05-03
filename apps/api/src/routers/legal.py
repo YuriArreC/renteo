@@ -1,8 +1,14 @@
-"""GET /api/legal/{key} — texto legal versionado vigente (skill 2).
+"""GET /api/legal/{key} y /api/public/legal/{key} — texto legal versionado.
 
-Permite que el front renderice los textos sin duplicarlos como
-constantes. La respuesta incluye `version` para auditoría inversa
-("¿qué versión vio el usuario en este momento?").
+- `/api/legal/{key}` requiere auth (JWT). Sirve para mostrar disclaimers
+  embebidos en flujos autenticados (simulador, wizard, etc.).
+- `/api/public/legal/{key}` es público y sin auth. Lo consumen las pages
+  públicas /legal/privacidad y /legal/terminos antes del login. Usa
+  `service_session` (sin RLS) porque los textos son por definición
+  públicos.
+
+La respuesta incluye `version` para auditoría inversa ("¿qué versión vio
+el usuario en este momento?").
 """
 
 from __future__ import annotations
@@ -14,10 +20,11 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.tenancy import current_user
-from src.db import get_db_session
+from src.db import get_db_session, service_session
 from src.lib.legal_texts import LegalTextNotFound, get_legal_text
 
 router = APIRouter(prefix="/api/legal", tags=["legal"])
+public_router = APIRouter(prefix="/api/public/legal", tags=["legal"])
 
 
 class LegalTextResponse(BaseModel):
@@ -41,11 +48,8 @@ _ALLOWED_KEYS = frozenset(
 )
 
 
-@router.get("/{key}", response_model=LegalTextResponse)
-async def get_legal(
-    key: str,
-    _user_id: UUID = Depends(current_user),
-    session: AsyncSession = Depends(get_db_session),
+async def _resolve_legal(
+    session: AsyncSession, key: str
 ) -> LegalTextResponse:
     if key not in _ALLOWED_KEYS:
         raise HTTPException(
@@ -64,3 +68,24 @@ async def get_legal(
         body=legal.body,
         effective_from=legal.effective_from,
     )
+
+
+@router.get("/{key}", response_model=LegalTextResponse)
+async def get_legal(
+    key: str,
+    _user_id: UUID = Depends(current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> LegalTextResponse:
+    return await _resolve_legal(session, key)
+
+
+@public_router.get("/{key}", response_model=LegalTextResponse)
+async def get_legal_public(key: str) -> LegalTextResponse:
+    """Versión pública del lookup legal — sin auth.
+
+    Los textos legales son por definición públicos (T&C, privacidad).
+    Usamos `service_session` para no necesitar un JWT y respondemos
+    el mismo shape que `/api/legal/{key}`.
+    """
+    async with service_session() as session:
+        return await _resolve_legal(session, key)

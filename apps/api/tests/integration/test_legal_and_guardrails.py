@@ -147,6 +147,33 @@ async def test_legal_rejects_unknown_key(
     assert response.status_code == 404
 
 
+@pytest.mark.integration
+async def test_public_legal_returns_body_without_auth(
+    http_client_legal: AsyncClient,
+) -> None:
+    """/api/public/legal/{key} no requiere JWT y devuelve el texto vigente."""
+    app.dependency_overrides.pop(verify_jwt, None)
+    response = await http_client_legal.get(
+        "/api/public/legal/politica-privacidad",
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["key"] == "politica-privacidad"
+    assert data["version"] == "v1"
+    assert data["body"]
+
+
+@pytest.mark.integration
+async def test_public_legal_rejects_unknown_key(
+    http_client_legal: AsyncClient,
+) -> None:
+    app.dependency_overrides.pop(verify_jwt, None)
+    response = await http_client_legal.get(
+        "/api/public/legal/no-existe",
+    )
+    assert response.status_code == 404
+
+
 # ---------------------------------------------------------------------------
 # Disclaimer enriquecido en endpoints
 # ---------------------------------------------------------------------------

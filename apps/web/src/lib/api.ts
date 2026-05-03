@@ -57,6 +57,24 @@ export async function fetchApiClient<T = unknown>(
   return _fetch<T>(path, session?.access_token ?? null, init);
 }
 
+/**
+ * Fetch al backend sin token. Sirve para endpoints públicos
+ * (/api/public/legal/{key} para T&C / privacidad antes del login).
+ */
+export async function fetchApiPublic<T = unknown>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
+  return _fetch<T>(path, null, init);
+}
+
+export interface LegalTextResponse {
+  key: string;
+  version: string;
+  body: string;
+  effective_from: string;
+}
+
 // ---------------------------------------------------------------------------
 // Tipos manuales del API mientras el pipeline shared-types no esté listo
 // (fase 1+). Mantener sincronizado con apps/api/src/routers/*.
