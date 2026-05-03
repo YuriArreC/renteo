@@ -96,3 +96,34 @@ export interface CreateWorkspaceResp {
   type: WorkspaceType;
   role: Role;
 }
+
+// Endpoints de cálculo (placeholder, valores no firmados).
+
+export type IdpcRegimen = "14_a" | "14_d_3" | "14_d_8";
+export type PpmRegimen = "14_d_3" | "14_d_8";
+
+export interface CalcResponse {
+  value: string;
+  currency: "CLP";
+  tax_year: number;
+  fuente_legal: string;
+  disclaimer: string;
+}
+
+export interface IdpcRequest {
+  regimen: IdpcRegimen;
+  tax_year: number;
+  rli: string;
+}
+
+export interface IgcRequest {
+  tax_year: number;
+  base_pesos: string;
+}
+
+export interface PpmRequest {
+  regimen: PpmRegimen;
+  tax_year: number;
+  ingresos_mes_pesos: string;
+  ingresos_anio_anterior_uf: string;
+}

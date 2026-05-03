@@ -57,11 +57,48 @@
   },
   "dashboard": {
     "header": {
-      "logout": "Cerrar sesión"
+      "logout": "Cerrar sesión",
+      "playground": "Playground"
     },
     "empty": {
       "title": "Bienvenido a {name}",
-      "body": "Pronto verás aquí el estado tributario de tu empresa, escenarios simulados y alertas. Por ahora estamos preparando los datos."
+      "body": "Pronto verás aquí el estado tributario de tu empresa, escenarios simulados y alertas. Por ahora estamos preparando los datos.",
+      "playgroundCta": "Probar el motor (placeholder)"
+    }
+  },
+  "calc": {
+    "title": "Playground del motor",
+    "subtitle": "Pruebas internas. Las tasas son PLACEHOLDER hasta que el contador socio firme las tablas oficiales — los resultados no son válidos para decisiones tributarias reales.",
+    "common": {
+      "year": "Año tributario",
+      "submit": "Calcular",
+      "submitting": "Calculando…",
+      "result": "Resultado",
+      "fuente": "Fundamento"
+    },
+    "idpc": {
+      "title": "IDPC — Impuesto de Primera Categoría",
+      "regimen": "Régimen",
+      "rli": "Renta Líquida Imponible (CLP)",
+      "regimenOptions": {
+        "14_a": "14 A — Régimen general (semi-integrado)",
+        "14_d_3": "14 D N°3 — Pro PyME General",
+        "14_d_8": "14 D N°8 — Pro PyME Transparente"
+      }
+    },
+    "igc": {
+      "title": "IGC — Impuesto Global Complementario",
+      "base": "Base afecta al IGC del dueño (CLP)"
+    },
+    "ppm": {
+      "title": "PPM — Pago Provisional Mensual",
+      "regimen": "Régimen",
+      "ingresosMes": "Ingresos del mes (CLP)",
+      "ingresosAnio": "Ingresos año anterior (UF)",
+      "regimenOptions": {
+        "14_d_3": "14 D N°3 — Pro PyME General",
+        "14_d_8": "14 D N°8 — Pro PyME Transparente"
+      }
     }
   },
   "landing": {
