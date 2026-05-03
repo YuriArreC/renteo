@@ -1,17 +1,46 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { type FormEvent, Suspense, useState } from "react";
+import { Suspense, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/sonner";
 import { ApiError, fetchApiClient, type MeResponse } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 
+const schema = z.object({
+  code: z
+    .string()
+    .min(6, "Código demasiado corto")
+    .max(10, "Código demasiado largo")
+    .regex(/^[0-9]+$/, "Solo números"),
+});
+
+type FormValues = z.infer<typeof schema>;
+
 export default function SignupVerifyPage() {
-  // Next 15 requiere que useSearchParams viva dentro de un <Suspense>
-  // boundary para que la generación estática no falle. El fallback es
-  // intencionalmente mínimo — la página solo es relevante con la query
-  // string presente.
   return (
     <Suspense fallback={null}>
       <SignupVerifyForm />
@@ -24,141 +53,110 @@ function SignupVerifyForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
-
-  const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
-  const [resent, setResent] = useState(false);
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    setError(null);
-    setSubmitting(true);
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { code: "" },
+  });
 
+  async function onSubmit(values: FormValues) {
     if (!email) {
-      setSubmitting(false);
-      setError(t("missingEmail"));
+      toast.error(t("missingEmail"));
       return;
     }
-
     const supabase = createClient();
-    // En supabase-js v2, el type para confirmar email tras signup es
-    // "email" (cubre signup confirmation y email change). El antiguo
-    // "signup" está deprecated y devuelve "invalid token" silenciosamente.
-    const { error: verifyError } = await supabase.auth.verifyOtp({
+    const { error } = await supabase.auth.verifyOtp({
       email,
-      token: code,
+      token: values.code,
       type: "email",
     });
-
-    if (verifyError) {
-      setSubmitting(false);
-      setError(verifyError.message);
+    if (error) {
+      toast.error(error.message);
       return;
     }
 
-    // Verify exitoso → sesión activa. Decidir destino según tenancy.
     try {
       const me = await fetchApiClient<MeResponse>("/api/me");
       router.push(me.workspace ? "/dashboard" : "/onboarding/workspace");
       router.refresh();
     } catch (err) {
-      setSubmitting(false);
-      setError(err instanceof ApiError ? err.detail : String(err));
+      toast.error(err instanceof ApiError ? err.detail : String(err));
     }
   }
 
   async function handleResend() {
-    setError(null);
-    setResent(false);
-    setResending(true);
-
     if (!email) {
-      setResending(false);
-      setError(t("missingEmail"));
+      toast.error(t("missingEmail"));
       return;
     }
-
+    setResending(true);
     const supabase = createClient();
-    const { error: resendError } = await supabase.auth.resend({
-      type: "signup",
-      email,
-    });
-
+    const { error } = await supabase.auth.resend({ type: "signup", email });
     setResending(false);
-    if (resendError) {
-      setError(resendError.message);
-      return;
-    }
-    setResent(true);
+    if (error) toast.error(error.message);
+    else toast.success(t("resent"));
   }
 
   return (
-    <main className="container max-w-md py-16">
-      <h1 className="mb-2 text-3xl font-semibold tracking-tight">
-        {t("title")}
-      </h1>
-      <p className="mb-8 text-sm text-muted-foreground">
-        {t("subtitle", { email: email || "—" })}
-      </p>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label htmlFor="code" className="mb-1 block text-sm font-medium">
-            {t("codeLabel")}
-          </label>
-          <input
-            id="code"
-            type="text"
-            required
-            inputMode="numeric"
-            // Supabase puede mandar OTP de 6 u 8 dígitos según la config
-            // del proyecto. Aceptamos rango 6-10 para no quedar pegados
-            // si Supabase cambia el default.
-            pattern="[0-9]{6,10}"
-            minLength={6}
-            maxLength={10}
-            autoComplete="one-time-code"
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            placeholder="••••••"
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-center font-mono text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t("codeHint")}
-          </p>
-        </div>
-
-        {error && (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        )}
-
-        {resent && (
-          <p className="text-sm text-muted-foreground" role="status">
-            {t("resent")}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={submitting || code.length < 6}
-          className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary font-medium text-primary-foreground disabled:opacity-50"
-        >
-          {submitting ? t("submitting") : t("submit")}
-        </button>
-      </form>
-
-      <button
-        type="button"
-        onClick={handleResend}
-        disabled={resending}
-        className="mt-6 w-full text-center text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
-      >
-        {resending ? t("resending") : t("resend")}
-      </button>
+    <main className="container flex min-h-screen items-center justify-center py-16">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>{t("title")}</CardTitle>
+          <CardDescription>
+            {t("subtitle", { email: email || "—" })}
+          </CardDescription>
+        </CardHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("codeLabel")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={10}
+                        placeholder="••••••"
+                        className="text-center font-mono text-lg tracking-widest"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.currentTarget.value.replace(/\D/g, ""),
+                          )
+                        }
+                      />
+                    </FormControl>
+                    <FormDescription>{t("codeHint")}</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+            <CardFooter className="flex-col gap-4">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? t("submitting") : t("submit")}
+              </Button>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+              >
+                {resending ? t("resending") : t("resend")}
+              </button>
+            </CardFooter>
+          </form>
+        </Form>
+      </Card>
     </main>
   );
 }

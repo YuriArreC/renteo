@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { Footer_Shared } from "@/components/Footer_Shared";
+import { Button } from "@/components/ui/button";
 
 export default async function HomePage() {
   const t = await getTranslations("landing");
@@ -16,19 +17,13 @@ export default async function HomePage() {
           <Link href="/" className="font-semibold tracking-tight">
             {tCommon("appName")}
           </Link>
-          <nav className="flex items-center gap-3 text-sm">
-            <Link
-              href="/login"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              {t("cta.secondary")}
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex h-9 items-center rounded-md bg-primary px-4 font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              {t("cta.primary")}
-            </Link>
+          <nav className="flex items-center gap-2 text-sm">
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/login">{t("cta.secondary")}</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/signup">{t("cta.primary")}</Link>
+            </Button>
           </nav>
         </div>
       </header>
@@ -42,18 +37,12 @@ export default async function HomePage() {
             {t("hero.subheadline")}
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link
-              href="/signup"
-              className="inline-flex h-11 items-center rounded-md bg-primary px-6 font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              {t("cta.primary")}
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex h-11 items-center rounded-md border border-border px-6 font-medium hover:bg-accent"
-            >
-              {t("cta.secondary")}
-            </Link>
+            <Button asChild size="lg">
+              <Link href="/signup">{t("cta.primary")}</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/login">{t("cta.secondary")}</Link>
+            </Button>
           </div>
         </section>
 

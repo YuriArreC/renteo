@@ -32,6 +32,7 @@
     },
     "login": {
       "title": "Iniciar sesión",
+      "subtitle": "Entra con tu correo y contraseña.",
       "email": "Correo electrónico",
       "password": "Contraseña",
       "submit": "Entrar",

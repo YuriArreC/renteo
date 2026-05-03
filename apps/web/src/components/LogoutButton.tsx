@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
 export function LogoutButton() {
@@ -20,13 +21,14 @@ export function LogoutButton() {
   }
 
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="sm"
       onClick={handleLogout}
       disabled={submitting}
-      className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
     >
       {t("logout")}
-    </button>
+    </Button>
   );
 }
