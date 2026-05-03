@@ -137,10 +137,10 @@ async def _load_tax_year_params_snapshot(
     igc = await session.execute(
         text(
             """
-            select desde_uta, hasta_uta, tasa, rebajar_uta, fuente_legal
+            select tramo, desde_uta, hasta_uta, tasa, rebajar_uta
               from tax_params.igc_brackets
              where tax_year = :y
-             order by desde_uta
+             order by tramo
             """
         ),
         {"y": tax_year},
@@ -148,10 +148,11 @@ async def _load_tax_year_params_snapshot(
     ppm = await session.execute(
         text(
             """
-            select regimen, ingresos_anio_anterior_uf_lte, rate, fuente_legal
+            select regimen, umbral_uf, tasa_bajo, tasa_alto,
+                   es_transitoria, fuente_legal
               from tax_params.ppm_pyme_rates
              where tax_year = :y
-             order by regimen, ingresos_anio_anterior_uf_lte
+             order by regimen
             """
         ),
         {"y": tax_year},
