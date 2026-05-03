@@ -96,10 +96,12 @@ async def compute_igc(
         )
 
     # 4. Encontrar el tramo correcto.
-    selected = None
-    for desde, hasta, tasa, rebajar in brackets:
+    selected: tuple[Decimal, Decimal] | None = None
+    for row in brackets:
+        desde: Decimal = row[0]
+        hasta = row[1]
         if base_uta >= desde and (hasta is None or base_uta < hasta):
-            selected = (tasa, rebajar)
+            selected = (row[2], row[3])
             break
 
     if selected is None:
@@ -115,5 +117,7 @@ async def compute_igc(
         impuesto_uta = Decimal("0")
 
     # 6. Convertir a pesos.
-    impuesto_pesos = (impuesto_uta * uta_pesos).quantize(Decimal("0.01"))
+    impuesto_pesos: Decimal = (impuesto_uta * uta_pesos).quantize(
+        Decimal("0.01")
+    )
     return impuesto_pesos

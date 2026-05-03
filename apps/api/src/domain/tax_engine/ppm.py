@@ -78,6 +78,11 @@ async def compute_ppm(
             f"No ppm_pyme_rates row for ({regimen!r}, AT {tax_year})"
         )
 
-    umbral_uf, tasa_bajo, tasa_alto = row
+    umbral_uf: Decimal = row[0]
+    tasa_bajo: Decimal = row[1]
+    tasa_alto: Decimal = row[2]
     tasa = tasa_bajo if ingresos_anio_anterior_uf <= umbral_uf else tasa_alto
-    return (ingresos_mes_pesos * tasa).quantize(Decimal("0.01"))
+    result_decimal: Decimal = (ingresos_mes_pesos * tasa).quantize(
+        Decimal("0.01")
+    )
+    return result_decimal
