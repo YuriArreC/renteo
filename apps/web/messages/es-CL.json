@@ -65,7 +65,66 @@
       "body": "Pronto verás aquí el estado tributario de tu empresa, escenarios simulados y alertas. Por ahora estamos preparando los datos.",
       "playgroundCta": "Probar el motor (placeholder)",
       "comparadorCta": "Comparar régimen tributario",
-      "simulatorCta": "Simular cierre con palancas"
+      "simulatorCta": "Simular cierre con palancas",
+      "regimeCta": "Diagnóstico de régimen"
+    }
+  },
+  "regime": {
+    "title": "Diagnóstico de régimen tributario",
+    "subtitle": "Responde 11 preguntas para que el motor evalúe elegibilidad por régimen y proyecte la carga tributaria a 3 años. Versión PLACEHOLDER pendiente firma del contador socio.",
+    "form": {
+      "section1": "1. Identificación",
+      "section2": "2. Situación económica",
+      "section3": "3. Estructura societaria",
+      "section4": "4. Plan a 3 años",
+      "year": "Año tributario inicial",
+      "regimenActual": "Régimen actual",
+      "regimenActualHint": "Si lo dejas vacío asumimos 14 A (régimen general supletorio).",
+      "regimenAuto": "(autodetectar)",
+      "ingresosProm": "Promedio ingresos giro últimos 3 años (UF)",
+      "ingresosMax": "Pico anual de los últimos 3 años (UF)",
+      "capital": "Capital efectivo inicial (UF)",
+      "pctPasivos": "% ingresos pasivos sobre el total (0 a 1)",
+      "ventasAnuales": "Ventas anuales actuales (UF)",
+      "sector": "Sector / giro principal",
+      "sectorOptions": {
+        "comercio": "Comercio",
+        "servicios": "Servicios",
+        "agricola": "Agrícola",
+        "transporte": "Transporte terrestre de carga",
+        "mineria": "Minería",
+        "otro": "Otro"
+      },
+      "duenosChile": "Todos los dueños son personas naturales con domicilio o residencia en Chile",
+      "participaciones": "La empresa participa por más del 10% en sociedades no acogidas a 14 D",
+      "rliProyectada": "RLI proyectada anual (UF)",
+      "rliHint": "Estimada para los próximos 3 años.",
+      "planRetiros": "% de RLI a retirar por el dueño cada año (0 a 1)",
+      "submit": "Generar diagnóstico",
+      "submitting": "Diagnosticando…"
+    },
+    "result": {
+      "veredictoHeader": "Veredicto",
+      "currentRegimen": "Régimen actual",
+      "recomendado": "Régimen recomendado",
+      "ahorro3a": "Ahorro estimado a 3 años",
+      "elegibilidadHeader": "Elegibilidad por régimen",
+      "elegible": "Elegible",
+      "noElegible": "No elegible",
+      "proyeccionHeader": "Proyección 3 años (carga total por régimen)",
+      "year": "Año",
+      "rli": "RLI",
+      "idpc": "IDPC",
+      "retiros": "Retiros",
+      "igc": "IGC dueño",
+      "total": "Carga total",
+      "total3a": "Total 3 años",
+      "dualHeader": "Escenario dual 14 D N°3 (transitorio vs. revertido)",
+      "dualBase": "Tasa transitoria 12,5%",
+      "dualRevertido": "Tasa revertida 25%",
+      "riesgosHeader": "Riesgos e implicancias del cambio",
+      "fuenteHeader": "Fundamento legal",
+      "transitoria": "Transitorio"
     }
   },
   "simulator": {

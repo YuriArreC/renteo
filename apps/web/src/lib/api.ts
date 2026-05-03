@@ -262,3 +262,83 @@ export interface CompareResponse {
   plan_accion: PlanAccionItem[];
   disclaimer: string;
 }
+
+// Diagnóstico de régimen (skill 7).
+
+export type RegimeKey = "14_a" | "14_d_3" | "14_d_8" | "renta_presunta";
+export type Sector =
+  | "comercio"
+  | "servicios"
+  | "agricola"
+  | "transporte"
+  | "mineria"
+  | "otro";
+
+export interface DiagnoseRequest {
+  tax_year: number;
+  regimen_actual?: "14_a" | "14_d_3" | "14_d_8";
+  ingresos_promedio_3a_uf: string;
+  ingresos_max_anual_uf: string;
+  capital_efectivo_inicial_uf: string;
+  pct_ingresos_pasivos: string;
+  todos_duenos_personas_naturales_chile: boolean;
+  participacion_empresas_no_14d_sobre_10pct: boolean;
+  sector: Sector;
+  ventas_anuales_uf: string;
+  rli_proyectada_anual_uf: string;
+  plan_retiros_pct: string;
+}
+
+export interface RequisitoOut {
+  texto: string;
+  ok: boolean;
+  fundamento: string;
+}
+
+export interface EligibilityOut {
+  regimen: RegimeKey;
+  label: string;
+  elegible: boolean;
+  requisitos: RequisitoOut[];
+}
+
+export interface ProjectionRow {
+  año: number;
+  rli: string;
+  idpc: string;
+  retiros: string;
+  igc_dueno: string;
+  carga_total: string;
+}
+
+export interface RegimeProjection {
+  regimen: RegimeKey;
+  label: string;
+  rows: ProjectionRow[];
+  total_3a: string;
+  es_transitoria: boolean;
+  nota: string | null;
+}
+
+export interface DualProjection {
+  base: RegimeProjection;
+  revertido: RegimeProjection;
+}
+
+export interface DiagnoseVeredicto {
+  regimen_actual: "14_a" | "14_d_3" | "14_d_8";
+  regimen_recomendado: RegimeKey;
+  ahorro_3a_clp: string;
+  ahorro_3a_uf: string;
+}
+
+export interface DiagnoseResponse {
+  tax_year: number;
+  veredicto: DiagnoseVeredicto;
+  elegibilidad: EligibilityOut[];
+  proyecciones: RegimeProjection[];
+  proyeccion_dual_14d3: DualProjection | null;
+  riesgos: string[];
+  fuente_legal: string[];
+  disclaimer: string;
+}
