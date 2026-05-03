@@ -63,8 +63,32 @@
     "empty": {
       "title": "Bienvenido a {name}",
       "body": "Pronto verás aquí el estado tributario de tu empresa, escenarios simulados y alertas. Por ahora estamos preparando los datos.",
-      "playgroundCta": "Probar el motor (placeholder)"
+      "playgroundCta": "Probar el motor (placeholder)",
+      "comparadorCta": "Comparar régimen tributario"
     }
+  },
+  "comparador": {
+    "title": "Comparador de régimen tributario",
+    "subtitle": "Compara la carga total estimada (IDPC + IGC del dueño) entre 14 A, 14 D N°3 y 14 D N°8 para tu RLI proyectada y tu plan de retiros. Versión PLACEHOLDER pendiente firma del contador socio.",
+    "form": {
+      "year": "Año tributario",
+      "rli": "RLI proyectada (CLP)",
+      "rliHint": "Renta Líquida Imponible que estimas para el año.",
+      "retiros": "Retiros del dueño en el año (CLP)",
+      "retirosHint": "Cuánto retiraría el dueño desde la empresa.",
+      "submit": "Comparar regímenes",
+      "submitting": "Calculando…"
+    },
+    "table": {
+      "regimen": "Régimen",
+      "idpc": "IDPC empresa",
+      "igc": "IGC dueño",
+      "total": "Carga total",
+      "ahorro": "Ahorro vs 14 A",
+      "recomendado": "Recomendado"
+    },
+    "transitoria": "Tasa transitoria",
+    "notesHeader": "Notas y fundamento legal por escenario"
   },
   "calc": {
     "title": "Playground del motor",

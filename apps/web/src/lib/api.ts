@@ -127,3 +127,38 @@ export interface PpmRequest {
   ingresos_mes_pesos: string;
   ingresos_anio_anterior_uf: string;
 }
+
+// Comparador multi-régimen.
+
+export type ComparadorRegimenKey =
+  | "14_a"
+  | "14_d_3"
+  | "14_d_3_revertido"
+  | "14_d_8";
+
+export interface ComparadorRequest {
+  tax_year: number;
+  rli: string;
+  retiros_pesos: string;
+}
+
+export interface RegimenScenario {
+  regimen: ComparadorRegimenKey;
+  label: string;
+  idpc: string;
+  igc_dueno: string;
+  carga_total: string;
+  ahorro_vs_14a: string;
+  es_recomendado: boolean;
+  es_transitoria: boolean;
+  nota: string | null;
+  fuente_legal: string;
+}
+
+export interface ComparadorResponse {
+  tax_year: number;
+  rli: string;
+  retiros_pesos: string;
+  scenarios: RegimenScenario[];
+  disclaimer: string;
+}

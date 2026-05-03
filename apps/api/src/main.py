@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.config import settings
 from src.lib.logging import configure_logging, get_logger
 from src.routers import calculations as calculations_router
+from src.routers import comparador as comparador_router
 from src.routers import me as me_router
 from src.routers import workspaces as workspaces_router
 
@@ -42,3 +43,4 @@ async def readyz() -> dict[str, str]:
 app.include_router(me_router.router)
 app.include_router(workspaces_router.router)
 app.include_router(calculations_router.router)
+app.include_router(comparador_router.router)

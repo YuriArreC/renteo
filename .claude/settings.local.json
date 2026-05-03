@@ -3,7 +3,21 @@
     "allow": [
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(git commit *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git fetch *)",
+      "Bash(git push *)",
+      "Bash(gh run *)",
+      "Bash(git check-ignore *)",
+      "Bash(echo \"---exit=$?---\")",
+      "Bash(git config *)",
+      "Bash(vercel --version)",
+      "Bash(vercel whoami *)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm setup *)",
+      "Bash(npm install *)"
     ]
   }
 }
