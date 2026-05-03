@@ -80,6 +80,15 @@ async def workspace_ctx(
         await admin_session.execute(
             text("set local session_replication_role = 'replica'")
         )
+        # `replica` desactiva regular triggers — incluidas las FK
+        # cascade. Limpiamos las recomendaciones explícitamente para
+        # no dejar filas huérfanas que contaminen tests posteriores.
+        await admin_session.execute(
+            text(
+                "delete from core.recomendaciones where workspace_id = :id"
+            ),
+            {"id": str(workspace_id)},
+        )
         await admin_session.execute(
             text("delete from core.workspaces where id = :id"),
             {"id": str(workspace_id)},
@@ -266,15 +275,16 @@ async def test_recomendaciones_listed_after_diagnose(
         _claims(workspace_ctx["user_id"], workspace_ctx["workspace_id"])
     )
 
-    # Lista vacía al inicio.
+    # Baseline: el listado puede traer filas residuales de otros tests
+    # si el cleanup falla; solo verificamos que el diagnóstico nuevo
+    # quede listado y sume exactamente 1.
     initial = await http_client_reg.get(
         "/api/regime/recomendaciones",
         headers={"Authorization": "Bearer fake"},
     )
     assert initial.status_code == 200
-    assert initial.json()["recomendaciones"] == []
+    initial_count = len(initial.json()["recomendaciones"])
 
-    # Diagnóstico se persiste.
     diagnose = await http_client_reg.post(
         "/api/regime/diagnose",
         json=_DEFAULT_BODY,
@@ -289,11 +299,11 @@ async def test_recomendaciones_listed_after_diagnose(
     )
     assert listed.status_code == 200
     items = listed.json()["recomendaciones"]
-    assert len(items) == 1
-    assert items[0]["id"] == rec_id
-    assert items[0]["tipo"] == "cambio_regimen"
-    assert items[0]["regimen_actual"] == "14_a"
-    assert items[0]["disclaimer_version"] == "v1"
+    assert len(items) == initial_count + 1
+    nuevo = next(i for i in items if i["id"] == rec_id)
+    assert nuevo["tipo"] == "cambio_regimen"
+    assert nuevo["regimen_actual"] == "14_a"
+    assert nuevo["disclaimer_version"] == "v1"
 
 
 @pytest.mark.integration
@@ -316,5 +326,8 @@ async def test_recomendaciones_filter_by_year(
         "/api/regime/recomendaciones?tax_year=2025",
         headers={"Authorization": "Bearer fake"},
     )
+    # El filtro server-side debe excluir 2026, sin asumir cardinalidad
+    # exacta (otros tests pueden dejar filas residuales con tax_year=2025).
     years = {r["tax_year"] for r in response.json()["recomendaciones"]}
-    assert years == {2025}
+    assert years.issubset({2025})
+    assert 2025 in years
