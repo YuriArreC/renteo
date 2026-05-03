@@ -59,7 +59,10 @@ async def test_comparador_returns_four_scenarios(
     assert response.status_code == 200, response.text
     data = response.json()
     assert data["tax_year"] == 2026
-    assert "PLACEHOLDER" in data["disclaimer"]
+    # Track 1+2: el disclaimer ahora viene de privacy.legal_texts,
+    # vigente y versionado. Verificamos shape, no PLACEHOLDER.
+    assert data["disclaimer"]
+    assert "proyección" in data["disclaimer"].lower()
 
     regimens = [s["regimen"] for s in data["scenarios"]]
     assert regimens == ["14_a", "14_d_3", "14_d_3_revertido", "14_d_8"]

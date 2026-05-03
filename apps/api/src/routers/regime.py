@@ -38,8 +38,11 @@ from src.domain.tax_engine.eligibility import (
     evaluar_14_d_8,
     evaluar_renta_presunta,
 )
+from src.domain.tax_engine.guardrails import is_recomendacion_whitelisted
 from src.domain.tax_engine.idpc import compute_idpc
 from src.domain.tax_engine.igc import compute_igc
+from src.lib.errors import RedFlagBlocked
+from src.lib.legal_texts import get_legal_text
 
 router = APIRouter(prefix="/api/regime", tags=["regime"])
 
@@ -448,6 +451,15 @@ async def diagnose(
     ahorro_clp = actual_proj.total_3a - recomendado_proj.total_3a
     ahorro_uf = (ahorro_clp / uf_clp).quantize(Decimal("0.01"))
 
+    # Skill 1: si la recomendación implica cambio de régimen, validar
+    # que `cambio_regimen` esté en lista blanca antes de devolverla.
+    if recomendado_proj.regimen != actual and not await is_recomendacion_whitelisted(
+        session, "cambio_regimen", payload.tax_year
+    ):
+        raise RedFlagBlocked(
+            "cambio_regimen no está en la lista blanca de recomendaciones"
+        )
+
     veredicto = DiagnoseVeredicto(
         regimen_actual=actual,
         regimen_recomendado=recomendado_proj.regimen,
@@ -462,6 +474,7 @@ async def diagnose(
         "Ley 21.735 art. 4° transitorio (condicionalidad cotización empleador)",
     ]
 
+    legal = await get_legal_text(session, "disclaimer-recomendacion")
     return DiagnoseResponse(
         tax_year=payload.tax_year,
         veredicto=veredicto,
@@ -470,4 +483,5 @@ async def diagnose(
         proyeccion_dual_14d3=proyeccion_dual,
         riesgos=_riesgos_para(actual, recomendado_proj.regimen),
         fuente_legal=fuente,
+        disclaimer=legal.body,
     )

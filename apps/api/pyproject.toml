@@ -72,6 +72,9 @@ ignore = [
 # Tax-domain exception names are fixed by skill 10 (IneligibleForRegime,
 # RedFlagBlocked, etc.); renaming would break the documented contract.
 "src/lib/errors.py" = ["N818"]
+# LegalTextNotFound is a 404-equivalent shaped after FileNotFoundError,
+# documented public name in skill 2 — N818 false positive.
+"src/lib/legal_texts.py" = ["N818"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]

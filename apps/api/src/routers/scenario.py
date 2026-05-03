@@ -32,18 +32,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.tenancy import Tenancy, current_tenancy
 from src.db import get_db_session
 from src.domain.tax_engine.beneficios import get_beneficio
+from src.domain.tax_engine.guardrails import is_recomendacion_whitelisted
 from src.domain.tax_engine.idpc import compute_idpc
 from src.domain.tax_engine.igc import compute_igc
+from src.lib.errors import RedFlagBlocked
+from src.lib.legal_texts import get_legal_text
 
 router = APIRouter(prefix="/api/scenario", tags=["scenario"])
 
 
+# Disclaimer fallback en caso de que `disclaimer-simulacion` no esté
+# publicado en privacy.legal_texts. La response real siempre proviene
+# de get_legal_text en cada request.
 PLACEHOLDER_DISCLAIMER = (
-    "🟡 Simulación calculada con parámetros tributarios PLACEHOLDER "
-    "pendientes de validación por contador socio. NO considera "
-    "registros SAC/RAI/REX, créditos imputados ni topes en UF "
-    "actualizados; el rango razonable de sueldo empresarial está "
-    "pendiente. NO usar para decisiones tributarias reales."
+    "Disclaimer pendiente de carga desde privacy.legal_texts."
 )
 
 # Track 11b: los topes paramétricos del simulador viven en
@@ -618,6 +620,16 @@ async def simulate(
     topes = await _load_topes(session, payload.tax_year)
     rli_sim, retiros_sim, impactos, banderas = _apply_palancas(payload, topes)
 
+    # Skill 1: cada palanca aplicada debe estar en la lista blanca.
+    for impacto in impactos:
+        if impacto.aplicada and not await is_recomendacion_whitelisted(
+            session, impacto.palanca_id, payload.tax_year
+        ):
+            raise RedFlagBlocked(
+                f"palanca {impacto.palanca_id!r} fuera de la lista blanca "
+                "de recomendaciones (skill 1, NGA arts. 4 bis/ter/quáter CT)"
+            )
+
     simulado = await _carga(
         session,
         regimen=payload.regimen,
@@ -644,6 +656,7 @@ async def simulate(
         banderas=banderas,
     )
 
+    legal = await get_legal_text(session, "disclaimer-simulacion")
     return ScenarioResponse(
         id=scenario_id,
         nombre=nombre,
@@ -654,6 +667,7 @@ async def simulate(
         ahorro_total=ahorro,
         palancas_aplicadas=impactos,
         banderas=banderas,
+        disclaimer=legal.body,
     )
 
 

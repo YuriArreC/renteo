@@ -40,6 +40,7 @@ from src.auth.tenancy import current_user
 from src.db import get_db_session
 from src.domain.tax_engine.idpc import compute_idpc
 from src.domain.tax_engine.igc import compute_igc
+from src.lib.legal_texts import get_legal_text
 
 router = APIRouter(prefix="/api/calc", tags=["calc"])
 
@@ -235,9 +236,11 @@ async def comparador_regimen(
 
     scenarios = [RegimenScenario(**s) for s in raw_scenarios]
 
+    legal = await get_legal_text(session, "disclaimer-simulacion")
     return ComparadorResponse(
         tax_year=year,
         rli=rli,
         retiros_pesos=retiros,
         scenarios=scenarios,
+        disclaimer=legal.body,
     )
