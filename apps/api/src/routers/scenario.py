@@ -242,6 +242,13 @@ class ScenarioRequest(BaseModel):
             "Si se omite, se autogenera con régimen + año + timestamp."
         ),
     )
+    empresa_id: UUID | None = Field(
+        default=None,
+        description=(
+            "Empresa del workspace activo a la que se asocia el escenario. "
+            "Si se omite, queda como escenario workspace-level."
+        ),
+    )
 
 
 class PalancaImpacto(BaseModel):
@@ -286,6 +293,7 @@ class ScenarioListItem(BaseModel):
     nombre: str
     tax_year: int
     regimen: Regimen
+    empresa_id: UUID | None
     carga_base: Decimal
     carga_simulada: Decimal
     ahorro_total: Decimal
@@ -682,6 +690,28 @@ def _default_nombre(regimen: Regimen, tax_year: int) -> str:
     return f"Escenario {regimen.upper()} AT{tax_year}"
 
 
+async def _assert_empresa_in_workspace(
+    session: AsyncSession, empresa_id: UUID
+) -> None:
+    """Bajo RLS, ver una empresa implica pertenecer al workspace activo.
+
+    Si el SELECT vuelve vacío la empresa no existe (en este workspace) o
+    no se tiene acceso por rol — en ambos casos rechazamos con 422.
+    """
+    result = await session.execute(
+        text("select 1 from core.empresas where id = :id and deleted_at is null"),
+        {"id": str(empresa_id)},
+    )
+    if result.first() is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"empresa_id {empresa_id} no existe en el workspace o no "
+                "tienes acceso bajo tu rol."
+            ),
+        )
+
+
 def _plan_accion_for(
     impactos: list[PalancaImpacto],
 ) -> list[PlanAccionItem]:
@@ -752,6 +782,7 @@ async def _persist(
     *,
     workspace_id: UUID,
     user_id: UUID,
+    empresa_id: UUID | None,
     nombre: str,
     regimen: Regimen,
     tax_year: int,
@@ -797,7 +828,7 @@ async def _persist(
                  rule_set_snapshot, tax_year_params_snapshot,
                  rules_snapshot_hash)
             values
-                (:ws, null, :year, :nombre,
+                (:ws, :empresa, :year, :nombre,
                  :regimen, cast(:inputs as jsonb), cast(:outputs as jsonb),
                  :ver, :uid,
                  cast(:rule_snap as jsonb),
@@ -808,6 +839,7 @@ async def _persist(
         ),
         {
             "ws": str(workspace_id),
+            "empresa": str(empresa_id) if empresa_id is not None else None,
             "year": tax_year,
             "nombre": nombre,
             "regimen": regimen,
@@ -845,6 +877,9 @@ async def simulate(
         retiros_total=payload.retiros_base,
     )
 
+    if payload.empresa_id is not None:
+        await _assert_empresa_in_workspace(session, payload.empresa_id)
+
     topes = await _load_topes(session, payload.tax_year)
     result = _apply_palancas(payload, topes)
 
@@ -875,6 +910,7 @@ async def simulate(
         session,
         workspace_id=tenancy.workspace_id,
         user_id=tenancy.user_id,
+        empresa_id=payload.empresa_id,
         nombre=nombre,
         regimen=payload.regimen,
         tax_year=payload.tax_year,
@@ -904,6 +940,7 @@ async def simulate(
 @router.get("/list", response_model=ScenarioListResponse)
 async def list_scenarios(
     tax_year: int | None = None,
+    empresa_id: UUID | None = None,
     limit: int = 50,
     _tenancy: Tenancy = Depends(current_tenancy),
     session: AsyncSession = Depends(get_db_session),
@@ -920,20 +957,26 @@ async def list_scenarios(
             detail="limit debe estar entre 1 y 200",
         )
 
-    params: dict[str, Any] = {"limit": limit, "year": tax_year}
+    params: dict[str, Any] = {
+        "limit": limit,
+        "year": tax_year,
+        "empresa": str(empresa_id) if empresa_id is not None else None,
+    }
 
-    # `coalesce(:year, tax_year)` actúa como "no filter when null", lo que
-    # mantiene una query estática (sin f-strings ni concat) — necesario
-    # para evitar el falso positivo S608 de ruff y para que los planners
-    # cacheen un único plan.
+    # `coalesce(:p, col)` actúa como "no filter when null", lo que
+    # mantiene una query estática y deja al planner cachear un único plan.
     result = await session.execute(
         text(
             """
-            select id, nombre, tax_year, regimen, outputs,
+            select id, nombre, tax_year, regimen, empresa_id, outputs,
                    created_at
               from core.escenarios_simulacion
              where regimen is not null
                and tax_year = coalesce(:year, tax_year)
+               and (
+                    :empresa::uuid is null
+                    or empresa_id = :empresa::uuid
+               )
              order by created_at desc
              limit :limit
             """
@@ -956,6 +999,11 @@ async def list_scenarios(
                 nombre=row["nombre"],
                 tax_year=row["tax_year"],
                 regimen=row["regimen"],
+                empresa_id=(
+                    UUID(str(row["empresa_id"]))
+                    if row["empresa_id"] is not None
+                    else None
+                ),
                 carga_base=carga_base,
                 carga_simulada=carga_sim,
                 ahorro_total=ahorro,

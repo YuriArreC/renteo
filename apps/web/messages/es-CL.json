@@ -137,7 +137,9 @@
       "rliHint": "Estimada para los próximos 3 años.",
       "planRetiros": "% de RLI a retirar por el dueño cada año (0 a 1)",
       "submit": "Generar diagnóstico",
-      "submitting": "Diagnosticando…"
+      "submitting": "Diagnosticando…",
+      "empresaSelect": "Empresa",
+      "empresaSelectNone": "Sin empresa (workspace)"
     },
     "result": {
       "veredictoHeader": "Veredicto",
@@ -231,6 +233,9 @@
       "block": "Bloqueo"
     },
     "saved": "Escenario guardado: {nombre}",
+    "empresaSelect": "Empresa",
+    "empresaSelectNone": "Sin empresa (workspace)",
+    "empresaHint": "El escenario se asocia a esta empresa.",
     "historial": {
       "header": "Historial de escenarios",
       "empty": "Aún no hay escenarios guardados para este workspace.",

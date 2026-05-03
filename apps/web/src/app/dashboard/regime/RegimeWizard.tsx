@@ -1,7 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -31,6 +35,7 @@ import {
   ApiError,
   type DiagnoseRequest,
   type DiagnoseResponse,
+  type EmpresasListResponse,
   fetchApiClient,
 } from "@/lib/api";
 
@@ -50,6 +55,7 @@ const REGIMENS = ["14_a", "14_d_3", "14_d_8"] as const;
 const schema = z.object({
   tax_year: z.coerce.number().int().min(2024).max(2030),
   regimen_actual: z.enum(["", ...REGIMENS]),
+  empresa_id: z.string(),
   ingresos_promedio_3a_uf: z.coerce.number().min(0),
   ingresos_max_anual_uf: z.coerce.number().min(0),
   capital_efectivo_inicial_uf: z.coerce.number().min(0),
@@ -74,6 +80,7 @@ export function RegimeWizard() {
     defaultValues: {
       tax_year: 2026,
       regimen_actual: "",
+      empresa_id: "",
       ingresos_promedio_3a_uf: 30000,
       ingresos_max_anual_uf: 40000,
       capital_efectivo_inicial_uf: 5000,
@@ -86,6 +93,13 @@ export function RegimeWizard() {
       plan_retiros_pct: 0.3,
     },
   });
+
+  const empresasQuery = useQuery<EmpresasListResponse>({
+    queryKey: ["empresas-list"],
+    queryFn: () =>
+      fetchApiClient<EmpresasListResponse>("/api/empresas"),
+  });
+  const empresas = empresasQuery.data?.empresas ?? [];
 
   const mutation = useMutation({
     mutationFn: (req: DiagnoseRequest) =>
@@ -122,6 +136,7 @@ export function RegimeWizard() {
       plan_retiros_pct: String(v.plan_retiros_pct),
     };
     if (v.regimen_actual !== "") body.regimen_actual = v.regimen_actual;
+    if (v.empresa_id) body.empresa_id = v.empresa_id;
     mutation.mutate(body);
   };
 
@@ -171,6 +186,31 @@ export function RegimeWizard() {
                       <FormDescription>
                         {tForm("regimenActualHint")}
                       </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="empresa_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{tForm("empresaSelect")}</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          <option value="">
+                            {tForm("empresaSelectNone")}
+                          </option>
+                          {empresas.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.razon_social} ({e.rut})
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

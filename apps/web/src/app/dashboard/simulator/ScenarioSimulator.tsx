@@ -1,7 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -28,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
 import {
   ApiError,
+  type EmpresasListResponse,
   fetchApiClient,
   type ScenarioRequest,
   type ScenarioResponse,
@@ -46,6 +51,7 @@ function formatCLP(value: string | number): string {
 const schema = z.object({
   regimen: z.enum(["14_a", "14_d_3", "14_d_8"]),
   tax_year: z.coerce.number().int().min(2024).max(2030),
+  empresa_id: z.string(),
   rli_base: z.coerce.number().min(0),
   retiros_base: z.coerce.number().min(0),
   planilla_anual_pesos: z.coerce.number().min(0),
@@ -87,6 +93,7 @@ export function ScenarioSimulator() {
     defaultValues: {
       regimen: "14_d_3",
       tax_year: 2026,
+      empresa_id: "",
       rli_base: 30_000_000,
       retiros_base: 0,
       planilla_anual_pesos: 0,
@@ -99,6 +106,13 @@ export function ScenarioSimulator() {
       apv_monto: 0,
     },
   });
+
+  const empresasQuery = useQuery<EmpresasListResponse>({
+    queryKey: ["empresas-list"],
+    queryFn: () =>
+      fetchApiClient<EmpresasListResponse>("/api/empresas"),
+  });
+  const empresas = empresasQuery.data?.empresas ?? [];
 
   const mutation = useMutation({
     mutationFn: (req: ScenarioRequest) =>
@@ -131,6 +145,7 @@ export function ScenarioSimulator() {
                   retiros_base: String(v.retiros_base),
                   planilla_anual_pesos: String(v.planilla_anual_pesos),
                   palancas: buildPalancas(v),
+                  empresa_id: v.empresa_id || undefined,
                 }),
               )}
               className="space-y-8"
@@ -170,6 +185,31 @@ export function ScenarioSimulator() {
                       <FormLabel>{tForm("year")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={2024} max={2030} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="empresa_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{tSimulator("empresaSelect")}</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          <option value="">
+                            {tSimulator("empresaSelectNone")}
+                          </option>
+                          {empresas.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.razon_social} ({e.rut})
+                            </option>
+                          ))}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

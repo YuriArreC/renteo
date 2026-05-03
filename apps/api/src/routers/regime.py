@@ -18,7 +18,7 @@ from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -145,6 +145,14 @@ class DiagnoseRequest(BaseModel):
         le=1,
         description="% de RLI que el dueño planea retirar cada año.",
     )
+    empresa_id: UUID | None = Field(
+        default=None,
+        description=(
+            "Empresa del workspace activo a la que se asocia el "
+            "diagnóstico. Si se omite, queda como recomendación "
+            "workspace-level."
+        ),
+    )
 
 
 class RequisitoOut(BaseModel):
@@ -216,6 +224,7 @@ class RecomendacionListItem(BaseModel):
     ahorro_estimado_clp: Decimal | None
     disclaimer_version: str
     engine_version: str
+    empresa_id: UUID | None
     created_at: str
 
 
@@ -355,12 +364,33 @@ def _riesgos_para(
 # ---------------------------------------------------------------------------
 
 
+async def _assert_empresa_in_workspace(
+    session: AsyncSession, empresa_id: UUID
+) -> None:
+    """Bajo RLS, ver una empresa implica pertenecer al workspace activo."""
+    result = await session.execute(
+        text("select 1 from core.empresas where id = :id and deleted_at is null"),
+        {"id": str(empresa_id)},
+    )
+    if result.first() is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"empresa_id {empresa_id} no existe en el workspace o no "
+                "tienes acceso bajo tu rol."
+            ),
+        )
+
+
 @router.post("/diagnose", response_model=DiagnoseResponse)
 async def diagnose(
     payload: DiagnoseRequest,
     tenancy: Tenancy = Depends(current_tenancy),
     session: AsyncSession = Depends(get_db_session),
 ) -> DiagnoseResponse:
+    if payload.empresa_id is not None:
+        await _assert_empresa_in_workspace(session, payload.empresa_id)
+
     elig_inputs = _to_eligibility_inputs(payload)
 
     ok_14a, req_14a = await evaluar_14_a(
@@ -537,7 +567,7 @@ async def diagnose(
                  rules_snapshot_hash,
                  created_by)
             values
-                (:ws, null, :year,
+                (:ws, :empresa, :year,
                  'cambio_regimen', :desc, cast(:fund as jsonb),
                  :ahorro,
                  :disc_v, :ver,
@@ -551,6 +581,11 @@ async def diagnose(
         ),
         {
             "ws": str(tenancy.workspace_id),
+            "empresa": (
+                str(payload.empresa_id)
+                if payload.empresa_id is not None
+                else None
+            ),
             "year": payload.tax_year,
             "desc": descripcion,
             "fund": json.dumps(fundamento_payload),
@@ -586,21 +621,30 @@ async def diagnose(
 )
 async def list_recomendaciones(
     tax_year: int | None = None,
+    empresa_id: UUID | None = None,
     limit: int = 50,
     _tenancy: Tenancy = Depends(current_tenancy),
     session: AsyncSession = Depends(get_db_session),
 ) -> RecomendacionListResponse:
     """Lista recomendaciones del workspace activo (RLS filtra)."""
-    params: dict[str, Any] = {"limit": limit, "year": tax_year}
+    params: dict[str, Any] = {
+        "limit": limit,
+        "year": tax_year,
+        "empresa": str(empresa_id) if empresa_id is not None else None,
+    }
     result = await session.execute(
         text(
             """
             select id, tax_year, tipo, descripcion,
                    ahorro_estimado_clp, disclaimer_version,
-                   engine_version, outputs, created_at
+                   engine_version, empresa_id, outputs, created_at
               from core.recomendaciones
              where tipo = 'cambio_regimen'
                and tax_year = coalesce(:year, tax_year)
+               and (
+                    :empresa::uuid is null
+                    or empresa_id = :empresa::uuid
+               )
              order by created_at desc
              limit :limit
             """
@@ -625,6 +669,11 @@ async def list_recomendaciones(
                 ahorro_estimado_clp=row["ahorro_estimado_clp"],
                 disclaimer_version=row["disclaimer_version"],
                 engine_version=row["engine_version"],
+                empresa_id=(
+                    UUID(str(row["empresa_id"]))
+                    if row["empresa_id"] is not None
+                    else None
+                ),
                 created_at=row["created_at"].isoformat(),
             )
         )

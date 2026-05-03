@@ -185,6 +185,7 @@ export interface ScenarioRequest {
   planilla_anual_pesos?: string;
   palancas: SimulatorPalancas;
   nombre?: string;
+  empresa_id?: string;
 }
 
 export interface ScenarioResultado {
@@ -229,6 +230,7 @@ export interface ScenarioListItem {
   nombre: string;
   tax_year: number;
   regimen: SimulatorRegimen;
+  empresa_id: string | null;
   carga_base: string;
   carga_simulada: string;
   ahorro_total: string;
@@ -324,6 +326,7 @@ export interface DiagnoseRequest {
   ventas_anuales_uf: string;
   rli_proyectada_anual_uf: string;
   plan_retiros_pct: string;
+  empresa_id?: string;
 }
 
 export interface RequisitoOut {
@@ -393,6 +396,7 @@ export interface RecomendacionListItem {
   ahorro_estimado_clp: string | null;
   disclaimer_version: string;
   engine_version: string;
+  empresa_id: string | null;
   created_at: string;
 }
 
