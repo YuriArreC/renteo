@@ -37,10 +37,12 @@ def verify_jwt(
     token = creds.credentials
     try:
         signing_key = _jwks_client().get_signing_key_from_jwt(token).key
+        # Supabase Auth firma con ES256 en proyectos nuevos y RS256 en
+        # proyectos legacy. Aceptamos ambos para cubrir las dos cohortes.
         return jwt.decode(
             token,
             signing_key,
-            algorithms=["RS256"],
+            algorithms=["RS256", "ES256"],
             audience=settings.supabase_jwt_audience,
         )
     except jwt.PyJWTError as exc:
