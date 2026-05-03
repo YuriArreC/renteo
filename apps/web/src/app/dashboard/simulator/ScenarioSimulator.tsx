@@ -1,10 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+import { ScenarioHistorial } from "@/app/dashboard/simulator/ScenarioHistorial";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -69,6 +71,8 @@ export function ScenarioSimulator() {
   const tForm = useTranslations("simulator.form");
   const tResult = useTranslations("simulator.result");
   const tSeverity = useTranslations("simulator.severity");
+  const tSimulator = useTranslations("simulator");
+  const queryClient = useQueryClient();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -90,6 +94,10 @@ export function ScenarioSimulator() {
         method: "POST",
         body: JSON.stringify(req),
       }),
+    onSuccess: (data) => {
+      toast.success(tSimulator("saved", { nombre: data.nombre }));
+      queryClient.invalidateQueries({ queryKey: ["scenario-list"] });
+    },
     onError: (err) =>
       toast.error(err instanceof ApiError ? err.detail : String(err)),
   });
@@ -274,6 +282,8 @@ export function ScenarioSimulator() {
           tSeverity={tSeverity}
         />
       )}
+
+      <ScenarioHistorial />
     </div>
   );
 }

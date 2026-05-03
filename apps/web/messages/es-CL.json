@@ -113,6 +113,40 @@
     "severity": {
       "warning": "Advertencia",
       "block": "Bloqueo"
+    },
+    "saved": "Escenario guardado: {nombre}",
+    "historial": {
+      "header": "Historial de escenarios",
+      "empty": "Aún no hay escenarios guardados para este workspace.",
+      "name": "Nombre",
+      "year": "Año",
+      "regimen": "Régimen",
+      "cargaSimulada": "Carga simulada",
+      "ahorro": "Ahorro",
+      "recomendado": "Recomendado",
+      "compareSelected": "Comparar seleccionados ({count})",
+      "compareHint": "Selecciona entre 2 y 4 escenarios para comparar.",
+      "createdAt": "Guardado",
+      "select": "Seleccionar"
+    },
+    "compare": {
+      "title": "Comparador de escenarios",
+      "subtitle": "Tabla lado a lado con plan de acción consolidado del escenario recomendado.",
+      "back": "← Volver al simulador",
+      "metric": "Métrica",
+      "rli": "RLI",
+      "idpc": "IDPC empresa",
+      "retiros": "Retiros del año",
+      "igc": "IGC dueño",
+      "carga": "Carga total",
+      "ahorro": "Ahorro vs base",
+      "palancasHeader": "Palancas activas",
+      "noPalancas": "Sin palancas",
+      "planHeader": "Plan de acción consolidado",
+      "planEmpty": "El escenario recomendado no requiere acciones adicionales.",
+      "fechaLimite": "Plazo: {fecha}",
+      "missingIds": "Selecciona al menos 2 escenarios desde el historial.",
+      "loadFailed": "No se pudo cargar la comparación."
     }
   },
   "comparador": {

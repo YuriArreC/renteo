@@ -180,6 +180,7 @@ export interface ScenarioRequest {
   rli_base: string;
   retiros_base?: string;
   palancas: SimulatorPalancas;
+  nombre?: string;
 }
 
 export interface ScenarioResultado {
@@ -206,6 +207,8 @@ export interface BanderaRoja {
 }
 
 export interface ScenarioResponse {
+  id: string;
+  nombre: string;
   tax_year: number;
   regimen: SimulatorRegimen;
   base: ScenarioResultado;
@@ -213,5 +216,49 @@ export interface ScenarioResponse {
   ahorro_total: string;
   palancas_aplicadas: PalancaImpacto[];
   banderas: BanderaRoja[];
+  engine_version: string;
+  disclaimer: string;
+}
+
+export interface ScenarioListItem {
+  id: string;
+  nombre: string;
+  tax_year: number;
+  regimen: SimulatorRegimen;
+  carga_base: string;
+  carga_simulada: string;
+  ahorro_total: string;
+  es_recomendado: boolean;
+  created_at: string;
+}
+
+export interface ScenarioListResponse {
+  scenarios: ScenarioListItem[];
+}
+
+export interface CompareScenarioCard {
+  id: string;
+  nombre: string;
+  tax_year: number;
+  regimen: SimulatorRegimen;
+  base: ScenarioResultado;
+  simulado: ScenarioResultado;
+  ahorro_total: string;
+  palancas_aplicadas: PalancaImpacto[];
+  banderas: BanderaRoja[];
+  es_recomendado: boolean;
+}
+
+export interface PlanAccionItem {
+  palanca_id: string;
+  label: string;
+  accion: string;
+  fundamento_legal: string;
+  fecha_limite: string;
+}
+
+export interface CompareResponse {
+  scenarios: CompareScenarioCard[];
+  plan_accion: PlanAccionItem[];
   disclaimer: string;
 }

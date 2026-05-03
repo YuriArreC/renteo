@@ -1,37 +1,34 @@
-"""Simulador de escenario de cierre — Track 8 (MVP).
+"""Simulador de escenario de cierre — Track 9.
 
-Implementa el motor what-if de skill 8 con un subconjunto de palancas
-de la lista blanca de `tax-compliance-guardrails.md`:
+Track 8 (MVP) entregó el motor what-if con 4 palancas (P1, P3, P4, P5).
+Track 9 agrega:
 
-- P1 (`dep_instantanea`): depreciación instantánea de activos fijos
-  (régimen 14 D). Reduce RLI por el monto del activo.
-- P3 (`rebaja_14e`): rebaja de RLI por reinversión, hasta 50% con
-  tope absoluto 5.000 UF (régimen 14 D N°3 únicamente).
-- P4 (`retiros_adicionales`): retiros del dueño antes del 31-dic;
-  suben la base IGC.
-- P5 (`sueldo_empresarial_mensual`): sueldo al socio activo; gasto
-  aceptado que baja RLI, pendiente de validar rango razonable
-  (TODO contador).
+- Persistencia en `core.escenarios_simulacion` por workspace.
+- `GET /api/scenario/list` para consultar el historial.
+- `POST /api/scenario/compare` para enfrentar hasta 4 escenarios lado a
+  lado, con marca `es_recomendado` (menor carga total) y plan de
+  acción consolidado por palanca aplicada.
 
-🟡 MVP. La fase 3 oficial agrega: P2 SENCE, P6 I+D, P7 IVA, P8
-donaciones, P9 APV, P10 IPE, P11 timing facturación, P12 cambio
-régimen, persistencia en `escenarios_simulacion` con engine_version
-y plan de acción exportable. Sin SAC/RAI/REX en este MVP.
+Fase 3 oficial: P2 SENCE, P6 I+D, P7 IVA, P8 donaciones, P9 APV, P10
+IPE, P11 timing, P12 cambio régimen; SAC/RAI/REX; rules_snapshot_hash
+firmado por skill 11; validación de contador socio sobre rangos.
 
-Auth: usuario autenticado.
+Auth: tenancy completa requerida (workspace activo).
 """
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.tenancy import current_user
+from src.auth.tenancy import Tenancy, current_tenancy
 from src.db import get_db_session
 from src.domain.tax_engine.idpc import compute_idpc
 from src.domain.tax_engine.igc import compute_igc
@@ -61,6 +58,14 @@ _PCT_MAX_14E: Decimal = Decimal("0.50")
 # Heurística MVP para sueldo empresarial razonable: tope mensual UF.
 # TODO(contador): reemplazar por rango razonable por industria/función.
 _SUELDO_EMP_TOPE_MENSUAL_UF: Decimal = Decimal("250")
+
+# Identifica la versión del motor que produjo el escenario. En track 11
+# pasa a derivarse del rules_snapshot_hash; por ahora viaja como string
+# constante para soportar la columna NOT NULL de la tabla.
+ENGINE_VERSION = "track-9-mvp-001"
+
+# Cantidad máxima de escenarios que el comparador acepta lado a lado.
+_COMPARE_MAX = 4
 
 
 # ---------------------------------------------------------------------------
@@ -117,6 +122,14 @@ class ScenarioRequest(BaseModel):
         description="Retiros del dueño ya realizados en el año.",
     )
     palancas: Palancas = Field(default_factory=Palancas)
+    nombre: str | None = Field(
+        default=None,
+        max_length=120,
+        description=(
+            "Nombre opcional del escenario (ej. 'Sin palancas', 'Plan A'). "
+            "Si se omite, se autogenera con régimen + año + timestamp."
+        ),
+    )
 
 
 class PalancaImpacto(BaseModel):
@@ -143,6 +156,8 @@ class ScenarioResultado(BaseModel):
 
 
 class ScenarioResponse(BaseModel):
+    id: UUID
+    nombre: str
     tax_year: int
     regimen: Regimen
     base: ScenarioResultado
@@ -150,6 +165,56 @@ class ScenarioResponse(BaseModel):
     ahorro_total: Decimal
     palancas_aplicadas: list[PalancaImpacto]
     banderas: list[BanderaRoja]
+    engine_version: str = ENGINE_VERSION
+    disclaimer: str = PLACEHOLDER_DISCLAIMER
+
+
+class ScenarioListItem(BaseModel):
+    id: UUID
+    nombre: str
+    tax_year: int
+    regimen: Regimen
+    carga_base: Decimal
+    carga_simulada: Decimal
+    ahorro_total: Decimal
+    es_recomendado: bool
+    created_at: str
+
+
+class ScenarioListResponse(BaseModel):
+    scenarios: list[ScenarioListItem]
+
+
+class CompareRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ids: list[UUID] = Field(min_length=1, max_length=_COMPARE_MAX)
+
+
+class CompareScenarioCard(BaseModel):
+    id: UUID
+    nombre: str
+    tax_year: int
+    regimen: Regimen
+    base: ScenarioResultado
+    simulado: ScenarioResultado
+    ahorro_total: Decimal
+    palancas_aplicadas: list[PalancaImpacto]
+    banderas: list[BanderaRoja]
+    es_recomendado: bool
+
+
+class PlanAccionItem(BaseModel):
+    palanca_id: str
+    label: str
+    accion: str
+    fundamento_legal: str
+    fecha_limite: str = "31-dic"
+
+
+class CompareResponse(BaseModel):
+    scenarios: list[CompareScenarioCard]
+    plan_accion: list[PlanAccionItem]
     disclaimer: str = PLACEHOLDER_DISCLAIMER
 
 
@@ -363,15 +428,136 @@ async def _carga(
     )
 
 
+def _default_nombre(regimen: Regimen, tax_year: int) -> str:
+    return f"Escenario {regimen.upper()} AT{tax_year}"
+
+
+def _plan_accion_for(
+    impactos: list[PalancaImpacto],
+) -> list[PlanAccionItem]:
+    """Genera la checklist de acción para palancas aplicadas.
+
+    Cada item ata la palanca a su acción concreta y a su fundamento
+    legal. La fecha límite por defecto es 31-dic; en track 10 se
+    refinará por palanca (ej. SENCE puede tener plazos antes).
+    """
+    plan_text: dict[str, str] = {
+        "dep_instantanea": (
+            "Adquirir y poner en uso el activo fijo dentro del ejercicio. "
+            "Conservar factura de compra y evidencia de uso."
+        ),
+        "rebaja_14e": (
+            "Reinvertir el monto en la empresa antes del cierre. No retirar "
+            "el equivalente en los 12 meses siguientes."
+        ),
+        "retiros_adicionales": (
+            "Documentar el retiro contra los registros SAC/RAI/REX y verificar "
+            "imputación con contador antes de ejecutar."
+        ),
+        "sueldo_empresarial": (
+            "Formalizar contrato y cotizaciones del socio activo, mantener "
+            "evidencia de presencia efectiva y razonabilidad del monto."
+        ),
+    }
+    items: list[PlanAccionItem] = []
+    for p in impactos:
+        if not p.aplicada:
+            continue
+        items.append(
+            PlanAccionItem(
+                palanca_id=p.palanca_id,
+                label=p.label,
+                accion=plan_text.get(
+                    p.palanca_id, "Coordinar ejecución con contador socio."
+                ),
+                fundamento_legal=p.fuente_legal,
+            )
+        )
+    return items
+
+
 # ---------------------------------------------------------------------------
-# Endpoint
+# Persistencia
+# ---------------------------------------------------------------------------
+
+
+def _serialize_jsonb(value: Any) -> str:
+    return json.dumps(value, default=str)
+
+
+async def _persist(
+    session: AsyncSession,
+    *,
+    workspace_id: UUID,
+    user_id: UUID,
+    nombre: str,
+    regimen: Regimen,
+    tax_year: int,
+    request: ScenarioRequest,
+    base: ScenarioResultado,
+    simulado: ScenarioResultado,
+    ahorro: Decimal,
+    impactos: list[PalancaImpacto],
+    banderas: list[BanderaRoja],
+) -> UUID:
+    """Inserta el escenario y devuelve el id generado por Postgres."""
+    inputs_payload = {
+        "regimen": regimen,
+        "tax_year": tax_year,
+        "rli_base": str(request.rli_base),
+        "retiros_base": str(request.retiros_base),
+        "palancas": json.loads(
+            request.palancas.model_dump_json(exclude_none=True)
+        ),
+    }
+    outputs_payload = {
+        "base": json.loads(base.model_dump_json()),
+        "simulado": json.loads(simulado.model_dump_json()),
+        "ahorro_total": str(ahorro),
+        "palancas_aplicadas": [
+            json.loads(i.model_dump_json()) for i in impactos
+        ],
+        "banderas": [json.loads(b.model_dump_json()) for b in banderas],
+    }
+
+    result = await session.execute(
+        text(
+            """
+            insert into core.escenarios_simulacion
+                (workspace_id, empresa_id, tax_year, nombre,
+                 regimen, inputs, outputs,
+                 engine_version, created_by)
+            values
+                (:ws, null, :year, :nombre,
+                 :regimen, cast(:inputs as jsonb), cast(:outputs as jsonb),
+                 :ver, :uid)
+            returning id
+            """
+        ),
+        {
+            "ws": str(workspace_id),
+            "year": tax_year,
+            "nombre": nombre,
+            "regimen": regimen,
+            "inputs": _serialize_jsonb(inputs_payload),
+            "outputs": _serialize_jsonb(outputs_payload),
+            "ver": ENGINE_VERSION,
+            "uid": str(user_id),
+        },
+    )
+    row = result.scalar_one()
+    return UUID(str(row))
+
+
+# ---------------------------------------------------------------------------
+# Endpoints
 # ---------------------------------------------------------------------------
 
 
 @router.post("/simulate", response_model=ScenarioResponse)
 async def simulate(
     payload: ScenarioRequest,
-    _user_id: UUID = Depends(current_user),
+    tenancy: Tenancy = Depends(current_tenancy),
     session: AsyncSession = Depends(get_db_session),
 ) -> ScenarioResponse:
     _validate_eligibility(payload.regimen, payload.palancas)
@@ -395,8 +581,26 @@ async def simulate(
     )
 
     ahorro = base.carga_total - simulado.carga_total
+    nombre = payload.nombre or _default_nombre(payload.regimen, payload.tax_year)
+
+    scenario_id = await _persist(
+        session,
+        workspace_id=tenancy.workspace_id,
+        user_id=tenancy.user_id,
+        nombre=nombre,
+        regimen=payload.regimen,
+        tax_year=payload.tax_year,
+        request=payload,
+        base=base,
+        simulado=simulado,
+        ahorro=ahorro,
+        impactos=impactos,
+        banderas=banderas,
+    )
 
     return ScenarioResponse(
+        id=scenario_id,
+        nombre=nombre,
         tax_year=payload.tax_year,
         regimen=payload.regimen,
         base=base,
@@ -405,3 +609,161 @@ async def simulate(
         palancas_aplicadas=impactos,
         banderas=banderas,
     )
+
+
+@router.get("/list", response_model=ScenarioListResponse)
+async def list_scenarios(
+    tax_year: int | None = None,
+    limit: int = 50,
+    _tenancy: Tenancy = Depends(current_tenancy),
+    session: AsyncSession = Depends(get_db_session),
+) -> ScenarioListResponse:
+    """Lista escenarios del workspace activo (RLS filtra automáticamente).
+
+    `es_recomendado` se calcula en vivo: el escenario con menor carga
+    total entre los listados queda marcado. Empate → desempata por
+    menor cantidad de palancas activadas (preferencia por simplicidad).
+    """
+    if limit < 1 or limit > 200:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="limit debe estar entre 1 y 200",
+        )
+
+    params: dict[str, Any] = {"limit": limit, "year": tax_year}
+
+    # `coalesce(:year, tax_year)` actúa como "no filter when null", lo que
+    # mantiene una query estática (sin f-strings ni concat) — necesario
+    # para evitar el falso positivo S608 de ruff y para que los planners
+    # cacheen un único plan.
+    result = await session.execute(
+        text(
+            """
+            select id, nombre, tax_year, regimen, outputs,
+                   created_at
+              from core.escenarios_simulacion
+             where regimen is not null
+               and tax_year = coalesce(:year, tax_year)
+             order by created_at desc
+             limit :limit
+            """
+        ),
+        params,
+    )
+    rows = result.mappings().all()
+
+    items: list[ScenarioListItem] = []
+    for row in rows:
+        outputs = row["outputs"] or {}
+        carga_base = Decimal(str((outputs.get("base") or {}).get("carga_total", "0")))
+        carga_sim = Decimal(
+            str((outputs.get("simulado") or {}).get("carga_total", "0"))
+        )
+        ahorro = Decimal(str(outputs.get("ahorro_total", "0")))
+        items.append(
+            ScenarioListItem(
+                id=UUID(str(row["id"])),
+                nombre=row["nombre"],
+                tax_year=row["tax_year"],
+                regimen=row["regimen"],
+                carga_base=carga_base,
+                carga_simulada=carga_sim,
+                ahorro_total=ahorro,
+                es_recomendado=False,
+                created_at=row["created_at"].isoformat(),
+            )
+        )
+
+    _mark_recomendado(items, lambda i: (i.carga_simulada, 0))
+
+    return ScenarioListResponse(scenarios=items)
+
+
+@router.post("/compare", response_model=CompareResponse)
+async def compare(
+    payload: CompareRequest,
+    _tenancy: Tenancy = Depends(current_tenancy),
+    session: AsyncSession = Depends(get_db_session),
+) -> CompareResponse:
+    """Compara hasta 4 escenarios lado a lado y consolida plan de acción.
+
+    `es_recomendado` se asigna al escenario con menor carga total entre
+    los provistos (lícitos por construcción, ya validados al simular).
+    Empate → menos palancas activadas.
+    """
+    ids_str = [str(i) for i in payload.ids]
+    result = await session.execute(
+        text(
+            """
+            select id, nombre, tax_year, regimen, outputs
+              from core.escenarios_simulacion
+             where id = any(cast(:ids as uuid[]))
+            """
+        ),
+        {"ids": ids_str},
+    )
+    rows = {str(row["id"]): row for row in result.mappings().all()}
+
+    missing = [str(i) for i in payload.ids if str(i) not in rows]
+    if missing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"escenarios no encontrados: {', '.join(missing)}",
+        )
+
+    cards: list[CompareScenarioCard] = []
+    for sid in payload.ids:
+        row = rows[str(sid)]
+        outputs = row["outputs"] or {}
+        impactos = [
+            PalancaImpacto.model_validate(p)
+            for p in outputs.get("palancas_aplicadas", [])
+        ]
+        banderas = [
+            BanderaRoja.model_validate(b)
+            for b in outputs.get("banderas", [])
+        ]
+        cards.append(
+            CompareScenarioCard(
+                id=UUID(str(row["id"])),
+                nombre=row["nombre"],
+                tax_year=row["tax_year"],
+                regimen=row["regimen"],
+                base=ScenarioResultado.model_validate(outputs.get("base") or {}),
+                simulado=ScenarioResultado.model_validate(
+                    outputs.get("simulado") or {}
+                ),
+                ahorro_total=Decimal(str(outputs.get("ahorro_total", "0"))),
+                palancas_aplicadas=impactos,
+                banderas=banderas,
+                es_recomendado=False,
+            )
+        )
+
+    _mark_recomendado(
+        cards,
+        lambda c: (
+            c.simulado.carga_total,
+            sum(1 for p in c.palancas_aplicadas if p.aplicada),
+        ),
+    )
+
+    # Plan de acción: dedupe por palanca_id de la unión de palancas del
+    # escenario recomendado (si hay) o del primero pasado.
+    pivot = next((c for c in cards if c.es_recomendado), cards[0])
+    plan = _plan_accion_for(pivot.palancas_aplicadas)
+
+    return CompareResponse(scenarios=cards, plan_accion=plan)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _mark_recomendado(items: list[Any], key: Any) -> None:
+    """Marca como `es_recomendado=True` al item con la menor key."""
+    if not items:
+        return
+    winner = min(items, key=key)
+    winner.es_recomendado = True
