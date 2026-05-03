@@ -1,65 +1,24 @@
-"""Fixtures para tests de integración con DB real (Supabase local o preview).
+"""Fixtures específicas de tests integration.
 
-Los tests se saltan automáticamente si `DATABASE_URL` no está configurada,
-así el test_smoke unitario no requiere infraestructura.
-
-Patrón:
-- `engine` (session scope): AsyncEngine compartido.
-- `admin_session`: sesión que NO aplica RLS (rol superuser/postgres) usada
-  para setup/teardown.
-- `tenant_session(engine, claims)`: context manager que abre una sesión
-  con `set local role authenticated` y `set local request.jwt.claims = ...`,
-  para que RLS evalúe las policies del Bloque 0B.
+Las fixtures `engine` y `admin_session` viven en `tests/conftest.py`
+(raíz) para que también las hereden tests golden.
 """
 
 from __future__ import annotations
 
 import json
-import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 from uuid import UUID, uuid4
 
-import pytest
 import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     async_sessionmaker,
-    create_async_engine,
 )
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-
-def _skip_if_no_db() -> None:
-    if not DATABASE_URL:
-        pytest.skip("DATABASE_URL not set; integration tests skipped")
-
-
-@pytest_asyncio.fixture
-async def engine() -> AsyncIterator[AsyncEngine]:
-    # Function-scoped: pytest-asyncio crea un event loop por test y un engine
-    # con scope=session se ata al primer loop, lanzando "Task attached to a
-    # different loop" en los tests siguientes.
-    _skip_if_no_db()
-    eng = create_async_engine(DATABASE_URL, future=True)
-    try:
-        yield eng
-    finally:
-        await eng.dispose()
-
-
-@pytest_asyncio.fixture
-async def admin_session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
-    """Conexión sin RLS (postgres/service_role) para setup/teardown."""
-    factory = async_sessionmaker(
-        engine, expire_on_commit=False, class_=AsyncSession
-    )
-    async with factory() as session:
-        yield session
 
 
 @asynccontextmanager

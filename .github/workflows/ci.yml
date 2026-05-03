@@ -86,13 +86,13 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
       - run: pip install -e "apps/api[dev]"
-      - name: Run integration + RLS tests
+      - name: Run integration + RLS + golden tests
         working-directory: apps/api
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:54322/postgres
         run: |
-          pytest tests/integration -v \
-            -m "integration or rls" \
+          pytest tests/integration tests/golden -v \
+            -m "integration or rls or golden" \
             --cov=src/domain/tax_engine \
             --cov-report=term
       - name: Validate published rules
