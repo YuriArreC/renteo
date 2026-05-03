@@ -39,7 +39,7 @@ XFAIL_REASON = (
 async def test_idpc_14a_at2026_rli_50000000(
     admin_session: AsyncSession,
 ) -> None:
-    """14 A AT 2026: RLI $50.000.000 × 27% = $13.500.000.
+    """14 A AT 2026: RLI $50.000.000 * 27% = $13.500.000.
 
     Fundamento esperado: art. 14 A LIR, tasa permanente 27% post Ley
     21.210. Regla pendiente firma.
@@ -60,7 +60,7 @@ async def test_idpc_14d3_at2026_transitoria(
 ) -> None:
     """14 D N°3 AT 2026 con tasa transitoria 12,5%.
 
-    RLI $30.000.000 × 12,5% = $3.750.000.
+    RLI $30.000.000 * 12,5% = $3.750.000.
     Fundamento: Ley 21.755, Circular SII 53/2025. Sujeto a condicio-
     nalidad del art. 4° transitorio Ley 21.735.
     """
@@ -80,7 +80,7 @@ async def test_idpc_14d3_at2025_permanente(
 ) -> None:
     """14 D N°3 AT 2025 a tasa permanente 25%.
 
-    RLI $40.000.000 × 25% = $10.000.000.
+    RLI $40.000.000 * 25% = $10.000.000.
     Fundamento: art. 14 D N°3 LIR, régimen permanente post-pandemia.
     """
     rli = Decimal("40000000")

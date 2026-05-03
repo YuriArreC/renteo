@@ -39,7 +39,7 @@ async def compute_idpc(
     tax_year: int,
     rli: Decimal,
 ) -> Decimal:
-    """Calcula el IDPC bruto: tasa × RLI.
+    """Calcula el IDPC bruto: tasa * RLI.
 
     Args:
         session: AsyncSession (sin RLS necesario; tax_params es global).

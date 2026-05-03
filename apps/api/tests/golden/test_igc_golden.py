@@ -36,7 +36,7 @@ async def test_igc_at2026_tramo_exento(
     """Base 10 UTA → tramo 1 (exento).
 
     UTA dic 2025 placeholder = $834.504.
-    Base = 10 × 834.504 = $8.345.040.
+    Base = 10 * 834.504 = $8.345.040.
     Tramo 1 (0-13.5 UTA): tasa 0%. IGC = 0.
     """
     base = Decimal("8345040")
@@ -51,9 +51,9 @@ async def test_igc_at2026_tramo_3(
 ) -> None:
     """Base 40 UTA → tramo 3 (8%, rebajar 1.74 UTA).
 
-    Base = 40 × $834.504 = $33.380.160.
-    impuesto_uta = 40 × 0.08 - 1.74 = 3.20 - 1.74 = 1.46 UTA.
-    impuesto_pesos = 1.46 × 834.504 = $1.218.375,84.
+    Base = 40 * $834.504 = $33.380.160.
+    impuesto_uta = 40 * 0.08 - 1.74 = 3.20 - 1.74 = 1.46 UTA.
+    impuesto_pesos = 1.46 * 834.504 = $1.218.375,84.
     """
     base = Decimal("33380160")
     expected = Decimal("1218375.84")
@@ -68,9 +68,9 @@ async def test_igc_at2026_tramo_8_alto(
 ) -> None:
     """Base 400 UTA → tramo 8 (40%, rebajar 38.82 UTA).
 
-    Base = 400 × $834.504 = $333.801.600.
-    impuesto_uta = 400 × 0.40 - 38.82 = 160 - 38.82 = 121.18 UTA.
-    impuesto_pesos = 121.18 × 834.504 = $101.123.394,72.
+    Base = 400 * $834.504 = $333.801.600.
+    impuesto_uta = 400 * 0.40 - 38.82 = 160 - 38.82 = 121.18 UTA.
+    impuesto_pesos = 121.18 * 834.504 = $101.123.394,72.
     """
     base = Decimal("333801600")
     expected = Decimal("101123394.72")

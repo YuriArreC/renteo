@@ -28,7 +28,7 @@ async def test_ppm_14d3_at2026_tasa_baja(
     """14 D N°3 AT 2026, ingresos año anterior 30.000 UF (≤ 50.000).
 
     Tasa baja transitoria 0,125%. Ingresos del mes $10.000.000.
-    PPM = $10.000.000 × 0,00125 = $12.500.
+    PPM = $10.000.000 * 0,00125 = $12.500.
     """
     result = await compute_ppm(
         admin_session,
@@ -48,7 +48,7 @@ async def test_ppm_14d3_at2026_tasa_alta(
     """14 D N°3 AT 2026, ingresos año anterior 70.000 UF (> 50.000).
 
     Tasa alta transitoria 0,25%. Ingresos del mes $10.000.000.
-    PPM = $10.000.000 × 0,0025 = $25.000.
+    PPM = $10.000.000 * 0,0025 = $25.000.
     """
     result = await compute_ppm(
         admin_session,
