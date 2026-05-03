@@ -333,6 +333,7 @@ export interface DiagnoseVeredicto {
 }
 
 export interface DiagnoseResponse {
+  id: string;
   tax_year: number;
   veredicto: DiagnoseVeredicto;
   elegibilidad: EligibilityOut[];
@@ -341,4 +342,23 @@ export interface DiagnoseResponse {
   riesgos: string[];
   fuente_legal: string[];
   disclaimer: string;
+  disclaimer_version: string;
+  engine_version: string;
+}
+
+export interface RecomendacionListItem {
+  id: string;
+  tax_year: number;
+  tipo: string;
+  descripcion: string;
+  regimen_actual: "14_a" | "14_d_3" | "14_d_8";
+  regimen_recomendado: RegimeKey;
+  ahorro_estimado_clp: string | null;
+  disclaimer_version: string;
+  engine_version: string;
+  created_at: string;
+}
+
+export interface RecomendacionListResponse {
+  recomendaciones: RecomendacionListItem[];
 }

@@ -132,6 +132,13 @@ async def test_diagnose_pyme_chilena_recommends_14d(
     assert Decimal(data["veredicto"]["ahorro_3a_clp"]) >= Decimal("0")
     assert data["proyeccion_dual_14d3"] is not None
     assert data["proyeccion_dual_14d3"]["base"]["es_transitoria"] is True
+    # Track 7b: el diagnóstico se persiste y la response trae id +
+    # disclaimer_version + engine_version.
+    from uuid import UUID as _UUID
+
+    assert _UUID(data["id"])
+    assert data["disclaimer_version"] == "v1"
+    assert data["engine_version"].startswith("track-7b")
 
 
 @pytest.mark.integration
@@ -244,3 +251,70 @@ async def test_diagnose_rejects_invalid_pct(
         headers={"Authorization": "Bearer fake"},
     )
     assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Track 7b — persistencia y listado
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+async def test_recomendaciones_listed_after_diagnose(
+    http_client_reg: AsyncClient, workspace_ctx: dict[str, UUID]
+) -> None:
+    app.dependency_overrides[verify_jwt] = _override_jwt(
+        _claims(workspace_ctx["user_id"], workspace_ctx["workspace_id"])
+    )
+
+    # Lista vacía al inicio.
+    initial = await http_client_reg.get(
+        "/api/regime/recomendaciones",
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert initial.status_code == 200
+    assert initial.json()["recomendaciones"] == []
+
+    # Diagnóstico se persiste.
+    diagnose = await http_client_reg.post(
+        "/api/regime/diagnose",
+        json=_DEFAULT_BODY,
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert diagnose.status_code == 200, diagnose.text
+    rec_id = diagnose.json()["id"]
+
+    listed = await http_client_reg.get(
+        "/api/regime/recomendaciones",
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert listed.status_code == 200
+    items = listed.json()["recomendaciones"]
+    assert len(items) == 1
+    assert items[0]["id"] == rec_id
+    assert items[0]["tipo"] == "cambio_regimen"
+    assert items[0]["regimen_actual"] == "14_a"
+    assert items[0]["disclaimer_version"] == "v1"
+
+
+@pytest.mark.integration
+async def test_recomendaciones_filter_by_year(
+    http_client_reg: AsyncClient, workspace_ctx: dict[str, UUID]
+) -> None:
+    app.dependency_overrides[verify_jwt] = _override_jwt(
+        _claims(workspace_ctx["user_id"], workspace_ctx["workspace_id"])
+    )
+    for year in (2025, 2026):
+        body = {**_DEFAULT_BODY, "tax_year": year}
+        r = await http_client_reg.post(
+            "/api/regime/diagnose",
+            json=body,
+            headers={"Authorization": "Bearer fake"},
+        )
+        assert r.status_code == 200, r.text
+
+    response = await http_client_reg.get(
+        "/api/regime/recomendaciones?tax_year=2025",
+        headers={"Authorization": "Bearer fake"},
+    )
+    years = {r["tax_year"] for r in response.json()["recomendaciones"]}
+    assert years == {2025}

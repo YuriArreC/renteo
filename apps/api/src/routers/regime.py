@@ -1,26 +1,22 @@
-"""Diagnóstico de régimen tributario — Track 7 oficial (skill 7).
+"""Diagnóstico de régimen tributario — Track 7 + 7b (skill 7).
 
-POST /api/regime/diagnose recibe los inputs del wizard y retorna:
-
-- Veredicto: régimen actual + recomendado + ahorro 3 años en CLP/UF.
-- Elegibilidad por régimen con detalle de requisitos (✓ / ✗ + cita
-  legal por requisito).
-- Proyección 3 años por régimen elegible (RLI, IDPC, retiros, IGC,
-  carga total) — usa `compute_idpc` y `compute_igc` reales.
-- Para 14 D N°3: escenario dual (transitoria 12,5% vs revertido 25%
-  por incumplimiento Ley 21.735 art. 4° transitorio).
-- Riesgos / implicancias del cambio de régimen.
-
-Persistencia: deferida a track 7b (tabla `core.recomendaciones` ya
-existe). Por ahora retorna el resultado pero no lo guarda.
+Endpoints:
+- POST /api/regime/diagnose: ejecuta el motor + persiste la
+  recomendación (track 7b) en core.recomendaciones con
+  disclaimer_version, engine_version, fundamento_legal e
+  inputs/outputs serializados.
+- GET /api/regime/recomendaciones: lista recomendaciones del
+  workspace activo (RLS filtra), ordenadas por created_at desc.
 
 Auth: tenancy completa (workspace activo).
 """
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict, Field
@@ -47,11 +43,13 @@ from src.lib.legal_texts import get_legal_text
 router = APIRouter(prefix="/api/regime", tags=["regime"])
 
 PLACEHOLDER_DISCLAIMER = (
-    "🟡 Diagnóstico calculado con tasas y tramos PLACEHOLDER pendientes "
-    "de validación por contador socio. La proyección 3 años usa la RLI "
-    "que tú declaraste como expectativa, sin sincronización SII real. "
-    "NO usar para decidir cambio de régimen sin revisión humana."
+    "Disclaimer pendiente de carga desde privacy.legal_texts."
 )
+
+# Track 7b: ID lógico del motor que produjo la recomendación. Incluido
+# en cada fila persistida para reproducibilidad. Track 11 oficial lo
+# derivará del rules_snapshot_hash.
+ENGINE_VERSION = "track-7b-mvp-001"
 
 _FLAG_14D3_REVERTIDA = "idpc_14d3_revertida_rate"
 
@@ -192,6 +190,7 @@ class DiagnoseVeredicto(BaseModel):
 
 
 class DiagnoseResponse(BaseModel):
+    id: UUID
     tax_year: int
     veredicto: DiagnoseVeredicto
     elegibilidad: list[EligibilityOut]
@@ -200,6 +199,27 @@ class DiagnoseResponse(BaseModel):
     riesgos: list[str]
     fuente_legal: list[str]
     disclaimer: str = PLACEHOLDER_DISCLAIMER
+    disclaimer_version: str = "v1"
+    engine_version: str = ENGINE_VERSION
+
+
+class RecomendacionListItem(BaseModel):
+    """Resumen de una recomendación persistida (skill 7b)."""
+
+    id: UUID
+    tax_year: int
+    tipo: str
+    descripcion: str
+    regimen_actual: Literal["14_a", "14_d_3", "14_d_8"]
+    regimen_recomendado: Literal["14_a", "14_d_3", "14_d_8", "renta_presunta"]
+    ahorro_estimado_clp: Decimal | None
+    disclaimer_version: str
+    engine_version: str
+    created_at: str
+
+
+class RecomendacionListResponse(BaseModel):
+    recomendaciones: list[RecomendacionListItem]
 
 
 # ---------------------------------------------------------------------------
@@ -337,7 +357,7 @@ def _riesgos_para(
 @router.post("/diagnose", response_model=DiagnoseResponse)
 async def diagnose(
     payload: DiagnoseRequest,
-    _tenancy: Tenancy = Depends(current_tenancy),
+    tenancy: Tenancy = Depends(current_tenancy),
     session: AsyncSession = Depends(get_db_session),
 ) -> DiagnoseResponse:
     elig_inputs = _to_eligibility_inputs(payload)
@@ -475,7 +495,74 @@ async def diagnose(
     ]
 
     legal = await get_legal_text(session, "disclaimer-recomendacion")
+
+    descripcion = (
+        f"Régimen actual {actual.upper()} → recomendado "
+        f"{recomendado_proj.regimen.upper()}. "
+        f"Ahorro estimado 3 años: {ahorro_clp} CLP."
+    )
+    inputs_payload = json.loads(payload.model_dump_json())
+    outputs_payload = {
+        "veredicto": json.loads(veredicto.model_dump_json()),
+        "elegibilidad": [
+            json.loads(e.model_dump_json()) for e in elegibilidad
+        ],
+        "proyecciones": [
+            json.loads(p.model_dump_json()) for p in proyecciones
+        ],
+        "proyeccion_dual_14d3": (
+            json.loads(proyeccion_dual.model_dump_json())
+            if proyeccion_dual
+            else None
+        ),
+        "riesgos": _riesgos_para(actual, recomendado_proj.regimen),
+        "fuente_legal": fuente,
+    }
+    fundamento_payload = [{"texto": f} for f in fuente]
+    snapshot_placeholder = json.dumps(
+        {"placeholder": True, "engine_version": ENGINE_VERSION}
+    )
+
+    result = await session.execute(
+        text(
+            """
+            insert into core.recomendaciones
+                (workspace_id, empresa_id, tax_year,
+                 tipo, descripcion, fundamento_legal,
+                 ahorro_estimado_clp,
+                 disclaimer_version, engine_version,
+                 inputs_snapshot, outputs,
+                 rule_set_snapshot, tax_year_params_snapshot,
+                 created_by)
+            values
+                (:ws, null, :year,
+                 'cambio_regimen', :desc, cast(:fund as jsonb),
+                 :ahorro,
+                 :disc_v, :ver,
+                 cast(:inp as jsonb), cast(:out as jsonb),
+                 cast(:snap as jsonb), cast(:snap as jsonb),
+                 :uid)
+            returning id
+            """
+        ),
+        {
+            "ws": str(tenancy.workspace_id),
+            "year": payload.tax_year,
+            "desc": descripcion,
+            "fund": json.dumps(fundamento_payload),
+            "ahorro": ahorro_clp,
+            "disc_v": legal.version,
+            "ver": ENGINE_VERSION,
+            "inp": json.dumps(inputs_payload, default=str),
+            "out": json.dumps(outputs_payload, default=str),
+            "snap": snapshot_placeholder,
+            "uid": str(tenancy.user_id),
+        },
+    )
+    rec_id = UUID(str(result.scalar_one()))
+
     return DiagnoseResponse(
+        id=rec_id,
         tax_year=payload.tax_year,
         veredicto=veredicto,
         elegibilidad=elegibilidad,
@@ -484,4 +571,55 @@ async def diagnose(
         riesgos=_riesgos_para(actual, recomendado_proj.regimen),
         fuente_legal=fuente,
         disclaimer=legal.body,
+        disclaimer_version=legal.version,
     )
+
+
+@router.get(
+    "/recomendaciones", response_model=RecomendacionListResponse
+)
+async def list_recomendaciones(
+    tax_year: int | None = None,
+    limit: int = 50,
+    _tenancy: Tenancy = Depends(current_tenancy),
+    session: AsyncSession = Depends(get_db_session),
+) -> RecomendacionListResponse:
+    """Lista recomendaciones del workspace activo (RLS filtra)."""
+    params: dict[str, Any] = {"limit": limit, "year": tax_year}
+    result = await session.execute(
+        text(
+            """
+            select id, tax_year, tipo, descripcion,
+                   ahorro_estimado_clp, disclaimer_version,
+                   engine_version, outputs, created_at
+              from core.recomendaciones
+             where tipo = 'cambio_regimen'
+               and tax_year = coalesce(:year, tax_year)
+             order by created_at desc
+             limit :limit
+            """
+        ),
+        params,
+    )
+    rows = result.mappings().all()
+    items: list[RecomendacionListItem] = []
+    for row in rows:
+        outputs = row["outputs"] or {}
+        veredicto = outputs.get("veredicto") or {}
+        items.append(
+            RecomendacionListItem(
+                id=UUID(str(row["id"])),
+                tax_year=row["tax_year"],
+                tipo=row["tipo"],
+                descripcion=row["descripcion"],
+                regimen_actual=veredicto.get("regimen_actual", "14_a"),
+                regimen_recomendado=veredicto.get(
+                    "regimen_recomendado", "14_a"
+                ),
+                ahorro_estimado_clp=row["ahorro_estimado_clp"],
+                disclaimer_version=row["disclaimer_version"],
+                engine_version=row["engine_version"],
+                created_at=row["created_at"].isoformat(),
+            )
+        )
+    return RecomendacionListResponse(recomendaciones=items)

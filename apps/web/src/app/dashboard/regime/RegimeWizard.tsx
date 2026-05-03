@@ -1,10 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+import { RegimeHistorial } from "@/app/dashboard/regime/RegimeHistorial";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -64,6 +66,8 @@ type FormValues = z.infer<typeof schema>;
 
 export function RegimeWizard() {
   const tForm = useTranslations("regime.form");
+  const tResult = useTranslations("regime.result");
+  const queryClient = useQueryClient();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -89,6 +93,14 @@ export function RegimeWizard() {
         method: "POST",
         body: JSON.stringify(req),
       }),
+    onSuccess: (data) => {
+      toast.success(
+        tResult("saved", {
+          desc: `${data.veredicto.regimen_actual.toUpperCase()} → ${data.veredicto.regimen_recomendado.toUpperCase()}`,
+        }),
+      );
+      queryClient.invalidateQueries({ queryKey: ["regime-recomendaciones"] });
+    },
     onError: (err) =>
       toast.error(err instanceof ApiError ? err.detail : String(err)),
   });
@@ -354,6 +366,8 @@ export function RegimeWizard() {
       </Card>
 
       {mutation.data && <RegimeResult data={mutation.data} />}
+
+      <RegimeHistorial />
     </div>
   );
 }

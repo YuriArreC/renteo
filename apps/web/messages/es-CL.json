@@ -124,7 +124,20 @@
       "dualRevertido": "Tasa revertida 25%",
       "riesgosHeader": "Riesgos e implicancias del cambio",
       "fuenteHeader": "Fundamento legal",
-      "transitoria": "Transitorio"
+      "transitoria": "Transitorio",
+      "saved": "Diagnóstico guardado: {desc}"
+    },
+    "historial": {
+      "header": "Mis diagnósticos",
+      "empty": "Aún no has guardado diagnósticos en este workspace.",
+      "year": "Año",
+      "from": "Actual",
+      "arrow": "→",
+      "to": "Recomendado",
+      "ahorro": "Ahorro 3a",
+      "version": "Versión",
+      "createdAt": "Generado",
+      "diagnosticVersion": "Disclaimer {disclaimer} · motor {engine}"
     }
   },
   "simulator": {
