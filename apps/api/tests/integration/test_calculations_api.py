@@ -138,9 +138,13 @@ async def test_calc_idpc_rejects_year_out_of_range(
 
 @pytest.mark.integration
 async def test_calc_requires_auth(http_client_calc: AsyncClient) -> None:
-    # Sin override de verify_jwt y sin Authorization header → 403 (HTTPBearer).
+    # Garantizar que ningún override de tests previos se filtre acá.
+    app.dependency_overrides.pop(verify_jwt, None)
+    # Sin Authorization header → 401 o 403 (HTTPBearer auto_error=True
+    # devuelve 401 en versiones recientes de FastAPI; aceptamos ambos
+    # para ser robusto a cambios upstream).
     response = await http_client_calc.post(
         "/api/calc/idpc",
         json={"regimen": "14_a", "tax_year": 2026, "rli": "1000000"},
     )
-    assert response.status_code == 403
+    assert response.status_code in (401, 403), response.text
