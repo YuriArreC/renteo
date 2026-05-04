@@ -752,6 +752,46 @@ export interface FromRutResponse {
   warnings: string[];
 }
 
+// Custodia certificado + mandato (skill 4b).
+
+export interface CertificateUploadRequest {
+  pfx_base64: string;
+  rut_titular: string;
+  nombre_titular?: string;
+  valido_desde: string;
+  valido_hasta: string;
+  passphrase?: string;
+}
+
+export interface CertificateMetadataResponse {
+  id: string;
+  rut_titular: string;
+  nombre_titular: string | null;
+  valido_desde: string;
+  valido_hasta: string;
+  revocado_at: string | null;
+  kms_provider: string;
+  storage_provider: string;
+}
+
+export interface MandatoCreateRequest {
+  alcance: string[];
+  inicio: string;
+  termino: string;
+  sii_referencia?: string;
+  consentimiento_version: string;
+  ip_otorgamiento?: string;
+}
+
+export interface MandatoResponse {
+  id: string;
+  alcance: string[];
+  inicio: string;
+  termino: string;
+  revocado_at: string | null;
+  sii_referencia: string | null;
+}
+
 // Sincronización SII (skill 4).
 
 export type SiiProvider = "mock" | "simpleapi" | "baseapi" | "apigateway";

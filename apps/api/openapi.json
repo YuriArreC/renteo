@@ -735,6 +735,127 @@
         "title": "CarteraResponse",
         "type": "object"
       },
+      "CertificateMetadataResponse": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kms_provider": {
+            "title": "Kms Provider",
+            "type": "string"
+          },
+          "nombre_titular": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre Titular"
+          },
+          "revocado_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revocado At"
+          },
+          "rut_titular": {
+            "title": "Rut Titular",
+            "type": "string"
+          },
+          "storage_provider": {
+            "title": "Storage Provider",
+            "type": "string"
+          },
+          "valido_desde": {
+            "title": "Valido Desde",
+            "type": "string"
+          },
+          "valido_hasta": {
+            "title": "Valido Hasta",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rut_titular",
+          "nombre_titular",
+          "valido_desde",
+          "valido_hasta",
+          "revocado_at",
+          "kms_provider",
+          "storage_provider"
+        ],
+        "title": "CertificateMetadataResponse",
+        "type": "object"
+      },
+      "CertificateUploadRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "nombre_titular": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre Titular"
+          },
+          "passphrase": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passphrase"
+          },
+          "pfx_base64": {
+            "minLength": 4,
+            "title": "Pfx Base64",
+            "type": "string"
+          },
+          "rut_titular": {
+            "maxLength": 12,
+            "minLength": 3,
+            "title": "Rut Titular",
+            "type": "string"
+          },
+          "valido_desde": {
+            "format": "date",
+            "title": "Valido Desde",
+            "type": "string"
+          },
+          "valido_hasta": {
+            "format": "date",
+            "title": "Valido Hasta",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pfx_base64",
+          "rut_titular",
+          "valido_desde",
+          "valido_hasta"
+        ],
+        "title": "CertificateUploadRequest",
+        "type": "object"
+      },
       "ComparadorRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2742,6 +2863,123 @@
           "via_sii"
         ],
         "title": "LookupSummary",
+        "type": "object"
+      },
+      "MandatoCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "alcance": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Alcance",
+            "type": "array"
+          },
+          "consentimiento_version": {
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Consentimiento Version",
+            "type": "string"
+          },
+          "inicio": {
+            "format": "date",
+            "title": "Inicio",
+            "type": "string"
+          },
+          "ip_otorgamiento": {
+            "anyOf": [
+              {
+                "maxLength": 45,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Otorgamiento"
+          },
+          "sii_referencia": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sii Referencia"
+          },
+          "termino": {
+            "format": "date",
+            "title": "Termino",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alcance",
+          "inicio",
+          "termino",
+          "consentimiento_version"
+        ],
+        "title": "MandatoCreateRequest",
+        "type": "object"
+      },
+      "MandatoResponse": {
+        "properties": {
+          "alcance": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Alcance",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "inicio": {
+            "title": "Inicio",
+            "type": "string"
+          },
+          "revocado_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revocado At"
+          },
+          "sii_referencia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sii Referencia"
+          },
+          "termino": {
+            "title": "Termino",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "alcance",
+          "inicio",
+          "termino",
+          "revocado_at",
+          "sii_referencia"
+        ],
+        "title": "MandatoResponse",
         "type": "object"
       },
       "MeResponse": {
@@ -6291,6 +6529,253 @@
         "summary": "Empresa From Rut",
         "tags": [
           "empresas-from-rut"
+        ]
+      }
+    },
+    "/api/empresas/{empresa_id}/certificado": {
+      "delete": {
+        "operationId": "revoke_certificate_endpoint_api_empresas__empresa_id__certificado_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "empresa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Empresa Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Revoke Certificate Endpoint",
+        "tags": [
+          "custodia"
+        ]
+      },
+      "get": {
+        "operationId": "get_certificate_api_empresas__empresa_id__certificado_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "empresa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Empresa Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateMetadataResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Certificate",
+        "tags": [
+          "custodia"
+        ]
+      },
+      "post": {
+        "operationId": "upload_certificate_api_empresas__empresa_id__certificado_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "empresa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Empresa Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateUploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateMetadataResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload Certificate",
+        "tags": [
+          "custodia"
+        ]
+      }
+    },
+    "/api/empresas/{empresa_id}/mandato": {
+      "get": {
+        "operationId": "get_mandato_api_empresas__empresa_id__mandato_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "empresa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Empresa Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MandatoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Mandato",
+        "tags": [
+          "custodia"
+        ]
+      },
+      "post": {
+        "operationId": "register_mandato_api_empresas__empresa_id__mandato_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "empresa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Empresa Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MandatoCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MandatoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Register Mandato",
+        "tags": [
+          "custodia"
         ]
       }
     },

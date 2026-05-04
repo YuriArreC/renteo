@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { AlertasInbox } from "@/app/dashboard/AlertasInbox";
+import { CertificadoCustodyPanel } from "@/app/dashboard/CertificadoCustodyPanel";
 import { SiiSyncSection } from "@/app/dashboard/SiiSyncSection";
 import { LogoutButton } from "@/components/LogoutButton";
 import { Button } from "@/components/ui/button";
@@ -106,6 +107,10 @@ export default async function DashboardPage() {
         <EmpresasSection empresas={empresas.empresas} />
 
         {hasEmpresas && <SiiSyncSection empresas={empresas.empresas} />}
+
+        {hasEmpresas && (
+          <CertificadoCustodyPanel empresas={empresas.empresas} />
+        )}
 
         {hasEmpresas && <AlertasInbox empresas={empresas.empresas} />}
       </main>

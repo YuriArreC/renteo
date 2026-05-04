@@ -475,6 +475,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/empresas/{empresa_id}/certificado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Certificate */
+        get: operations["get_certificate_api_empresas__empresa_id__certificado_get"];
+        put?: never;
+        /** Upload Certificate */
+        post: operations["upload_certificate_api_empresas__empresa_id__certificado_post"];
+        /** Revoke Certificate Endpoint */
+        delete: operations["revoke_certificate_endpoint_api_empresas__empresa_id__certificado_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/empresas/{empresa_id}/mandato": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Mandato */
+        get: operations["get_mandato_api_empresas__empresa_id__mandato_get"];
+        put?: never;
+        /** Register Mandato */
+        post: operations["register_mandato_api_empresas__empresa_id__mandato_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/empresas/{empresa_id}/papel-trabajo.xlsx": {
         parameters: {
             query?: never;
@@ -1210,6 +1247,49 @@ export interface components {
             /** Total Empresas */
             total_empresas: number;
         };
+        /** CertificateMetadataResponse */
+        CertificateMetadataResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kms Provider */
+            kms_provider: string;
+            /** Nombre Titular */
+            nombre_titular: string | null;
+            /** Revocado At */
+            revocado_at: string | null;
+            /** Rut Titular */
+            rut_titular: string;
+            /** Storage Provider */
+            storage_provider: string;
+            /** Valido Desde */
+            valido_desde: string;
+            /** Valido Hasta */
+            valido_hasta: string;
+        };
+        /** CertificateUploadRequest */
+        CertificateUploadRequest: {
+            /** Nombre Titular */
+            nombre_titular?: string | null;
+            /** Passphrase */
+            passphrase?: string | null;
+            /** Pfx Base64 */
+            pfx_base64: string;
+            /** Rut Titular */
+            rut_titular: string;
+            /**
+             * Valido Desde
+             * Format: date
+             */
+            valido_desde: string;
+            /**
+             * Valido Hasta
+             * Format: date
+             */
+            valido_hasta: string;
+        };
         /** ComparadorRequest */
         ComparadorRequest: {
             /**
@@ -1886,6 +1966,45 @@ export interface components {
             razon_social: string;
             /** Via Sii */
             via_sii: boolean;
+        };
+        /** MandatoCreateRequest */
+        MandatoCreateRequest: {
+            /** Alcance */
+            alcance: string[];
+            /** Consentimiento Version */
+            consentimiento_version: string;
+            /**
+             * Inicio
+             * Format: date
+             */
+            inicio: string;
+            /** Ip Otorgamiento */
+            ip_otorgamiento?: string | null;
+            /** Sii Referencia */
+            sii_referencia?: string | null;
+            /**
+             * Termino
+             * Format: date
+             */
+            termino: string;
+        };
+        /** MandatoResponse */
+        MandatoResponse: {
+            /** Alcance */
+            alcance: string[];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Inicio */
+            inicio: string;
+            /** Revocado At */
+            revocado_at: string | null;
+            /** Sii Referencia */
+            sii_referencia: string | null;
+            /** Termino */
+            termino: string;
         };
         /** MeResponse */
         MeResponse: {
@@ -3466,6 +3585,167 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FromRutResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_certificate_api_empresas__empresa_id__certificado_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                empresa_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateMetadataResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_certificate_api_empresas__empresa_id__certificado_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                empresa_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificateUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateMetadataResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_certificate_endpoint_api_empresas__empresa_id__certificado_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                empresa_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_mandato_api_empresas__empresa_id__mandato_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                empresa_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MandatoResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_mandato_api_empresas__empresa_id__mandato_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                empresa_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MandatoCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MandatoResponse"];
                 };
             };
             /** @description Validation Error */

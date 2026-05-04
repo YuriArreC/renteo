@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     kms_certs_key_arn: str = Field(default="")
     s3_certs_bucket: str = Field(default="")
 
+    # Skill 4b: KMS key ARN para envelope-encrypt del PFX. En CI / dev
+    # el mock usa el ARN como semilla del XOR; en prod debe ser una
+    # CMK real con key policy revisada por el equipo de seguridad.
+    sii_kms_key_arn: str = Field(default="")
+
     sii_provider_primary: Literal["simpleapi", "baseapi", "apigateway"] = "simpleapi"
     sii_provider_backup: Literal["simpleapi", "baseapi", "apigateway"] = "baseapi"
 

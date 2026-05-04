@@ -22,6 +22,7 @@ from src.routers import alertas as alertas_router
 from src.routers import calculations as calculations_router
 from src.routers import cartera as cartera_router
 from src.routers import comparador as comparador_router
+from src.routers import custodia as custodia_router
 from src.routers import empresas as empresas_router
 from src.routers import empresas_from_rut as empresas_from_rut_router
 from src.routers import encargados as encargados_router
@@ -156,6 +157,7 @@ app.include_router(legal_router.router)
 app.include_router(legal_router.public_router)
 app.include_router(empresas_router.router)
 app.include_router(empresas_from_rut_router.router)
+app.include_router(custodia_router.router)
 app.include_router(sii_router.router)
 app.include_router(papeles_router.router)
 app.include_router(privacy_router.router)

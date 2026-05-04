@@ -361,6 +361,30 @@
       "syncOk": "Sincronización completada: {rows} filas cargadas ({provider}).",
       "syncFail": "No se pudo sincronizar con SII: {error}",
       "providerNote": "Proveedor activo: {provider}. Mock = datos de prueba; cambia a SimpleAPI publicando el feature flag sii_provider."
+    },
+    "custody": {
+      "header": "Custodia certificado digital SII",
+      "subtitle": "El PFX viaja cifrado con KMS y se guarda en S3. Solo metadatos (vigencia, RUT titular) quedan en DB. Renueva o revoca cuando cambies el certificado.",
+      "active": "Vigente: {rut} hasta {hasta}",
+      "noActive": "Sin certificado vigente.",
+      "upload": "Subir certificado",
+      "replace": "Reemplazar",
+      "revoke": "Revocar",
+      "revoking": "Revocando…",
+      "close": "Cerrar",
+      "file": "Archivo .pfx / .p12",
+      "rut": "RUT del titular",
+      "nombre": "Nombre del titular (opcional)",
+      "validoDesde": "Válido desde",
+      "validoHasta": "Válido hasta",
+      "passphrase": "Passphrase del certificado",
+      "passphraseHint": "Solo se usa al cifrar; no se persiste.",
+      "submit": "Cifrar y custodiar",
+      "uploading": "Procesando…",
+      "uploadOk": "Certificado custodiado para {razon}.",
+      "revokeOk": "Certificado revocado.",
+      "fileRequired": "Selecciona el archivo PFX.",
+      "fieldsRequired": "Completa RUT y vigencia."
     }
   },
   "privacy": {
