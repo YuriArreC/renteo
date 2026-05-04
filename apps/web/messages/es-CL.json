@@ -148,6 +148,10 @@
       "acciones": "Acciones",
       "diagnosticar": "Diagnosticar",
       "simular": "Simular",
+      "papelTrabajo": "Papel de trabajo",
+      "papelDescargando": "Generando…",
+      "papelDescargado": "Papel de trabajo descargado para {razon}.",
+      "papelError": "No se pudo descargar el papel de trabajo: {error}",
       "noDiag": "—",
       "noSim": "—"
     },

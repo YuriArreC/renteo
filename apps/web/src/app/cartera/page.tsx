@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { BatchDiagnose } from "@/app/cartera/BatchDiagnose";
+import { PapelTrabajoButton } from "@/app/cartera/PapelTrabajoButton";
 import { LogoutButton } from "@/components/LogoutButton";
 import { Button } from "@/components/ui/button";
 import {
@@ -213,6 +214,11 @@ export default async function CarteraPage() {
                                 {t("table.simular")}
                               </Link>
                             </Button>
+                            <PapelTrabajoButton
+                              empresaId={e.empresa_id}
+                              razonSocial={e.razon_social}
+                              rut={e.rut}
+                            />
                           </div>
                         </td>
                       </tr>

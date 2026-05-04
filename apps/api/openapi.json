@@ -4953,6 +4953,52 @@
         ]
       }
     },
+    "/api/empresas/{empresa_id}/papel-trabajo.xlsx": {
+      "get": {
+        "operationId": "descargar_papel_trabajo_api_empresas__empresa_id__papel_trabajo_xlsx_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "empresa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Empresa Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Descargar Papel Trabajo",
+        "tags": [
+          "papeles"
+        ]
+      }
+    },
     "/api/empresas/{empresa_id}/sync-sii": {
       "post": {
         "operationId": "sync_sii_api_empresas__empresa_id__sync_sii_post",
