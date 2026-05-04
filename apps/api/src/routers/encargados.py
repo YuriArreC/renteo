@@ -23,6 +23,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 from src.auth.internal_admin import require_internal_admin
 from src.db import service_session
@@ -164,6 +165,22 @@ async def list_admin(
         )
 
 
+def _map_check_violation(exc: IntegrityError) -> HTTPException:
+    """El CHECK del schema exige dpa_vigente_hasta > dpa_firmado_at.
+    Lo mapeamos a 422 con un mensaje útil para el panel admin."""
+    if "encargados_check" in str(exc.orig):
+        return HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "dpa_vigente_hasta debe ser posterior a dpa_firmado_at."
+            ),
+        )
+    return HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail=str(exc.orig),
+    )
+
+
 @router.post(
     "", response_model=EncargadoAdmin, status_code=status.HTTP_201_CREATED
 )
@@ -172,34 +189,37 @@ async def create_encargado(
     _admin: UUID = Depends(require_internal_admin),
 ) -> EncargadoAdmin:
     async with service_session() as session:
-        result = await session.execute(
-            text(
-                """
-                insert into privacy.encargados
-                    (nombre, proposito, pais_tratamiento,
-                     dpa_firmado_at, dpa_vigente_hasta, dpa_url,
-                     contacto_dpo, notas)
-                values
-                    (:nombre, :proposito, :pais,
-                     :firmado, :vigente, :url, :dpo, :notas)
-                returning id, nombre, proposito, pais_tratamiento,
-                          dpa_firmado_at, dpa_vigente_hasta, dpa_url,
-                          contacto_dpo, notas, activo, created_at,
-                          updated_at
-                """
-            ),
-            {
-                "nombre": payload.nombre,
-                "proposito": payload.proposito,
-                "pais": payload.pais_tratamiento,
-                "firmado": payload.dpa_firmado_at,
-                "vigente": payload.dpa_vigente_hasta,
-                "url": payload.dpa_url,
-                "dpo": payload.contacto_dpo,
-                "notas": payload.notas,
-            },
-        )
-        row = result.mappings().one()
+        try:
+            result = await session.execute(
+                text(
+                    """
+                    insert into privacy.encargados
+                        (nombre, proposito, pais_tratamiento,
+                         dpa_firmado_at, dpa_vigente_hasta, dpa_url,
+                         contacto_dpo, notas)
+                    values
+                        (:nombre, :proposito, :pais,
+                         :firmado, :vigente, :url, :dpo, :notas)
+                    returning id, nombre, proposito, pais_tratamiento,
+                              dpa_firmado_at, dpa_vigente_hasta, dpa_url,
+                              contacto_dpo, notas, activo, created_at,
+                              updated_at
+                    """
+                ),
+                {
+                    "nombre": payload.nombre,
+                    "proposito": payload.proposito,
+                    "pais": payload.pais_tratamiento,
+                    "firmado": payload.dpa_firmado_at,
+                    "vigente": payload.dpa_vigente_hasta,
+                    "url": payload.dpa_url,
+                    "dpo": payload.contacto_dpo,
+                    "notas": payload.notas,
+                },
+            )
+            row = result.mappings().one()
+        except IntegrityError as exc:
+            raise _map_check_violation(exc) from exc
     return _row_to_admin(dict(row))
 
 
@@ -220,38 +240,41 @@ async def update_encargado(
         )
 
     async with service_session() as session:
-        result = await session.execute(
-            text(
-                """
-                update privacy.encargados
-                   set proposito        = coalesce(:proposito, proposito),
-                       pais_tratamiento = coalesce(:pais, pais_tratamiento),
-                       dpa_firmado_at   = coalesce(:firmado, dpa_firmado_at),
-                       dpa_vigente_hasta= coalesce(:vigente, dpa_vigente_hasta),
-                       dpa_url          = coalesce(:url, dpa_url),
-                       contacto_dpo     = coalesce(:dpo, contacto_dpo),
-                       notas            = coalesce(:notas, notas),
-                       activo           = coalesce(:activo, activo)
-                 where id = :id and deleted_at is null
-                returning id, nombre, proposito, pais_tratamiento,
-                          dpa_firmado_at, dpa_vigente_hasta, dpa_url,
-                          contacto_dpo, notas, activo, created_at,
-                          updated_at
-                """
-            ),
-            {
-                "id": str(encargado_id),
-                "proposito": diff.get("proposito"),
-                "pais": diff.get("pais_tratamiento"),
-                "firmado": diff.get("dpa_firmado_at"),
-                "vigente": diff.get("dpa_vigente_hasta"),
-                "url": diff.get("dpa_url"),
-                "dpo": diff.get("contacto_dpo"),
-                "notas": diff.get("notas"),
-                "activo": diff.get("activo"),
-            },
-        )
-        row = result.mappings().one_or_none()
+        try:
+            result = await session.execute(
+                text(
+                    """
+                    update privacy.encargados
+                       set proposito        = coalesce(:proposito, proposito),
+                           pais_tratamiento = coalesce(:pais, pais_tratamiento),
+                           dpa_firmado_at   = coalesce(:firmado, dpa_firmado_at),
+                           dpa_vigente_hasta= coalesce(:vigente, dpa_vigente_hasta),
+                           dpa_url          = coalesce(:url, dpa_url),
+                           contacto_dpo     = coalesce(:dpo, contacto_dpo),
+                           notas            = coalesce(:notas, notas),
+                           activo           = coalesce(:activo, activo)
+                     where id = :id and deleted_at is null
+                    returning id, nombre, proposito, pais_tratamiento,
+                              dpa_firmado_at, dpa_vigente_hasta, dpa_url,
+                              contacto_dpo, notas, activo, created_at,
+                              updated_at
+                    """
+                ),
+                {
+                    "id": str(encargado_id),
+                    "proposito": diff.get("proposito"),
+                    "pais": diff.get("pais_tratamiento"),
+                    "firmado": diff.get("dpa_firmado_at"),
+                    "vigente": diff.get("dpa_vigente_hasta"),
+                    "url": diff.get("dpa_url"),
+                    "dpo": diff.get("contacto_dpo"),
+                    "notas": diff.get("notas"),
+                    "activo": diff.get("activo"),
+                },
+            )
+            row = result.mappings().one_or_none()
+        except IntegrityError as exc:
+            raise _map_check_violation(exc) from exc
     if row is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
