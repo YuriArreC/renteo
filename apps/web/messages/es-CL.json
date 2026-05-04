@@ -605,6 +605,11 @@
     "copyright": "© {year} Renteo. Todos los derechos reservados.",
     "version": "v{version}"
   },
+  "snapshotTrace": {
+    "label": "Hash reglas",
+    "engine": "motor",
+    "disclaimer": "disclaimer"
+  },
   "legal": {
     "placeholderBanner": "Versión preliminar (v1) pendiente de revisión y firma por estudio jurídico antes del go-live público.",
     "versionInfo": "Versión {version} vigente desde {date}",

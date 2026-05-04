@@ -12,7 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def _insert_recomendacion(
-    session: AsyncSession, ws_id: UUID, emp_id: UUID, *, engine_version: str = "v1"
+    session: AsyncSession,
+    ws_id: UUID,
+    emp_id: UUID,
+    *,
+    engine_version: str = "v1",
+    snapshot_hash: str = "test-hash-aaaa",
 ) -> UUID:
     rec_id = uuid4()
     await session.execute(
@@ -23,14 +28,16 @@ async def _insert_recomendacion(
                 tipo, descripcion, fundamento_legal,
                 disclaimer_version, engine_version,
                 inputs_snapshot, outputs,
-                rule_set_snapshot, tax_year_params_snapshot
+                rule_set_snapshot, tax_year_params_snapshot,
+                rules_snapshot_hash
             ) values (
                 :id, :ws, :emp, 2026,
                 'cambio_regimen', 'test',
                 cast('[]' as jsonb),
                 'disclaimer-recomendacion-v1', :engine,
                 cast('{}' as jsonb), cast('{}' as jsonb),
-                cast('{"rules":[]}' as jsonb), cast('{}' as jsonb)
+                cast('{"rules":[]}' as jsonb), cast('{}' as jsonb),
+                :hash
             )
             """
         ),
@@ -39,6 +46,7 @@ async def _insert_recomendacion(
             "ws": str(ws_id),
             "emp": str(emp_id),
             "engine": engine_version,
+            "hash": snapshot_hash,
         },
     )
     return rec_id
@@ -101,6 +109,37 @@ async def test_snapshot_rule_set_snapshot_is_immutable(
                         "where id = :id"
                     ),
                     {"id": str(rec_id), "tampered": '{"tampered":true}'},
+                )
+    finally:
+        if rec_id is not None:
+            async with admin_session.begin():
+                await admin_session.execute(
+                    text("delete from core.recomendaciones where id = :id"),
+                    {"id": str(rec_id)},
+                )
+
+
+@pytest.mark.integration
+async def test_snapshot_hash_is_immutable(
+    admin_session: AsyncSession, two_workspaces: dict[str, UUID]
+) -> None:
+    """rules_snapshot_hash es parte del guard (track snapshot escenarios)."""
+    rec_id: UUID | None = None
+    try:
+        async with admin_session.begin():
+            rec_id = await _insert_recomendacion(
+                admin_session, two_workspaces["ws_a"], two_workspaces["emp_a"]
+            )
+
+        with pytest.raises((DBAPIError, InternalError)):
+            async with admin_session.begin():
+                await admin_session.execute(
+                    text(
+                        "update core.recomendaciones "
+                        "set rules_snapshot_hash = 'tampered' "
+                        "where id = :id"
+                    ),
+                    {"id": str(rec_id)},
                 )
     finally:
         if rec_id is not None:

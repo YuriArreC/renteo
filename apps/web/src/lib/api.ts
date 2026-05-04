@@ -437,6 +437,8 @@ export interface ComparadorResponse {
   rli: string;
   retiros_pesos: string;
   scenarios: RegimenScenario[];
+  engine_version: string;
+  rules_snapshot_hash: string;
   disclaimer: string;
 }
 
@@ -499,6 +501,7 @@ export interface ScenarioResponse {
   palancas_aplicadas: PalancaImpacto[];
   banderas: BanderaRoja[];
   engine_version: string;
+  rules_snapshot_hash: string;
   disclaimer: string;
 }
 
@@ -702,6 +705,7 @@ export interface DiagnoseResponse {
   disclaimer: string;
   disclaimer_version: string;
   engine_version: string;
+  rules_snapshot_hash: string;
 }
 
 export interface RecomendacionListItem {

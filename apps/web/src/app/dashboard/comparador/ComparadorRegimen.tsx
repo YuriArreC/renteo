@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { DecisionRibbon } from "@/components/DecisionRibbon";
+import { SnapshotTrace_Shared } from "@/components/SnapshotTrace_Shared";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -253,6 +254,10 @@ export function ComparadorRegimen() {
 
           <DecisionRibbon
             context={`Comparador multi-régimen AT ${mutation.data.tax_year}, RLI ${mutation.data.rli}`}
+          />
+          <SnapshotTrace_Shared
+            rulesSnapshotHash={mutation.data.rules_snapshot_hash}
+            engineVersion={mutation.data.engine_version}
           />
         </>
       )}

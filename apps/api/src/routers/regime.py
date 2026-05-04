@@ -211,6 +211,7 @@ class DiagnoseResponse(BaseModel):
     disclaimer: str = PLACEHOLDER_DISCLAIMER
     disclaimer_version: str = "v1"
     engine_version: str = ENGINE_VERSION
+    rules_snapshot_hash: str
 
 
 class RecomendacionListItem(BaseModel):
@@ -642,6 +643,7 @@ async def diagnose(
         fuente_legal=fuente,
         disclaimer=legal.body,
         disclaimer_version=legal.version,
+        rules_snapshot_hash=snap_hash,
     )
 
 

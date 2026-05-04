@@ -40,7 +40,14 @@ from src.auth.tenancy import current_user
 from src.db import get_db_session
 from src.domain.tax_engine.idpc import compute_idpc
 from src.domain.tax_engine.igc import compute_igc
+from src.domain.tax_engine.snapshot import build_snapshots
 from src.lib.legal_texts import get_legal_text
+
+# Skill 11: el comparador no persiste pero igual reporta el hash + version
+# para que el contador pueda cotejar qué set de reglas produjo la
+# comparación. Cualquier comparación re-ejecutada con el mismo set debe
+# devolver el mismo hash (test_comparador_hash_determinism).
+ENGINE_VERSION = "track-snapshot-v1-comparador"
 
 router = APIRouter(prefix="/api/calc", tags=["calc"])
 
@@ -115,6 +122,8 @@ class ComparadorResponse(BaseModel):
     rli: Decimal
     retiros_pesos: Decimal
     scenarios: list[RegimenScenario]
+    engine_version: str = ENGINE_VERSION
+    rules_snapshot_hash: str
     disclaimer: str = PLACEHOLDER_DISCLAIMER
 
 
@@ -237,10 +246,12 @@ async def comparador_regimen(
     scenarios = [RegimenScenario(**s) for s in raw_scenarios]
 
     legal = await get_legal_text(session, "disclaimer-simulacion")
+    _, _, snap_hash = await build_snapshots(session, tax_year=year)
     return ComparadorResponse(
         tax_year=year,
         rli=rli,
         retiros_pesos=retiros,
         scenarios=scenarios,
+        rules_snapshot_hash=snap_hash,
         disclaimer=legal.body,
     )

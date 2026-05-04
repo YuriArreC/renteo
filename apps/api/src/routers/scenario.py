@@ -286,6 +286,7 @@ class ScenarioResponse(BaseModel):
     palancas_aplicadas: list[PalancaImpacto]
     banderas: list[BanderaRoja]
     engine_version: str = ENGINE_VERSION
+    rules_snapshot_hash: str
     disclaimer: str = PLACEHOLDER_DISCLAIMER
 
 
@@ -802,8 +803,8 @@ async def _persist(
     ahorro: Decimal,
     impactos: list[PalancaImpacto],
     banderas: list[BanderaRoja],
-) -> UUID:
-    """Inserta el escenario y devuelve el id generado por Postgres."""
+) -> tuple[UUID, str]:
+    """Inserta el escenario y devuelve (id, rules_snapshot_hash)."""
     inputs_payload = {
         "regimen": regimen,
         "tax_year": tax_year,
@@ -863,7 +864,7 @@ async def _persist(
         },
     )
     row = result.scalar_one()
-    return UUID(str(row))
+    return UUID(str(row)), snap_hash
 
 
 # ---------------------------------------------------------------------------
@@ -918,7 +919,7 @@ async def simulate(
     ahorro = base.carga_total - simulado.carga_total
     nombre = payload.nombre or _default_nombre(payload.regimen, payload.tax_year)
 
-    scenario_id = await _persist(
+    scenario_id, snap_hash = await _persist(
         session,
         workspace_id=tenancy.workspace_id,
         user_id=tenancy.user_id,
@@ -962,6 +963,7 @@ async def simulate(
         ahorro_total=ahorro,
         palancas_aplicadas=result.impactos,
         banderas=result.banderas,
+        rules_snapshot_hash=snap_hash,
         disclaimer=legal.body,
     )
 

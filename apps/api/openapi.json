@@ -574,6 +574,11 @@
             "title": "Disclaimer",
             "type": "string"
           },
+          "engine_version": {
+            "default": "track-snapshot-v1-comparador",
+            "title": "Engine Version",
+            "type": "string"
+          },
           "retiros_pesos": {
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Retiros Pesos",
@@ -582,6 +587,10 @@
           "rli": {
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Rli",
+            "type": "string"
+          },
+          "rules_snapshot_hash": {
+            "title": "Rules Snapshot Hash",
             "type": "string"
           },
           "scenarios": {
@@ -600,7 +609,8 @@
           "tax_year",
           "rli",
           "retiros_pesos",
-          "scenarios"
+          "scenarios",
+          "rules_snapshot_hash"
         ],
         "title": "ComparadorResponse",
         "type": "object"
@@ -1422,6 +1432,10 @@
             "title": "Riesgos",
             "type": "array"
           },
+          "rules_snapshot_hash": {
+            "title": "Rules Snapshot Hash",
+            "type": "string"
+          },
           "tax_year": {
             "title": "Tax Year",
             "type": "integer"
@@ -1438,7 +1452,8 @@
           "proyecciones",
           "proyeccion_dual_14d3",
           "riesgos",
-          "fuente_legal"
+          "fuente_legal",
+          "rules_snapshot_hash"
         ],
         "title": "DiagnoseResponse",
         "type": "object"
@@ -3151,6 +3166,10 @@
             "title": "Regimen",
             "type": "string"
           },
+          "rules_snapshot_hash": {
+            "title": "Rules Snapshot Hash",
+            "type": "string"
+          },
           "simulado": {
             "$ref": "#/components/schemas/ScenarioResultado"
           },
@@ -3168,7 +3187,8 @@
           "simulado",
           "ahorro_total",
           "palancas_aplicadas",
-          "banderas"
+          "banderas",
+          "rules_snapshot_hash"
         ],
         "title": "ScenarioResponse",
         "type": "object"

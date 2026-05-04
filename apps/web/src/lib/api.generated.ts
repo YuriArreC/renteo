@@ -970,10 +970,17 @@ export interface components {
              * @default 🟡 Comparativa calculada con parámetros tributarios PLACEHOLDER pendientes de validación por contador socio. Esta versión NO considera registros SAC/RAI/REX, créditos imputados ni proyección multi-año (eso entra en fase 3 oficial). NO usar para decisiones tributarias reales.
              */
             disclaimer: string;
+            /**
+             * Engine Version
+             * @default track-snapshot-v1-comparador
+             */
+            engine_version: string;
             /** Retiros Pesos */
             retiros_pesos: string;
             /** Rli */
             rli: string;
+            /** Rules Snapshot Hash */
+            rules_snapshot_hash: string;
             /** Scenarios */
             scenarios: components["schemas"]["RegimenScenario"][];
             /** Tax Year */
@@ -1258,6 +1265,8 @@ export interface components {
             proyecciones: components["schemas"]["RegimeProjection"][];
             /** Riesgos */
             riesgos: string[];
+            /** Rules Snapshot Hash */
+            rules_snapshot_hash: string;
             /** Tax Year */
             tax_year: number;
             veredicto: components["schemas"]["DiagnoseVeredicto"];
@@ -1877,6 +1886,8 @@ export interface components {
              * @enum {string}
              */
             regimen: "14_a" | "14_d_3" | "14_d_8";
+            /** Rules Snapshot Hash */
+            rules_snapshot_hash: string;
             simulado: components["schemas"]["ScenarioResultado"];
             /** Tax Year */
             tax_year: number;

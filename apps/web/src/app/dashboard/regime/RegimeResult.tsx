@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { DecisionRibbon } from "@/components/DecisionRibbon";
+import { SnapshotTrace_Shared } from "@/components/SnapshotTrace_Shared";
 import {
   Card,
   CardContent,
@@ -199,6 +200,11 @@ export function RegimeResult({ data }: { data: DiagnoseResponse }) {
 
       <DecisionRibbon
         context={`Diagnóstico régimen #${data.id} (${data.veredicto.regimen_actual} → ${data.veredicto.regimen_recomendado}, AT ${data.tax_year})`}
+      />
+      <SnapshotTrace_Shared
+        rulesSnapshotHash={data.rules_snapshot_hash}
+        engineVersion={data.engine_version}
+        disclaimerVersion={data.disclaimer_version}
       />
     </div>
   );

@@ -12,6 +12,7 @@ import { z } from "zod";
 
 import { ScenarioHistorial } from "@/app/dashboard/simulator/ScenarioHistorial";
 import { DecisionRibbon } from "@/components/DecisionRibbon";
+import { SnapshotTrace_Shared } from "@/components/SnapshotTrace_Shared";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -581,6 +582,10 @@ function ResultPanels({ data, tResult, tSeverity }: ResultPanelsProps) {
 
       <DecisionRibbon
         context={`Escenario simulado #${data.id} (${data.regimen}, AT ${data.tax_year})`}
+      />
+      <SnapshotTrace_Shared
+        rulesSnapshotHash={data.rules_snapshot_hash}
+        engineVersion={data.engine_version}
       />
     </>
   );
