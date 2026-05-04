@@ -142,3 +142,35 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
           NEXT_PUBLIC_API_URL: http://localhost:8000
         run: pnpm --filter @renteo/web build
+
+  shared-types-sync:
+    name: shared types · openapi.json + api.generated.ts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -e "apps/api[dev]"
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Regenerate openapi.json
+        working-directory: apps/api
+        run: python tools/dump_openapi.py
+      - name: Regenerate api.generated.ts
+        run: pnpm --filter @renteo/web types:gen
+      - name: Verify shared types are committed in sync
+        run: |
+          if ! git diff --exit-code apps/api/openapi.json \
+                                  apps/web/src/lib/api.generated.ts; then
+            echo "::error::Shared types out of sync. Corre desde la raíz:"
+            echo "  python apps/api/tools/dump_openapi.py"
+            echo "  pnpm --filter @renteo/web types:gen"
+            echo "y commitea los archivos resultantes."
+            exit 1
+          fi

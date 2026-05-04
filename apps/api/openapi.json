@@ -1,0 +1,4197 @@
+{
+  "components": {
+    "schemas": {
+      "AlertaResponse": {
+        "properties": {
+          "accion_recomendada": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accion Recomendada"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "empresa_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Empresa Id"
+          },
+          "estado": {
+            "enum": [
+              "nueva",
+              "vista",
+              "descartada",
+              "accionada"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "fecha_limite": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Limite"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "severidad": {
+            "enum": [
+              "info",
+              "warning",
+              "critical"
+            ],
+            "title": "Severidad",
+            "type": "string"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          },
+          "titulo": {
+            "title": "Titulo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "empresa_id",
+          "tipo",
+          "severidad",
+          "titulo",
+          "descripcion",
+          "accion_recomendada",
+          "estado",
+          "fecha_limite",
+          "created_at"
+        ],
+        "title": "AlertaResponse",
+        "type": "object"
+      },
+      "AlertasListResponse": {
+        "properties": {
+          "alertas": {
+            "items": {
+              "$ref": "#/components/schemas/AlertaResponse"
+            },
+            "title": "Alertas",
+            "type": "array"
+          }
+        },
+        "required": [
+          "alertas"
+        ],
+        "title": "AlertasListResponse",
+        "type": "object"
+      },
+      "ArcopListResponse": {
+        "properties": {
+          "solicitudes": {
+            "items": {
+              "$ref": "#/components/schemas/ArcopResponse"
+            },
+            "title": "Solicitudes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "solicitudes"
+        ],
+        "title": "ArcopListResponse",
+        "type": "object"
+      },
+      "ArcopResponse": {
+        "properties": {
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "estado": {
+            "enum": [
+              "recibida",
+              "en_proceso",
+              "cumplida",
+              "rechazada"
+            ],
+            "title": "Estado",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "recibida_at": {
+            "title": "Recibida At",
+            "type": "string"
+          },
+          "respondida_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Respondida At"
+          },
+          "respuesta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Respuesta"
+          },
+          "tipo": {
+            "enum": [
+              "acceso",
+              "rectificacion",
+              "cancelacion",
+              "oposicion",
+              "portabilidad"
+            ],
+            "title": "Tipo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "estado",
+          "descripcion",
+          "recibida_at",
+          "respondida_at",
+          "respuesta"
+        ],
+        "title": "ArcopResponse",
+        "type": "object"
+      },
+      "BanderaRoja": {
+        "properties": {
+          "mensaje": {
+            "title": "Mensaje",
+            "type": "string"
+          },
+          "palanca_id": {
+            "title": "Palanca Id",
+            "type": "string"
+          },
+          "severidad": {
+            "enum": [
+              "warning",
+              "block"
+            ],
+            "title": "Severidad",
+            "type": "string"
+          }
+        },
+        "required": [
+          "severidad",
+          "palanca_id",
+          "mensaje"
+        ],
+        "title": "BanderaRoja",
+        "type": "object"
+      },
+      "CalculationResponse": {
+        "properties": {
+          "currency": {
+            "const": "CLP",
+            "default": "CLP",
+            "title": "Currency",
+            "type": "string"
+          },
+          "disclaimer": {
+            "default": "🟡 Resultado calculado con parámetros tributarios PLACEHOLDER pendientes de validación por contador socio. NO usar para decisiones tributarias reales hasta que se publique la versión firmada.",
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "fuente_legal": {
+            "title": "Fuente Legal",
+            "type": "string"
+          },
+          "tax_year": {
+            "title": "Tax Year",
+            "type": "integer"
+          },
+          "value": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "tax_year",
+          "fuente_legal"
+        ],
+        "title": "CalculationResponse",
+        "type": "object"
+      },
+      "CarteraEmpresaItem": {
+        "properties": {
+          "alertas_abiertas": {
+            "title": "Alertas Abiertas",
+            "type": "integer"
+          },
+          "empresa_id": {
+            "format": "uuid",
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "razon_social": {
+            "title": "Razon Social",
+            "type": "string"
+          },
+          "regimen_actual": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8",
+              "presunta",
+              "desconocido"
+            ],
+            "title": "Regimen Actual",
+            "type": "string"
+          },
+          "rut": {
+            "title": "Rut",
+            "type": "string"
+          },
+          "score_oportunidad": {
+            "title": "Score Oportunidad",
+            "type": "integer"
+          },
+          "ultima_recomendacion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UltimaRecomendacion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ultima_simulacion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UltimaSimulacion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "empresa_id",
+          "rut",
+          "razon_social",
+          "regimen_actual",
+          "alertas_abiertas",
+          "ultima_simulacion",
+          "ultima_recomendacion",
+          "score_oportunidad"
+        ],
+        "title": "CarteraEmpresaItem",
+        "type": "object"
+      },
+      "CarteraResponse": {
+        "properties": {
+          "ahorro_potencial_estimado_clp": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ahorro Potencial Estimado Clp",
+            "type": "string"
+          },
+          "empresas": {
+            "items": {
+              "$ref": "#/components/schemas/CarteraEmpresaItem"
+            },
+            "title": "Empresas",
+            "type": "array"
+          },
+          "total_alertas_abiertas": {
+            "title": "Total Alertas Abiertas",
+            "type": "integer"
+          },
+          "total_empresas": {
+            "title": "Total Empresas",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "empresas",
+          "total_empresas",
+          "total_alertas_abiertas",
+          "ahorro_potencial_estimado_clp"
+        ],
+        "title": "CarteraResponse",
+        "type": "object"
+      },
+      "ComparadorRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "retiros_pesos": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "Retiros del dueño en el año, CLP",
+            "title": "Retiros Pesos"
+          },
+          "rli": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "RLI proyectada en CLP",
+            "title": "Rli"
+          },
+          "tax_year": {
+            "maximum": 2030.0,
+            "minimum": 2024.0,
+            "title": "Tax Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tax_year",
+          "rli",
+          "retiros_pesos"
+        ],
+        "title": "ComparadorRequest",
+        "type": "object"
+      },
+      "ComparadorResponse": {
+        "properties": {
+          "disclaimer": {
+            "default": "🟡 Comparativa calculada con parámetros tributarios PLACEHOLDER pendientes de validación por contador socio. Esta versión NO considera registros SAC/RAI/REX, créditos imputados ni proyección multi-año (eso entra en fase 3 oficial). NO usar para decisiones tributarias reales.",
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "retiros_pesos": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Retiros Pesos",
+            "type": "string"
+          },
+          "rli": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rli",
+            "type": "string"
+          },
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/RegimenScenario"
+            },
+            "title": "Scenarios",
+            "type": "array"
+          },
+          "tax_year": {
+            "title": "Tax Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tax_year",
+          "rli",
+          "retiros_pesos",
+          "scenarios"
+        ],
+        "title": "ComparadorResponse",
+        "type": "object"
+      },
+      "CompareRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "CompareRequest",
+        "type": "object"
+      },
+      "CompareResponse": {
+        "properties": {
+          "disclaimer": {
+            "default": "Disclaimer pendiente de carga desde privacy.legal_texts.",
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "plan_accion": {
+            "items": {
+              "$ref": "#/components/schemas/PlanAccionItem"
+            },
+            "title": "Plan Accion",
+            "type": "array"
+          },
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/CompareScenarioCard"
+            },
+            "title": "Scenarios",
+            "type": "array"
+          }
+        },
+        "required": [
+          "scenarios",
+          "plan_accion"
+        ],
+        "title": "CompareResponse",
+        "type": "object"
+      },
+      "CompareScenarioCard": {
+        "properties": {
+          "ahorro_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ahorro Total",
+            "type": "string"
+          },
+          "banderas": {
+            "items": {
+              "$ref": "#/components/schemas/BanderaRoja"
+            },
+            "title": "Banderas",
+            "type": "array"
+          },
+          "base": {
+            "$ref": "#/components/schemas/ScenarioResultado"
+          },
+          "es_recomendado": {
+            "title": "Es Recomendado",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "palancas_aplicadas": {
+            "items": {
+              "$ref": "#/components/schemas/PalancaImpacto"
+            },
+            "title": "Palancas Aplicadas",
+            "type": "array"
+          },
+          "regimen": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen",
+            "type": "string"
+          },
+          "simulado": {
+            "$ref": "#/components/schemas/ScenarioResultado"
+          },
+          "tax_year": {
+            "title": "Tax Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "tax_year",
+          "regimen",
+          "base",
+          "simulado",
+          "ahorro_total",
+          "palancas_aplicadas",
+          "banderas",
+          "es_recomendado"
+        ],
+        "title": "CompareScenarioCard",
+        "type": "object"
+      },
+      "CreateArcopRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "descripcion": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Detalle libre del titular. Para 'rectificacion' incluir qué dato corregir y el valor solicitado.",
+            "title": "Descripcion"
+          },
+          "tipo": {
+            "enum": [
+              "acceso",
+              "rectificacion",
+              "cancelacion",
+              "oposicion",
+              "portabilidad"
+            ],
+            "title": "Tipo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tipo"
+        ],
+        "title": "CreateArcopRequest",
+        "type": "object"
+      },
+      "CreateDraftRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "domain": {
+            "minLength": 1,
+            "title": "Domain",
+            "type": "string"
+          },
+          "fuente_legal": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "minItems": 1,
+            "title": "Fuente Legal",
+            "type": "array"
+          },
+          "key": {
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "rules": {
+            "additionalProperties": true,
+            "title": "Rules",
+            "type": "object"
+          },
+          "vigencia_desde": {
+            "format": "date",
+            "title": "Vigencia Desde",
+            "type": "string"
+          },
+          "vigencia_hasta": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vigencia Hasta"
+          }
+        },
+        "required": [
+          "domain",
+          "key",
+          "vigencia_desde",
+          "rules",
+          "fuente_legal"
+        ],
+        "title": "CreateDraftRequest",
+        "type": "object"
+      },
+      "CreateEmpresaRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "capital_inicial_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capital Inicial Uf"
+          },
+          "fecha_inicio_actividades": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Inicio Actividades"
+          },
+          "giro": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Giro"
+          },
+          "razon_social": {
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Razon Social",
+            "type": "string"
+          },
+          "regimen_actual": {
+            "default": "desconocido",
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8",
+              "presunta",
+              "desconocido"
+            ],
+            "title": "Regimen Actual",
+            "type": "string"
+          },
+          "rut": {
+            "maxLength": 12,
+            "minLength": 3,
+            "title": "Rut",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rut",
+          "razon_social"
+        ],
+        "title": "CreateEmpresaRequest",
+        "type": "object"
+      },
+      "CreateWorkspaceReq": {
+        "additionalProperties": false,
+        "properties": {
+          "consent_tratamiento_datos": {
+            "const": true,
+            "description": "Consentimiento explícito al tratamiento de datos personales y tributarios bajo Ley 19.628 + Ley 21.719. Versión consentimiento-tratamiento-datos-v1.",
+            "title": "Consent Tratamiento Datos",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "pyme",
+              "accounting_firm"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "consent_tratamiento_datos"
+        ],
+        "title": "CreateWorkspaceReq",
+        "type": "object"
+      },
+      "CreateWorkspaceResp": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "owner",
+              "cfo",
+              "accountant_lead",
+              "accountant_staff",
+              "viewer"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "pyme",
+              "accounting_firm"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "role"
+        ],
+        "title": "CreateWorkspaceResp",
+        "type": "object"
+      },
+      "DiagnoseRequest": {
+        "additionalProperties": false,
+        "description": "Inputs del wizard de diagnóstico (skill 7, preguntas 4-12).",
+        "properties": {
+          "capital_efectivo_inicial_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Capital Efectivo Inicial Uf"
+          },
+          "empresa_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Empresa del workspace activo a la que se asocia el diagnóstico. Si se omite, queda como recomendación workspace-level.",
+            "title": "Empresa Id"
+          },
+          "ingresos_max_anual_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Ingresos Max Anual Uf"
+          },
+          "ingresos_promedio_3a_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Ingresos Promedio 3A Uf"
+          },
+          "participacion_empresas_no_14d_sobre_10pct": {
+            "title": "Participacion Empresas No 14D Sobre 10Pct",
+            "type": "boolean"
+          },
+          "pct_ingresos_pasivos": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Pct Ingresos Pasivos"
+          },
+          "plan_retiros_pct": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "% de RLI que el dueño planea retirar cada año.",
+            "title": "Plan Retiros Pct"
+          },
+          "regimen_actual": {
+            "anyOf": [
+              {
+                "enum": [
+                  "14_a",
+                  "14_d_3",
+                  "14_d_8"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Régimen vigente del contribuyente. Si se omite asume 14 A (supletorio).",
+            "title": "Regimen Actual"
+          },
+          "rli_proyectada_anual_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "RLI esperada para cada uno de los próximos 3 años.",
+            "title": "Rli Proyectada Anual Uf"
+          },
+          "sector": {
+            "enum": [
+              "comercio",
+              "servicios",
+              "agricola",
+              "transporte",
+              "mineria",
+              "otro"
+            ],
+            "title": "Sector",
+            "type": "string"
+          },
+          "tax_year": {
+            "maximum": 2030.0,
+            "minimum": 2024.0,
+            "title": "Tax Year",
+            "type": "integer"
+          },
+          "todos_duenos_personas_naturales_chile": {
+            "title": "Todos Duenos Personas Naturales Chile",
+            "type": "boolean"
+          },
+          "ventas_anuales_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "Ventas anuales actuales (UF). Se usa para evaluar renta presunta cuando el sector lo permite.",
+            "title": "Ventas Anuales Uf"
+          }
+        },
+        "required": [
+          "tax_year",
+          "ingresos_promedio_3a_uf",
+          "ingresos_max_anual_uf",
+          "capital_efectivo_inicial_uf",
+          "pct_ingresos_pasivos",
+          "todos_duenos_personas_naturales_chile",
+          "participacion_empresas_no_14d_sobre_10pct",
+          "sector",
+          "ventas_anuales_uf",
+          "rli_proyectada_anual_uf",
+          "plan_retiros_pct"
+        ],
+        "title": "DiagnoseRequest",
+        "type": "object"
+      },
+      "DiagnoseResponse": {
+        "properties": {
+          "disclaimer": {
+            "default": "Disclaimer pendiente de carga desde privacy.legal_texts.",
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "disclaimer_version": {
+            "default": "v1",
+            "title": "Disclaimer Version",
+            "type": "string"
+          },
+          "elegibilidad": {
+            "items": {
+              "$ref": "#/components/schemas/EligibilityOut"
+            },
+            "title": "Elegibilidad",
+            "type": "array"
+          },
+          "engine_version": {
+            "default": "track-7b-mvp-001",
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "fuente_legal": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fuente Legal",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "proyeccion_dual_14d3": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DualProjection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "proyecciones": {
+            "items": {
+              "$ref": "#/components/schemas/RegimeProjection"
+            },
+            "title": "Proyecciones",
+            "type": "array"
+          },
+          "riesgos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Riesgos",
+            "type": "array"
+          },
+          "tax_year": {
+            "title": "Tax Year",
+            "type": "integer"
+          },
+          "veredicto": {
+            "$ref": "#/components/schemas/DiagnoseVeredicto"
+          }
+        },
+        "required": [
+          "id",
+          "tax_year",
+          "veredicto",
+          "elegibilidad",
+          "proyecciones",
+          "proyeccion_dual_14d3",
+          "riesgos",
+          "fuente_legal"
+        ],
+        "title": "DiagnoseResponse",
+        "type": "object"
+      },
+      "DiagnoseVeredicto": {
+        "properties": {
+          "ahorro_3a_clp": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ahorro 3A Clp",
+            "type": "string"
+          },
+          "ahorro_3a_uf": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ahorro 3A Uf",
+            "type": "string"
+          },
+          "regimen_actual": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen Actual",
+            "type": "string"
+          },
+          "regimen_recomendado": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8",
+              "renta_presunta"
+            ],
+            "title": "Regimen Recomendado",
+            "type": "string"
+          }
+        },
+        "required": [
+          "regimen_actual",
+          "regimen_recomendado",
+          "ahorro_3a_clp",
+          "ahorro_3a_uf"
+        ],
+        "title": "DiagnoseVeredicto",
+        "type": "object"
+      },
+      "DualProjection": {
+        "properties": {
+          "base": {
+            "$ref": "#/components/schemas/RegimeProjection"
+          },
+          "revertido": {
+            "$ref": "#/components/schemas/RegimeProjection"
+          }
+        },
+        "required": [
+          "base",
+          "revertido"
+        ],
+        "title": "DualProjection",
+        "type": "object"
+      },
+      "EligibilityOut": {
+        "properties": {
+          "elegible": {
+            "title": "Elegible",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "regimen": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8",
+              "renta_presunta"
+            ],
+            "title": "Regimen",
+            "type": "string"
+          },
+          "requisitos": {
+            "items": {
+              "$ref": "#/components/schemas/RequisitoOut"
+            },
+            "title": "Requisitos",
+            "type": "array"
+          }
+        },
+        "required": [
+          "regimen",
+          "label",
+          "elegible",
+          "requisitos"
+        ],
+        "title": "EligibilityOut",
+        "type": "object"
+      },
+      "EmpresaResponse": {
+        "properties": {
+          "capital_inicial_uf": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capital Inicial Uf"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "fecha_inicio_actividades": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Inicio Actividades"
+          },
+          "giro": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Giro"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "razon_social": {
+            "title": "Razon Social",
+            "type": "string"
+          },
+          "regimen_actual": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8",
+              "presunta",
+              "desconocido"
+            ],
+            "title": "Regimen Actual",
+            "type": "string"
+          },
+          "rut": {
+            "title": "Rut",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rut",
+          "razon_social",
+          "giro",
+          "regimen_actual",
+          "fecha_inicio_actividades",
+          "capital_inicial_uf",
+          "created_at"
+        ],
+        "title": "EmpresaResponse",
+        "type": "object"
+      },
+      "EmpresasListResponse": {
+        "properties": {
+          "empresas": {
+            "items": {
+              "$ref": "#/components/schemas/EmpresaResponse"
+            },
+            "title": "Empresas",
+            "type": "array"
+          }
+        },
+        "required": [
+          "empresas"
+        ],
+        "title": "EmpresasListResponse",
+        "type": "object"
+      },
+      "EvaluateAlertasRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "empresa_id": {
+            "format": "uuid",
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "palancas_aplicadas": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Palancas Aplicadas",
+            "type": "array"
+          },
+          "regimen": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen",
+            "type": "string"
+          },
+          "retiros_declarados_pesos": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Retiros Declarados Pesos"
+          },
+          "rli_proyectada_pesos": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Rli Proyectada Pesos"
+          },
+          "tax_year": {
+            "maximum": 2030.0,
+            "minimum": 2024.0,
+            "title": "Tax Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "empresa_id",
+          "tax_year",
+          "regimen",
+          "rli_proyectada_pesos"
+        ],
+        "title": "EvaluateAlertasRequest",
+        "type": "object"
+      },
+      "EvaluateAlertasResponse": {
+        "properties": {
+          "alertas": {
+            "items": {
+              "$ref": "#/components/schemas/AlertaResponse"
+            },
+            "title": "Alertas",
+            "type": "array"
+          },
+          "creadas": {
+            "title": "Creadas",
+            "type": "integer"
+          },
+          "ya_existentes": {
+            "title": "Ya Existentes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "creadas",
+          "ya_existentes",
+          "alertas"
+        ],
+        "title": "EvaluateAlertasResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IdpcRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "regimen": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen",
+            "type": "string"
+          },
+          "rli": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "Renta Líquida Imponible en CLP",
+            "title": "Rli"
+          },
+          "tax_year": {
+            "maximum": 2030.0,
+            "minimum": 2024.0,
+            "title": "Tax Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "regimen",
+          "tax_year",
+          "rli"
+        ],
+        "title": "IdpcRequest",
+        "type": "object"
+      },
+      "IgcRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "base_pesos": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "Base afecta a IGC del dueño en CLP",
+            "title": "Base Pesos"
+          },
+          "tax_year": {
+            "maximum": 2030.0,
+            "minimum": 2024.0,
+            "title": "Tax Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tax_year",
+          "base_pesos"
+        ],
+        "title": "IgcRequest",
+        "type": "object"
+      },
+      "LegalTextResponse": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "effective_from": {
+            "title": "Effective From",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "version",
+          "body",
+          "effective_from"
+        ],
+        "title": "LegalTextResponse",
+        "type": "object"
+      },
+      "MeResponse": {
+        "properties": {
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "workspace": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeWorkspace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "user_id",
+          "workspace"
+        ],
+        "title": "MeResponse",
+        "type": "object"
+      },
+      "MeWorkspace": {
+        "properties": {
+          "empresa_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Empresa Ids",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "owner",
+              "cfo",
+              "accountant_lead",
+              "accountant_staff",
+              "viewer"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "pyme",
+              "accounting_firm"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "role",
+          "empresa_ids"
+        ],
+        "title": "MeWorkspace",
+        "type": "object"
+      },
+      "PalancaImpacto": {
+        "properties": {
+          "aplicada": {
+            "title": "Aplicada",
+            "type": "boolean"
+          },
+          "fuente_legal": {
+            "title": "Fuente Legal",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "monto_aplicado": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Monto Aplicado",
+            "type": "string"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "palanca_id": {
+            "title": "Palanca Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "palanca_id",
+          "label",
+          "aplicada",
+          "monto_aplicado",
+          "fuente_legal"
+        ],
+        "title": "PalancaImpacto",
+        "type": "object"
+      },
+      "Palancas": {
+        "additionalProperties": false,
+        "description": "Subconjunto de palancas activas. Todas opcionales.",
+        "properties": {
+          "apv_monto": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P9 — Aporte APV anual del dueño en CLP. Reduce la base imponible del IGC dentro del tope anual.",
+            "title": "Apv Monto"
+          },
+          "credito_id_monto": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P6 — Desembolso I+D certificado por CORFO en CLP. 35% se imputa como crédito IDPC (tope 15.000 UTM); 65% se reconoce como gasto deducible RLI.",
+            "title": "Credito Id Monto"
+          },
+          "dep_instantanea": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P1 — Monto del activo fijo a depreciar 100% en CLP.",
+            "title": "Dep Instantanea"
+          },
+          "rebaja_14e_pct": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P3 — Porcentaje (0-0,5) de RLI a reinvertir bajo art. 14 E. Se aplica el menor entre pct*RLI y el tope absoluto 5.000 UF.",
+            "title": "Rebaja 14E Pct"
+          },
+          "retiros_adicionales": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P4 — Retiros adicionales del dueño antes del 31-dic.",
+            "title": "Retiros Adicionales"
+          },
+          "sence_monto": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P2 — Gasto en capacitación SENCE en CLP. Genera crédito directo contra IDPC dentro del tope max(1% planilla, 9 UTM).",
+            "title": "Sence Monto"
+          },
+          "sueldo_empresarial_mensual": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P5 — Sueldo mensual al socio activo en CLP. Anualiza por 12 meses como gasto aceptado.",
+            "title": "Sueldo Empresarial Mensual"
+          }
+        },
+        "title": "Palancas",
+        "type": "object"
+      },
+      "PlanAccionItem": {
+        "properties": {
+          "accion": {
+            "title": "Accion",
+            "type": "string"
+          },
+          "fecha_limite": {
+            "default": "31-dic",
+            "title": "Fecha Limite",
+            "type": "string"
+          },
+          "fundamento_legal": {
+            "title": "Fundamento Legal",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "palanca_id": {
+            "title": "Palanca Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "palanca_id",
+          "label",
+          "accion",
+          "fundamento_legal"
+        ],
+        "title": "PlanAccionItem",
+        "type": "object"
+      },
+      "PpmRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "ingresos_anio_anterior_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Ingresos Anio Anterior Uf"
+          },
+          "ingresos_mes_pesos": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Ingresos Mes Pesos"
+          },
+          "regimen": {
+            "enum": [
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen",
+            "type": "string"
+          },
+          "tax_year": {
+            "maximum": 2030.0,
+            "minimum": 2024.0,
+            "title": "Tax Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "regimen",
+          "tax_year",
+          "ingresos_mes_pesos",
+          "ingresos_anio_anterior_uf"
+        ],
+        "title": "PpmRequest",
+        "type": "object"
+      },
+      "ProjectionRow": {
+        "properties": {
+          "año": {
+            "title": "Año",
+            "type": "integer"
+          },
+          "carga_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Carga Total",
+            "type": "string"
+          },
+          "idpc": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Idpc",
+            "type": "string"
+          },
+          "igc_dueno": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Igc Dueno",
+            "type": "string"
+          },
+          "retiros": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Retiros",
+            "type": "string"
+          },
+          "rli": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rli",
+            "type": "string"
+          }
+        },
+        "required": [
+          "año",
+          "rli",
+          "idpc",
+          "retiros",
+          "igc_dueno",
+          "carga_total"
+        ],
+        "title": "ProjectionRow",
+        "type": "object"
+      },
+      "RecomendacionListItem": {
+        "description": "Resumen de una recomendación persistida (skill 7b).",
+        "properties": {
+          "ahorro_estimado_clp": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ahorro Estimado Clp"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "descripcion": {
+            "title": "Descripcion",
+            "type": "string"
+          },
+          "disclaimer_version": {
+            "title": "Disclaimer Version",
+            "type": "string"
+          },
+          "empresa_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Empresa Id"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "regimen_actual": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen Actual",
+            "type": "string"
+          },
+          "regimen_recomendado": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8",
+              "renta_presunta"
+            ],
+            "title": "Regimen Recomendado",
+            "type": "string"
+          },
+          "tax_year": {
+            "title": "Tax Year",
+            "type": "integer"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tax_year",
+          "tipo",
+          "descripcion",
+          "regimen_actual",
+          "regimen_recomendado",
+          "ahorro_estimado_clp",
+          "disclaimer_version",
+          "engine_version",
+          "empresa_id",
+          "created_at"
+        ],
+        "title": "RecomendacionListItem",
+        "type": "object"
+      },
+      "RecomendacionListResponse": {
+        "properties": {
+          "recomendaciones": {
+            "items": {
+              "$ref": "#/components/schemas/RecomendacionListItem"
+            },
+            "title": "Recomendaciones",
+            "type": "array"
+          }
+        },
+        "required": [
+          "recomendaciones"
+        ],
+        "title": "RecomendacionListResponse",
+        "type": "object"
+      },
+      "RegimeProjection": {
+        "properties": {
+          "es_transitoria": {
+            "default": false,
+            "title": "Es Transitoria",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "regimen": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8",
+              "renta_presunta"
+            ],
+            "title": "Regimen",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectionRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "total_3a": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total 3A",
+            "type": "string"
+          }
+        },
+        "required": [
+          "regimen",
+          "label",
+          "rows",
+          "total_3a"
+        ],
+        "title": "RegimeProjection",
+        "type": "object"
+      },
+      "RegimenScenario": {
+        "properties": {
+          "ahorro_vs_14a": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ahorro Vs 14A",
+            "type": "string"
+          },
+          "carga_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Carga Total",
+            "type": "string"
+          },
+          "es_recomendado": {
+            "title": "Es Recomendado",
+            "type": "boolean"
+          },
+          "es_transitoria": {
+            "title": "Es Transitoria",
+            "type": "boolean"
+          },
+          "fuente_legal": {
+            "title": "Fuente Legal",
+            "type": "string"
+          },
+          "idpc": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Idpc",
+            "type": "string"
+          },
+          "igc_dueno": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Igc Dueno",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "regimen": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_3_revertido",
+              "14_d_8"
+            ],
+            "title": "Regimen",
+            "type": "string"
+          }
+        },
+        "required": [
+          "regimen",
+          "label",
+          "idpc",
+          "igc_dueno",
+          "carga_total",
+          "ahorro_vs_14a",
+          "es_recomendado",
+          "es_transitoria",
+          "nota",
+          "fuente_legal"
+        ],
+        "title": "RegimenScenario",
+        "type": "object"
+      },
+      "RequisitoOut": {
+        "properties": {
+          "fundamento": {
+            "title": "Fundamento",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "texto": {
+            "title": "Texto",
+            "type": "string"
+          }
+        },
+        "required": [
+          "texto",
+          "ok",
+          "fundamento"
+        ],
+        "title": "RequisitoOut",
+        "type": "object"
+      },
+      "RuleSetDetail": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "fuente_legal": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Fuente Legal",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "published_by_admin": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published By Admin"
+          },
+          "published_by_contador": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published By Contador"
+          },
+          "rules": {
+            "additionalProperties": true,
+            "title": "Rules",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "vigencia_desde": {
+            "title": "Vigencia Desde",
+            "type": "string"
+          },
+          "vigencia_hasta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vigencia Hasta"
+          }
+        },
+        "required": [
+          "id",
+          "domain",
+          "key",
+          "version",
+          "status",
+          "vigencia_desde",
+          "vigencia_hasta",
+          "published_by_contador",
+          "published_by_admin",
+          "published_at",
+          "created_at",
+          "rules",
+          "fuente_legal"
+        ],
+        "title": "RuleSetDetail",
+        "type": "object"
+      },
+      "RuleSetListResponse": {
+        "properties": {
+          "rule_sets": {
+            "items": {
+              "$ref": "#/components/schemas/RuleSetSummary"
+            },
+            "title": "Rule Sets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rule_sets"
+        ],
+        "title": "RuleSetListResponse",
+        "type": "object"
+      },
+      "RuleSetSummary": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "published_by_admin": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published By Admin"
+          },
+          "published_by_contador": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published By Contador"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "vigencia_desde": {
+            "title": "Vigencia Desde",
+            "type": "string"
+          },
+          "vigencia_hasta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vigencia Hasta"
+          }
+        },
+        "required": [
+          "id",
+          "domain",
+          "key",
+          "version",
+          "status",
+          "vigencia_desde",
+          "vigencia_hasta",
+          "published_by_contador",
+          "published_by_admin",
+          "published_at",
+          "created_at"
+        ],
+        "title": "RuleSetSummary",
+        "type": "object"
+      },
+      "ScenarioListItem": {
+        "properties": {
+          "ahorro_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ahorro Total",
+            "type": "string"
+          },
+          "carga_base": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Carga Base",
+            "type": "string"
+          },
+          "carga_simulada": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Carga Simulada",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "empresa_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Empresa Id"
+          },
+          "es_recomendado": {
+            "title": "Es Recomendado",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "regimen": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen",
+            "type": "string"
+          },
+          "tax_year": {
+            "title": "Tax Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "tax_year",
+          "regimen",
+          "empresa_id",
+          "carga_base",
+          "carga_simulada",
+          "ahorro_total",
+          "es_recomendado",
+          "created_at"
+        ],
+        "title": "ScenarioListItem",
+        "type": "object"
+      },
+      "ScenarioListResponse": {
+        "properties": {
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioListItem"
+            },
+            "title": "Scenarios",
+            "type": "array"
+          }
+        },
+        "required": [
+          "scenarios"
+        ],
+        "title": "ScenarioListResponse",
+        "type": "object"
+      },
+      "ScenarioRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "empresa_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Empresa del workspace activo a la que se asocia el escenario. Si se omite, queda como escenario workspace-level.",
+            "title": "Empresa Id"
+          },
+          "nombre": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Nombre opcional del escenario (ej. 'Sin palancas', 'Plan A'). Si se omite, se autogenera con régimen + año + timestamp.",
+            "title": "Nombre"
+          },
+          "palancas": {
+            "$ref": "#/components/schemas/Palancas"
+          },
+          "planilla_anual_pesos": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "description": "Planilla anual de remuneraciones imponibles en CLP. Sirve para calcular el tope SENCE (max 1% planilla, mínimo 9 UTM).",
+            "title": "Planilla Anual Pesos"
+          },
+          "regimen": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen",
+            "type": "string"
+          },
+          "retiros_base": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "description": "Retiros del dueño ya realizados en el año.",
+            "title": "Retiros Base"
+          },
+          "rli_base": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "RLI proyectada del año.",
+            "title": "Rli Base"
+          },
+          "tax_year": {
+            "maximum": 2030.0,
+            "minimum": 2024.0,
+            "title": "Tax Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "regimen",
+          "tax_year",
+          "rli_base"
+        ],
+        "title": "ScenarioRequest",
+        "type": "object"
+      },
+      "ScenarioResponse": {
+        "properties": {
+          "ahorro_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ahorro Total",
+            "type": "string"
+          },
+          "banderas": {
+            "items": {
+              "$ref": "#/components/schemas/BanderaRoja"
+            },
+            "title": "Banderas",
+            "type": "array"
+          },
+          "base": {
+            "$ref": "#/components/schemas/ScenarioResultado"
+          },
+          "disclaimer": {
+            "default": "Disclaimer pendiente de carga desde privacy.legal_texts.",
+            "title": "Disclaimer",
+            "type": "string"
+          },
+          "engine_version": {
+            "default": "track-8b-mvp-001",
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "palancas_aplicadas": {
+            "items": {
+              "$ref": "#/components/schemas/PalancaImpacto"
+            },
+            "title": "Palancas Aplicadas",
+            "type": "array"
+          },
+          "regimen": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen",
+            "type": "string"
+          },
+          "simulado": {
+            "$ref": "#/components/schemas/ScenarioResultado"
+          },
+          "tax_year": {
+            "title": "Tax Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "tax_year",
+          "regimen",
+          "base",
+          "simulado",
+          "ahorro_total",
+          "palancas_aplicadas",
+          "banderas"
+        ],
+        "title": "ScenarioResponse",
+        "type": "object"
+      },
+      "ScenarioResultado": {
+        "properties": {
+          "carga_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Carga Total",
+            "type": "string"
+          },
+          "idpc": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Idpc",
+            "type": "string"
+          },
+          "igc_dueno": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Igc Dueno",
+            "type": "string"
+          },
+          "retiros_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Retiros Total",
+            "type": "string"
+          },
+          "rli": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rli",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rli",
+          "idpc",
+          "retiros_total",
+          "igc_dueno",
+          "carga_total"
+        ],
+        "title": "ScenarioResultado",
+        "type": "object"
+      },
+      "UltimaRecomendacion": {
+        "properties": {
+          "ahorro_estimado_clp": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ahorro Estimado Clp"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "regimen_recomendado": {
+            "title": "Regimen Recomendado",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "regimen_recomendado",
+          "ahorro_estimado_clp",
+          "created_at"
+        ],
+        "title": "UltimaRecomendacion",
+        "type": "object"
+      },
+      "UltimaSimulacion": {
+        "properties": {
+          "ahorro_total_clp": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ahorro Total Clp",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ahorro_total_clp",
+          "created_at"
+        ],
+        "title": "UltimaSimulacion",
+        "type": "object"
+      },
+      "UpdateAlertaRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "estado": {
+            "enum": [
+              "nueva",
+              "vista",
+              "descartada",
+              "accionada"
+            ],
+            "title": "Estado",
+            "type": "string"
+          }
+        },
+        "required": [
+          "estado"
+        ],
+        "title": "UpdateAlertaRequest",
+        "type": "object"
+      },
+      "UpdateArcopRequest": {
+        "additionalProperties": false,
+        "description": "PATCH del DPO (skill 5b). Cambia estado y/o registra respuesta.",
+        "properties": {
+          "estado": {
+            "anyOf": [
+              {
+                "enum": [
+                  "recibida",
+                  "en_proceso",
+                  "cumplida",
+                  "rechazada"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estado"
+          },
+          "respuesta": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Respuesta"
+          }
+        },
+        "title": "UpdateArcopRequest",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "Renteo API",
+    "version": "0.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/admin/rules": {
+      "get": {
+        "operationId": "list_rules_api_admin_rules_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status_filter",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          },
+          {
+            "in": "query",
+            "name": "domain",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Domain"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleSetListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Rules",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "Crea una nueva versión de regla en estado draft.\n\n`version` se autoincrementa: max(version) + 1 para (domain, key)\no 1 si no existía.",
+        "operationId": "create_draft_api_admin_rules_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleSetDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Draft",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/rules/{rule_id}": {
+      "get": {
+        "operationId": "get_rule_api_admin_rules__rule_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rule_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Rule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleSetDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Rule",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/rules/{rule_id}/deprecate": {
+      "post": {
+        "operationId": "deprecate_rule_api_admin_rules__rule_id__deprecate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rule_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Rule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleSetSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Deprecate Rule",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/rules/{rule_id}/publish": {
+      "post": {
+        "description": "Segunda firma → published.\n\nEl constraint de la tabla exige published_by_contador !=\npublished_by_admin; si el mismo usuario firmó ambos, Postgres\nrechaza con check_violation y devolvemos 409.",
+        "operationId": "publish_rule_api_admin_rules__rule_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rule_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Rule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleSetSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Publish Rule",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/rules/{rule_id}/sign-contador": {
+      "post": {
+        "description": "Primera firma → pending_approval. published_by_contador queda\nseteado y el segundo firmante (admin técnico, distinto) ejecuta\n/publish para activar la regla.",
+        "operationId": "sign_contador_api_admin_rules__rule_id__sign_contador_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rule_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Rule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleSetSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Sign Contador",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/alertas": {
+      "get": {
+        "description": "Lista alertas del workspace activo (RLS filtra). Por defecto solo\nabiertas (`nueva` y `vista`).",
+        "operationId": "list_alertas_api_alertas_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "empresa_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Empresa Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "incluir_cerradas",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Incluir Cerradas",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertasListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Alertas",
+        "tags": [
+          "alertas"
+        ]
+      }
+    },
+    "/api/alertas/evaluate": {
+      "post": {
+        "description": "Evalúa el estado declarado y persiste las alertas nuevas.\n\nDedup por (workspace_id, empresa_id, tax_year, tipo) sobre alertas\nabiertas (estado in nueva|vista). Si el usuario descartó la alerta\nantes, vuelve a aparecer en la próxima evaluación si la condición\npersiste.",
+        "operationId": "evaluate_alertas_api_alertas_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateAlertasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluateAlertasResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Evaluate Alertas",
+        "tags": [
+          "alertas"
+        ]
+      }
+    },
+    "/api/alertas/{alerta_id}": {
+      "patch": {
+        "description": "Cambia el estado de una alerta (vista | descartada | accionada).",
+        "operationId": "update_alerta_api_alertas__alerta_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "alerta_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Alerta Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAlertaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertaResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Alerta",
+        "tags": [
+          "alertas"
+        ]
+      }
+    },
+    "/api/calc/comparador-regimen": {
+      "post": {
+        "operationId": "comparador_regimen_api_calc_comparador_regimen_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComparadorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparadorResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Comparador Regimen",
+        "tags": [
+          "calc"
+        ]
+      }
+    },
+    "/api/calc/idpc": {
+      "post": {
+        "operationId": "calc_idpc_api_calc_idpc_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdpcRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Calc Idpc",
+        "tags": [
+          "calc"
+        ]
+      }
+    },
+    "/api/calc/igc": {
+      "post": {
+        "operationId": "calc_igc_api_calc_igc_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IgcRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Calc Igc",
+        "tags": [
+          "calc"
+        ]
+      }
+    },
+    "/api/calc/ppm": {
+      "post": {
+        "operationId": "calc_ppm_api_calc_ppm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PpmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Calc Ppm",
+        "tags": [
+          "calc"
+        ]
+      }
+    },
+    "/api/cartera": {
+      "get": {
+        "description": "Devuelve la cartera enriquecida del workspace activo.",
+        "operationId": "get_cartera_api_cartera_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CarteraResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Cartera",
+        "tags": [
+          "cartera"
+        ]
+      }
+    },
+    "/api/empresas": {
+      "get": {
+        "description": "Lista empresas visibles bajo RLS, ordenadas por created_at desc.",
+        "operationId": "list_empresas_api_empresas_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmpresasListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Empresas",
+        "tags": [
+          "empresas"
+        ]
+      },
+      "post": {
+        "operationId": "create_empresa_api_empresas_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmpresaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmpresaResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Empresa",
+        "tags": [
+          "empresas"
+        ]
+      }
+    },
+    "/api/legal/{key}": {
+      "get": {
+        "operationId": "get_legal_api_legal__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalTextResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Legal",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
+    "/api/me": {
+      "get": {
+        "operationId": "get_me_api_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Me",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/privacy/arcop": {
+      "get": {
+        "description": "Lista solicitudes del titular. Admins (owner / accountant_lead)\nven todas las del workspace activo.\n\n`tenant_session` del backend corre como postgres (superuser) y\nbypassa RLS, por eso filtramos explícito por workspace_id +\nuser_id según rol — defensa en profundidad.",
+        "operationId": "list_arcop_api_privacy_arcop_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArcopListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Arcop",
+        "tags": [
+          "privacy"
+        ]
+      },
+      "post": {
+        "description": "Recibe una solicitud ARCOP. Estado inicial = 'recibida'.\n\nGatilla audit_log con `action='create'` y `resource_type='arcop'` para\ncumplir el principio de trazabilidad de la Ley 21.719.",
+        "operationId": "create_arcop_api_privacy_arcop_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArcopRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArcopResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Arcop",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/api/privacy/arcop/{arcop_id}": {
+      "patch": {
+        "description": "PATCH para el DPO: avanza estado y registra respuesta.\n\nSolo `owner` y `accountant_lead` pueden gestionar. Pasar a estado\nterminal (cumplida / rechazada) setea `respondida_at = now()`. Si\nya está terminal, rechazar el PATCH.",
+        "operationId": "update_arcop_api_privacy_arcop__arcop_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "arcop_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Arcop Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArcopRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArcopResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Arcop",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/api/public/legal/{key}": {
+      "get": {
+        "description": "Versión pública del lookup legal — sin auth.\n\nLos textos legales son por definición públicos (T&C, privacidad).\nUsamos `service_session` para no necesitar un JWT y respondemos\nel mismo shape que `/api/legal/{key}`.",
+        "operationId": "get_legal_public_api_public_legal__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalTextResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Legal Public",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
+    "/api/regime/diagnose": {
+      "post": {
+        "operationId": "diagnose_api_regime_diagnose_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiagnoseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnoseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Diagnose",
+        "tags": [
+          "regime"
+        ]
+      }
+    },
+    "/api/regime/recomendaciones": {
+      "get": {
+        "description": "Lista recomendaciones del workspace activo (RLS filtra).",
+        "operationId": "list_recomendaciones_api_regime_recomendaciones_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tax_year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tax Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "empresa_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Empresa Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecomendacionListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Recomendaciones",
+        "tags": [
+          "regime"
+        ]
+      }
+    },
+    "/api/scenario/compare": {
+      "post": {
+        "description": "Compara hasta 4 escenarios lado a lado y consolida plan de acción.\n\n`es_recomendado` se asigna al escenario con menor carga total entre\nlos provistos (lícitos por construcción, ya validados al simular).\nEmpate → menos palancas activadas.",
+        "operationId": "compare_api_scenario_compare_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Compare",
+        "tags": [
+          "scenario"
+        ]
+      }
+    },
+    "/api/scenario/list": {
+      "get": {
+        "description": "Lista escenarios del workspace activo (RLS filtra automáticamente).\n\n`es_recomendado` se calcula en vivo: el escenario con menor carga\ntotal entre los listados queda marcado. Empate → desempata por\nmenor cantidad de palancas activadas (preferencia por simplicidad).",
+        "operationId": "list_scenarios_api_scenario_list_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tax_year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tax Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "empresa_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Empresa Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Scenarios",
+        "tags": [
+          "scenario"
+        ]
+      }
+    },
+    "/api/scenario/simulate": {
+      "post": {
+        "operationId": "simulate_api_scenario_simulate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Simulate",
+        "tags": [
+          "scenario"
+        ]
+      }
+    },
+    "/api/workspaces": {
+      "post": {
+        "description": "Crea workspace + miembro inicial + consentimiento + audit log.\n\nAtómico: si cualquier paso falla, todo se revierte. El usuario debe\nrefrescar su sesión Supabase tras este POST para que el Auth Hook\nre-ejecute y inyecte la tenancy en el JWT.",
+        "operationId": "create_workspace_api_workspaces_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateWorkspaceResp"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Workspace",
+        "tags": [
+          "workspaces"
+        ]
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Healthz Healthz Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Healthz",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "readyz_readyz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Readyz Readyz Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Readyz",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}
