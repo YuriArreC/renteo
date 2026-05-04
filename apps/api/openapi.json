@@ -3211,6 +3211,129 @@
         "title": "ScenarioResultado",
         "type": "object"
       },
+      "SyncSiiRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "months": {
+            "default": 12,
+            "maximum": 24.0,
+            "minimum": 1.0,
+            "title": "Months",
+            "type": "integer"
+          }
+        },
+        "title": "SyncSiiRequest",
+        "type": "object"
+      },
+      "SyncSiiResponse": {
+        "properties": {
+          "period_from": {
+            "title": "Period From",
+            "type": "string"
+          },
+          "period_to": {
+            "title": "Period To",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "rcv_rows_inserted": {
+            "title": "Rcv Rows Inserted",
+            "type": "integer"
+          },
+          "rcv_rows_total": {
+            "title": "Rcv Rows Total",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "sync_id": {
+            "format": "uuid",
+            "title": "Sync Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sync_id",
+          "provider",
+          "period_from",
+          "period_to",
+          "rcv_rows_inserted",
+          "rcv_rows_total",
+          "status"
+        ],
+        "title": "SyncSiiResponse",
+        "type": "object"
+      },
+      "SyncStatusResponse": {
+        "properties": {
+          "empresa_id": {
+            "format": "uuid",
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "f22_anios_total": {
+            "title": "F22 Anios Total",
+            "type": "integer"
+          },
+          "f29_periodos_total": {
+            "title": "F29 Periodos Total",
+            "type": "integer"
+          },
+          "last_sync_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync At"
+          },
+          "last_sync_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync Provider"
+          },
+          "last_sync_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync Status"
+          },
+          "rcv_rows_total": {
+            "title": "Rcv Rows Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "empresa_id",
+          "last_sync_at",
+          "last_sync_status",
+          "last_sync_provider",
+          "rcv_rows_total",
+          "f29_periodos_total",
+          "f22_anios_total"
+        ],
+        "title": "SyncStatusResponse",
+        "type": "object"
+      },
       "UltimaRecomendacion": {
         "properties": {
           "ahorro_estimado_clp": {
@@ -4627,6 +4750,119 @@
         "summary": "Create Empresa",
         "tags": [
           "empresas"
+        ]
+      }
+    },
+    "/api/empresas/{empresa_id}/sync-sii": {
+      "post": {
+        "operationId": "sync_sii_api_empresas__empresa_id__sync_sii_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "empresa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Empresa Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SyncSiiRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncSiiResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Sync Sii",
+        "tags": [
+          "sii"
+        ]
+      }
+    },
+    "/api/empresas/{empresa_id}/sync-status": {
+      "get": {
+        "operationId": "sync_status_api_empresas__empresa_id__sync_status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "empresa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Empresa Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Sync Status",
+        "tags": [
+          "sii"
         ]
       }
     },

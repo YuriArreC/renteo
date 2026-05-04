@@ -579,6 +579,34 @@ export interface EmpresasListResponse {
   empresas: EmpresaResponse[];
 }
 
+// Sincronización SII (skill 4).
+
+export type SiiProvider = "mock" | "simpleapi" | "baseapi" | "apigateway";
+
+export interface SyncSiiRequest {
+  months?: number;
+}
+
+export interface SyncSiiResponse {
+  sync_id: string;
+  provider: SiiProvider;
+  period_from: string;
+  period_to: string;
+  rcv_rows_inserted: number;
+  rcv_rows_total: number;
+  status: string;
+}
+
+export interface SyncStatusResponse {
+  empresa_id: string;
+  last_sync_at: string | null;
+  last_sync_status: string | null;
+  last_sync_provider: SiiProvider | null;
+  rcv_rows_total: number;
+  f29_periodos_total: number;
+  f22_anios_total: number;
+}
+
 // Diagnóstico de régimen (skill 7).
 
 export type RegimeKey = "14_a" | "14_d_3" | "14_d_8" | "renta_presunta";

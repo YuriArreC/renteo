@@ -5,7 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.config import settings
-from src.lib.errors import IneligibleForRegime, MissingRuleError, RedFlagBlocked
+from src.lib.errors import (
+    IneligibleForRegime,
+    MissingRuleError,
+    RedFlagBlocked,
+    SiiAuthError,
+    SiiTimeout,
+    SiiUnavailable,
+)
 from src.lib.legal_texts import LegalTextNotFound
 from src.lib.logging import configure_logging, get_logger
 from src.lib.observability import RequestIdMiddleware, init_sentry
@@ -21,6 +28,7 @@ from src.routers import me as me_router
 from src.routers import privacy as privacy_router
 from src.routers import regime as regime_router
 from src.routers import scenario as scenario_router
+from src.routers import sii as sii_router
 from src.routers import workspaces as workspaces_router
 
 configure_logging()
@@ -104,6 +112,36 @@ async def _legal_text_handler(
     )
 
 
+@app.exception_handler(SiiUnavailable)
+async def _sii_unavailable_handler(
+    _request: Request, exc: SiiUnavailable
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={"detail": str(exc), "code": "sii_unavailable"},
+    )
+
+
+@app.exception_handler(SiiAuthError)
+async def _sii_auth_handler(
+    _request: Request, exc: SiiAuthError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_502_BAD_GATEWAY,
+        content={"detail": str(exc), "code": "sii_auth_error"},
+    )
+
+
+@app.exception_handler(SiiTimeout)
+async def _sii_timeout_handler(
+    _request: Request, exc: SiiTimeout
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+        content={"detail": str(exc), "code": "sii_timeout"},
+    )
+
+
 app.include_router(me_router.router)
 app.include_router(workspaces_router.router)
 app.include_router(calculations_router.router)
@@ -113,6 +151,7 @@ app.include_router(regime_router.router)
 app.include_router(legal_router.router)
 app.include_router(legal_router.public_router)
 app.include_router(empresas_router.router)
+app.include_router(sii_router.router)
 app.include_router(privacy_router.router)
 app.include_router(alertas_router.router)
 app.include_router(cartera_router.router)

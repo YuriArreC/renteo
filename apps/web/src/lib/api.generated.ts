@@ -398,6 +398,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/empresas/{empresa_id}/sync-sii": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sync Sii */
+        post: operations["sync_sii_api_empresas__empresa_id__sync_sii_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/empresas/{empresa_id}/sync-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sync Status */
+        get: operations["sync_status_api_empresas__empresa_id__sync_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/legal/{key}": {
         parameters: {
             query?: never;
@@ -1838,6 +1872,54 @@ export interface components {
             /** Rli */
             rli: string;
         };
+        /** SyncSiiRequest */
+        SyncSiiRequest: {
+            /**
+             * Months
+             * @default 12
+             */
+            months: number;
+        };
+        /** SyncSiiResponse */
+        SyncSiiResponse: {
+            /** Period From */
+            period_from: string;
+            /** Period To */
+            period_to: string;
+            /** Provider */
+            provider: string;
+            /** Rcv Rows Inserted */
+            rcv_rows_inserted: number;
+            /** Rcv Rows Total */
+            rcv_rows_total: number;
+            /** Status */
+            status: string;
+            /**
+             * Sync Id
+             * Format: uuid
+             */
+            sync_id: string;
+        };
+        /** SyncStatusResponse */
+        SyncStatusResponse: {
+            /**
+             * Empresa Id
+             * Format: uuid
+             */
+            empresa_id: string;
+            /** F22 Anios Total */
+            f22_anios_total: number;
+            /** F29 Periodos Total */
+            f29_periodos_total: number;
+            /** Last Sync At */
+            last_sync_at: string | null;
+            /** Last Sync Provider */
+            last_sync_provider: string | null;
+            /** Last Sync Status */
+            last_sync_status: string | null;
+            /** Rcv Rows Total */
+            rcv_rows_total: number;
+        };
         /** UltimaRecomendacion */
         UltimaRecomendacion: {
             /** Ahorro Estimado Clp */
@@ -2643,6 +2725,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EmpresaResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sync_sii_api_empresas__empresa_id__sync_sii_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                empresa_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SyncSiiRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncSiiResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sync_status_api_empresas__empresa_id__sync_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                empresa_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncStatusResponse"];
                 };
             };
             /** @description Validation Error */

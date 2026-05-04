@@ -278,6 +278,20 @@
         "14_d_8": "14 D N°8",
         "presunta": "Presunta"
       }
+    },
+    "sii": {
+      "header": "Sincronización SII",
+      "subtitle": "Trae el RCV de los últimos meses para alimentar diagnóstico, simulador y alertas.",
+      "empresa": "Empresa",
+      "lastSync": "Última sincronización",
+      "neverSynced": "Sin sincronizar",
+      "rcvRows": "Filas RCV",
+      "syncCta": "Sincronizar",
+      "syncing": "Sincronizando…",
+      "monthsLabel": "Meses",
+      "syncOk": "Sincronización completada: {rows} filas cargadas ({provider}).",
+      "syncFail": "No se pudo sincronizar con SII: {error}",
+      "providerNote": "Proveedor activo: {provider}. Mock = datos de prueba; cambia a SimpleAPI publicando el feature flag sii_provider."
     }
   },
   "privacy": {

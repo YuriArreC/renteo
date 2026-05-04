@@ -29,6 +29,14 @@ class SiiUnavailable(TaxError):
     """SII provider is unreachable or returned a transient failure."""
 
 
+class SiiAuthError(TaxError):
+    """SII provider rejected the credentials (token or certificate)."""
+
+
+class SiiTimeout(TaxError):
+    """SII provider did not respond within the configured budget."""
+
+
 class CertificateError(TaxError):
     """Digital certificate is invalid, expired, or cannot be decrypted."""
 
