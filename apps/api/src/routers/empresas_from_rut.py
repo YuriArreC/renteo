@@ -250,6 +250,14 @@ async def empresa_from_rut(
 
     empresa_id = UUID(str(result.scalar_one()))
 
+    # El sync_log abre una conexión separada (service_session); para
+    # que la FK contra core.empresas se resuelva, la fila recién
+    # insertada debe estar commiteada en su propia transacción antes
+    # de abrir la otra conexión. La commit explícita del tenant
+    # session cierra la transacción del get_db_session sin afectar el
+    # context manager que la envuelve.
+    await session.commit()
+
     # ----- 4) Sync inicial RCV (últimos N meses) ----------------------------
     sync: SyncSummary | None = None
     periods = _months_window(date.today(), payload.sync_meses)
@@ -319,25 +327,30 @@ async def empresa_from_rut(
             status="success",
         )
 
-    await log_audit(
-        session,
-        workspace_id=tenancy.workspace_id,
-        user_id=tenancy.user_id,
-        action="onboarding_from_rut",
-        resource_type="empresa",
-        resource_id=empresa_id,
-        empresa_id=empresa_id,
-        metadata={
-            "rut_masked": mask_rut(rut),
-            "razon_social": razon_social,
-            "regimen_actual": regimen_actual,
-            "via_sii": lookup_via_sii,
-            "sync_status": sync.status if sync else None,
-            "rcv_rows_inserted": (
-                sync.rcv_rows_inserted if sync else 0
-            ),
-        },
-    )
+    # Audit log via service_session: el tenant session ya commiteó
+    # (perdió `request.jwt.claims`), por lo que un INSERT con la
+    # policy WITH CHECK fallaría sin claims. service_session bypasea
+    # RLS y persiste con el workspace_id derivado del JWT verificado.
+    async with service_session() as svc:
+        await log_audit(
+            svc,
+            workspace_id=tenancy.workspace_id,
+            user_id=tenancy.user_id,
+            action="onboarding_from_rut",
+            resource_type="empresa",
+            resource_id=empresa_id,
+            empresa_id=empresa_id,
+            metadata={
+                "rut_masked": mask_rut(rut),
+                "razon_social": razon_social,
+                "regimen_actual": regimen_actual,
+                "via_sii": lookup_via_sii,
+                "sync_status": sync.status if sync else None,
+                "rcv_rows_inserted": (
+                    sync.rcv_rows_inserted if sync else 0
+                ),
+            },
+        )
 
     logger.info(
         "empresa_from_rut_completed",

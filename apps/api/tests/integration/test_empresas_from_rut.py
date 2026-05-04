@@ -152,7 +152,7 @@ async def test_onboarding_falla_si_rut_no_existe_ni_fallback(
     )
     response = await http_client_onboarding.post(
         "/api/empresas/from-rut",
-        json={"rut": "12000000-9"},
+        json={"rut": "12000000-4"},
         headers={"Authorization": "Bearer fake"},
     )
     assert response.status_code == 422
@@ -170,7 +170,7 @@ async def test_onboarding_usa_fallback_cuando_rut_no_existe(
     response = await http_client_onboarding.post(
         "/api/empresas/from-rut",
         json={
-            "rut": "12000000-9",
+            "rut": "12000000-4",
             "razon_social_fallback": "Empresa Fallback SpA",
             "sync_meses": 2,
         },
