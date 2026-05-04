@@ -218,6 +218,48 @@ export interface RuleSetListResponse {
   rule_sets: RuleSetSummary[];
 }
 
+export interface RuleSetDetail extends RuleSetSummary {
+  rules: Record<string, unknown>;
+  fuente_legal: Array<Record<string, unknown>>;
+}
+
+export interface ValidateSchemaRequest {
+  domain: string;
+  rules: Record<string, unknown>;
+}
+
+export interface ValidationFailureOut {
+  path: string;
+  message: string;
+}
+
+export interface ValidateSchemaResponse {
+  valid: boolean;
+  domains_disponibles: string[];
+  errors: ValidationFailureOut[];
+}
+
+export interface CreateRuleDraftRequest {
+  domain: string;
+  key: string;
+  vigencia_desde: string;
+  vigencia_hasta?: string;
+  rules: Record<string, unknown>;
+  fuente_legal: Array<Record<string, unknown>>;
+}
+
+export interface DryRunResponse {
+  rule_id: string;
+  domain: string;
+  key: string;
+  evaluadas: number;
+  pasaban_antes: number;
+  pasan_ahora: number;
+  cambian_elegibilidad: number;
+  delta_ahorro_total_clp: string;
+  nota: string;
+}
+
 // ---------------------------------------------------------------------------
 // Tipos manuales del API mientras el pipeline shared-types no esté listo
 // (fase 1+). Mantener sincronizado con apps/api/src/routers/*.

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { LogoutButton } from "@/components/LogoutButton";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -79,13 +80,16 @@ export default async function AdminRulesPage() {
           </Card>
         ) : (
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between gap-4">
               <CardTitle className="text-base">
                 {t("title")}{" "}
                 <span className="text-xs font-normal text-muted-foreground">
                   ({rules?.rule_sets.length ?? 0})
                 </span>
               </CardTitle>
+              <Button asChild size="sm">
+                <Link href="/admin/rules/new">{t("newRule")}</Link>
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -102,11 +106,17 @@ export default async function AdminRulesPage() {
                       <th className="p-2 font-medium">
                         {t("table.firmado")}
                       </th>
+                      <th className="p-2 font-medium">
+                        {t("table.rowAction")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {(rules?.rule_sets ?? []).map((r) => (
-                      <tr key={r.id} className="border-b border-border">
+                      <tr
+                        key={r.id}
+                        className="border-b border-border hover:bg-muted/30"
+                      >
                         <td className="p-2 font-mono">{r.domain}</td>
                         <td className="p-2 font-mono">{r.key}</td>
                         <td className="p-2 text-right font-mono">
@@ -126,6 +136,14 @@ export default async function AdminRulesPage() {
                         </td>
                         <td className="p-2 text-muted-foreground">
                           {r.published_at ? "✓✓" : r.published_by_contador ? "✓·" : "·"}
+                        </td>
+                        <td className="p-2">
+                          <Link
+                            href={`/admin/rules/${r.id}`}
+                            className="text-xs text-primary hover:underline"
+                          >
+                            {t("table.rowAction")}
+                          </Link>
                         </td>
                       </tr>
                     ))}
