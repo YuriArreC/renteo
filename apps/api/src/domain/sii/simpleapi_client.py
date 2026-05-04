@@ -29,6 +29,7 @@ from src.domain.sii.adapter import (
     F29Periodo,
     RcvLine,
     SiiClient,
+    TaxpayerInfo,
 )
 from src.lib.audit import mask_rut
 from src.lib.errors import SiiAuthError, SiiTimeout, SiiUnavailable
@@ -197,4 +198,30 @@ class SimpleApiSiiClient(SiiClient):
             regimen_declarado=str(payload["regimen_declarado"]),
             rli_declarada=Decimal(str(payload["rli_declarada"])),
             idpc_pagado=Decimal(str(payload["idpc_pagado"])),
+        )
+
+    async def lookup_taxpayer(
+        self, *, rut: str
+    ) -> TaxpayerInfo | None:
+        logger.info("sii_lookup_taxpayer", rut=mask_rut(rut))
+        payload = await self._request(
+            "POST",
+            "/contribuyente/info",
+            json={"rut": rut},
+        )
+        if not payload or payload.get("no_encontrado"):
+            return None
+        fecha_raw = payload.get("fecha_inicio_actividades")
+        return TaxpayerInfo(
+            rut=rut,
+            razon_social=str(payload["razon_social"]),
+            giro=(
+                str(payload["giro"])
+                if payload.get("giro") is not None
+                else None
+            ),
+            fecha_inicio_actividades=(
+                date.fromisoformat(str(fecha_raw)) if fecha_raw else None
+            ),
+            activo=bool(payload.get("activo", True)),
         )

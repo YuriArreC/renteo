@@ -16,6 +16,29 @@ from src.domain.sii.adapter import (
     F29Periodo,
     RcvLine,
     SiiClient,
+    TaxpayerInfo,
+)
+
+_GIROS = (
+    "Comercio al por menor",
+    "Servicios profesionales",
+    "Transporte de carga",
+    "Construcción",
+    "Tecnología y software",
+    "Consultoría",
+    "Restaurante",
+    "Educación",
+)
+_RAZONES_SUFFIXES = ("SpA", "Ltda.", "S.A.")
+_RAZONES_NUCLEO = (
+    "Andes",
+    "Patagonia",
+    "Cordillera",
+    "Maipo",
+    "Bio Bio",
+    "Atacama",
+    "Pacífico",
+    "Austral",
 )
 
 
@@ -99,4 +122,29 @@ class MockSiiClient(SiiClient):
             regimen_declarado=regimen,
             rli_declarada=rli,
             idpc_pagado=(rli * Decimal("0.27")).quantize(Decimal("0.01")),
+        )
+
+    async def lookup_taxpayer(
+        self, *, rut: str
+    ) -> TaxpayerInfo | None:
+        """Mock lookup: deriva razón social y giro determinísticamente
+        del RUT. Si los últimos 3 chars del cuerpo son '000' simula un
+        RUT inexistente para que los tests cubran ese caso."""
+        cuerpo = rut.replace("-", "").replace(".", "")[:-1]
+        if cuerpo.endswith("000"):
+            return None
+        seed = _seed(rut, "lookup")
+        nucleo = _RAZONES_NUCLEO[seed % len(_RAZONES_NUCLEO)]
+        suffix = _RAZONES_SUFFIXES[(seed >> 4) % len(_RAZONES_SUFFIXES)]
+        giro = _GIROS[(seed >> 8) % len(_GIROS)]
+        # Año fundacional entre 2010 y 2024 derivado del RUT.
+        year = 2010 + (seed % 14)
+        month = 1 + ((seed >> 12) % 12)
+        day = 1 + ((seed >> 16) % 27)
+        return TaxpayerInfo(
+            rut=rut,
+            razon_social=f"{nucleo} {suffix}",
+            giro=giro,
+            fecha_inicio_actividades=date(year, month, day),
+            activo=(seed % 11) != 0,
         )

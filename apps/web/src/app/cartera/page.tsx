@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 
 import { BatchDiagnose } from "@/app/cartera/BatchDiagnose";
 import { PapelTrabajoButton } from "@/app/cartera/PapelTrabajoButton";
+import { QuickAddEmpresa } from "@/app/cartera/QuickAddEmpresa";
 import { LogoutButton } from "@/components/LogoutButton";
 import { Button } from "@/components/ui/button";
 import {
@@ -103,6 +104,8 @@ export default async function CarteraPage() {
             value={formatCLP(cartera.ahorro_potencial_estimado_clp)}
           />
         </div>
+
+        <QuickAddEmpresa />
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-4">

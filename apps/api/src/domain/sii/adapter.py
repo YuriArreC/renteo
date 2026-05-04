@@ -50,6 +50,22 @@ class F22Anio:
     idpc_pagado: Decimal
 
 
+@dataclass(frozen=True)
+class TaxpayerInfo:
+    """Datos públicos de un contribuyente recuperados desde SII.
+
+    No incluye PII sensible (no marca social, no domicilio fiscal
+    tampoco): solo lo necesario para identificar la empresa y
+    pre-llenar el alta.
+    """
+
+    rut: str
+    razon_social: str
+    giro: str | None
+    fecha_inicio_actividades: date | None
+    activo: bool
+
+
 class SiiClient(ABC):
     """Contrato que cumplen todos los proveedores SII (mock + reales)."""
 
@@ -72,3 +88,10 @@ class SiiClient(ABC):
         self, *, rut: str, tax_year: int
     ) -> F22Anio | None:
         """F22 anual; None si aún no presentado."""
+
+    @abstractmethod
+    async def lookup_taxpayer(
+        self, *, rut: str
+    ) -> TaxpayerInfo | None:
+        """Información pública del contribuyente (razón social, giro,
+        fecha inicio actividades). None si el RUT no existe en SII."""

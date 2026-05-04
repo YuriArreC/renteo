@@ -665,6 +665,43 @@ export interface EmpresasListResponse {
   empresas: EmpresaResponse[];
 }
 
+// Onboarding desde RUT (skill 4 + 9 closure).
+
+export interface FromRutRequest {
+  rut: string;
+  razon_social_fallback?: string;
+  sync_meses?: number;
+}
+
+export interface FromRutLookupSummary {
+  razon_social: string;
+  giro: string | null;
+  fecha_inicio_actividades: string | null;
+  activo_en_sii: boolean;
+  via_sii: boolean;
+}
+
+export interface FromRutSyncSummary {
+  provider: SiiProvider;
+  rcv_rows_inserted: number;
+  period_from: string;
+  period_to: string;
+  sync_id: string;
+  status: string;
+}
+
+export interface FromRutResponse {
+  empresa_id: string;
+  rut: string;
+  razon_social: string;
+  giro: string | null;
+  regimen_actual: RegimenActual;
+  fecha_inicio_actividades: string | null;
+  lookup: FromRutLookupSummary;
+  sync: FromRutSyncSummary | null;
+  warnings: string[];
+}
+
 // Sincronización SII (skill 4).
 
 export type SiiProvider = "mock" | "simpleapi" | "baseapi" | "apigateway";

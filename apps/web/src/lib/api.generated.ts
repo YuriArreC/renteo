@@ -398,6 +398,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/empresas/from-rut": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Empresa From Rut */
+        post: operations["empresa_from_rut_api_empresas_from_rut_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/empresas/{empresa_id}/papel-trabajo.xlsx": {
         parameters: {
             query?: never;
@@ -1653,6 +1670,46 @@ export interface components {
             /** Ya Existentes */
             ya_existentes: number;
         };
+        /** FromRutRequest */
+        FromRutRequest: {
+            /**
+             * Razon Social Fallback
+             * @description Si el SII no responde, se usa este nombre. Si SII responde, se ignora (fuente de verdad = SII).
+             */
+            razon_social_fallback?: string | null;
+            /** Rut */
+            rut: string;
+            /**
+             * Sync Meses
+             * @default 12
+             */
+            sync_meses: number;
+        };
+        /** FromRutResponse */
+        FromRutResponse: {
+            /**
+             * Empresa Id
+             * Format: uuid
+             */
+            empresa_id: string;
+            /** Fecha Inicio Actividades */
+            fecha_inicio_actividades: string | null;
+            /** Giro */
+            giro: string | null;
+            lookup: components["schemas"]["LookupSummary"];
+            /** Razon Social */
+            razon_social: string;
+            /**
+             * Regimen Actual
+             * @enum {string}
+             */
+            regimen_actual: "14_a" | "14_d_3" | "14_d_8" | "presunta" | "desconocido";
+            /** Rut */
+            rut: string;
+            sync: components["schemas"]["SyncSummary"] | null;
+            /** Warnings */
+            warnings: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1693,6 +1750,19 @@ export interface components {
             key: string;
             /** Version */
             version: string;
+        };
+        /** LookupSummary */
+        LookupSummary: {
+            /** Activo En Sii */
+            activo_en_sii: boolean;
+            /** Fecha Inicio Actividades */
+            fecha_inicio_actividades: string | null;
+            /** Giro */
+            giro: string | null;
+            /** Razon Social */
+            razon_social: string;
+            /** Via Sii */
+            via_sii: boolean;
         };
         /** MeResponse */
         MeResponse: {
@@ -2293,6 +2363,24 @@ export interface components {
             last_sync_status: string | null;
             /** Rcv Rows Total */
             rcv_rows_total: number;
+        };
+        /** SyncSummary */
+        SyncSummary: {
+            /** Period From */
+            period_from: string;
+            /** Period To */
+            period_to: string;
+            /** Provider */
+            provider: string;
+            /** Rcv Rows Inserted */
+            rcv_rows_inserted: number;
+            /** Status */
+            status: string;
+            /**
+             * Sync Id
+             * Format: uuid
+             */
+            sync_id: string;
         };
         /** UltimaRecomendacion */
         UltimaRecomendacion: {
@@ -3125,6 +3213,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EmpresaResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    empresa_from_rut_api_empresas_from_rut_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FromRutRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FromRutResponse"];
                 };
             };
             /** @description Validation Error */

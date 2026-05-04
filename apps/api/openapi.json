@@ -2252,6 +2252,125 @@
         "title": "EvaluateAlertasResponse",
         "type": "object"
       },
+      "FromRutRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "razon_social_fallback": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Si el SII no responde, se usa este nombre. Si SII responde, se ignora (fuente de verdad = SII).",
+            "title": "Razon Social Fallback"
+          },
+          "rut": {
+            "maxLength": 12,
+            "minLength": 3,
+            "title": "Rut",
+            "type": "string"
+          },
+          "sync_meses": {
+            "default": 12,
+            "maximum": 24.0,
+            "minimum": 1.0,
+            "title": "Sync Meses",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rut"
+        ],
+        "title": "FromRutRequest",
+        "type": "object"
+      },
+      "FromRutResponse": {
+        "properties": {
+          "empresa_id": {
+            "format": "uuid",
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "fecha_inicio_actividades": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Inicio Actividades"
+          },
+          "giro": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Giro"
+          },
+          "lookup": {
+            "$ref": "#/components/schemas/LookupSummary"
+          },
+          "razon_social": {
+            "title": "Razon Social",
+            "type": "string"
+          },
+          "regimen_actual": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8",
+              "presunta",
+              "desconocido"
+            ],
+            "title": "Regimen Actual",
+            "type": "string"
+          },
+          "rut": {
+            "title": "Rut",
+            "type": "string"
+          },
+          "sync": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyncSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "empresa_id",
+          "rut",
+          "razon_social",
+          "giro",
+          "regimen_actual",
+          "fecha_inicio_actividades",
+          "lookup",
+          "sync",
+          "warnings"
+        ],
+        "title": "FromRutResponse",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2362,6 +2481,53 @@
           "effective_from"
         ],
         "title": "LegalTextResponse",
+        "type": "object"
+      },
+      "LookupSummary": {
+        "properties": {
+          "activo_en_sii": {
+            "title": "Activo En Sii",
+            "type": "boolean"
+          },
+          "fecha_inicio_actividades": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Inicio Actividades"
+          },
+          "giro": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Giro"
+          },
+          "razon_social": {
+            "title": "Razon Social",
+            "type": "string"
+          },
+          "via_sii": {
+            "title": "Via Sii",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "razon_social",
+          "giro",
+          "fecha_inicio_actividades",
+          "activo_en_sii",
+          "via_sii"
+        ],
+        "title": "LookupSummary",
         "type": "object"
       },
       "MeResponse": {
@@ -4108,6 +4274,45 @@
         "title": "SyncStatusResponse",
         "type": "object"
       },
+      "SyncSummary": {
+        "properties": {
+          "period_from": {
+            "title": "Period From",
+            "type": "string"
+          },
+          "period_to": {
+            "title": "Period To",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "rcv_rows_inserted": {
+            "title": "Rcv Rows Inserted",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "sync_id": {
+            "format": "uuid",
+            "title": "Sync Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "rcv_rows_inserted",
+          "period_from",
+          "period_to",
+          "sync_id",
+          "status"
+        ],
+        "title": "SyncSummary",
+        "type": "object"
+      },
       "UltimaRecomendacion": {
         "properties": {
           "ahorro_estimado_clp": {
@@ -5624,6 +5829,52 @@
         "summary": "Create Empresa",
         "tags": [
           "empresas"
+        ]
+      }
+    },
+    "/api/empresas/from-rut": {
+      "post": {
+        "operationId": "empresa_from_rut_api_empresas_from_rut_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FromRutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FromRutResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Empresa From Rut",
+        "tags": [
+          "empresas-from-rut"
         ]
       }
     },
