@@ -344,6 +344,88 @@
       "cancelacion": "Cancelación",
       "oposicion": "Oposición",
       "portabilidad": "Portabilidad"
+    },
+    "ratDpiaLink": "Panel DPO: RAT y DPIA (Ley 21.719)"
+  },
+  "privacyCompliance": {
+    "title": "Cumplimiento Ley 21.719 — RAT y DPIA",
+    "subtitle": "Registro de Actividades de Tratamiento (art. 15-16) y Evaluaciones de Impacto en Protección de Datos (art. 35). Mantenlos al día antes del 1-dic-2026.",
+    "tabRat": "RAT — Actividades",
+    "tabDpia": "DPIA — Evaluaciones",
+    "rat": {
+      "formHeader": "Nueva actividad de tratamiento",
+      "listHeader": "Actividades vigentes",
+      "loading": "Cargando…",
+      "empty": "Aún no hay actividades registradas.",
+      "submit": "Registrar actividad",
+      "submitting": "Guardando…",
+      "created": "Actividad registrada en el RAT.",
+      "archived": "Actividad archivada.",
+      "archive": "Archivar",
+      "export": "Exportar XLSX",
+      "fields": {
+        "nombre": "Nombre de la actividad",
+        "finalidad": "Finalidad",
+        "baseLegal": "Base legal",
+        "titulares": "Categorías de titulares (una por línea)",
+        "datos": "Categorías de datos (una por línea)",
+        "encargados": "Encargados de tratamiento (una por línea)",
+        "plazo": "Plazo de conservación",
+        "medidas": "Medidas de seguridad (una por línea)",
+        "responsable": "Responsable (email)",
+        "sensibles": "Trata datos sensibles",
+        "linePlaceholder": "Una línea por elemento"
+      },
+      "baseLegalOptions": {
+        "consentimiento": "Consentimiento del titular",
+        "contrato": "Ejecución de contrato",
+        "interes_legitimo": "Interés legítimo",
+        "obligacion_legal": "Obligación legal",
+        "interes_vital": "Interés vital del titular",
+        "interes_publico": "Interés público"
+      },
+      "cols": {
+        "nombre": "Actividad",
+        "base": "Base legal",
+        "sensibles": "Sensibles",
+        "responsable": "Responsable",
+        "creado": "Creado",
+        "acciones": "Acciones"
+      }
+    },
+    "dpia": {
+      "formHeader": "Nueva evaluación de impacto",
+      "listHeader": "Evaluaciones registradas",
+      "loading": "Cargando…",
+      "empty": "Aún no hay evaluaciones registradas.",
+      "submit": "Registrar evaluación",
+      "submitting": "Guardando…",
+      "created": "DPIA registrada.",
+      "approve": "Aprobar",
+      "approved": "DPIA aprobada por el DPO.",
+      "alreadyApproved": "Ya aprobada",
+      "export": "Exportar XLSX",
+      "fields": {
+        "nombre": "Nombre de la evaluación",
+        "descripcion": "Descripción del tratamiento",
+        "necesidad": "Necesidad y proporcionalidad",
+        "riesgos": "Riesgos identificados (uno por línea)",
+        "medidas": "Medidas de mitigación (una por línea)",
+        "riesgo": "Riesgo residual",
+        "linePlaceholder": "Una línea por elemento"
+      },
+      "riesgoOptions": {
+        "bajo": "Bajo",
+        "medio": "Medio",
+        "alto": "Alto"
+      },
+      "cols": {
+        "nombre": "Evaluación",
+        "riesgo": "Riesgo residual",
+        "aprobada": "Aprobada",
+        "version": "Versión",
+        "acciones": "Acciones"
+      }
     }
   },
   "regime": {

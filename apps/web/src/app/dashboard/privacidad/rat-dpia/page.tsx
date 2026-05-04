@@ -2,13 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { ArcopPortal } from "@/app/dashboard/privacidad/ArcopPortal";
+import { RatDpiaPanel } from "@/app/dashboard/privacidad/rat-dpia/RatDpiaPanel";
 import { LogoutButton } from "@/components/LogoutButton";
-import { Button } from "@/components/ui/button";
 import { type MeResponse } from "@/lib/api";
 import { fetchApiServer } from "@/lib/api-server";
 
-export default async function PrivacidadDashboardPage() {
+export const dynamic = "force-dynamic";
+
+export default async function RatDpiaPage() {
   let me: MeResponse;
   try {
     me = await fetchApiServer<MeResponse>("/api/me");
@@ -20,7 +21,7 @@ export default async function PrivacidadDashboardPage() {
   }
 
   const tCommon = await getTranslations("common");
-  const t = await getTranslations("privacy");
+  const t = await getTranslations("privacyCompliance");
 
   const isAdmin =
     me.workspace.role === "owner" ||
@@ -41,7 +42,6 @@ export default async function PrivacidadDashboardPage() {
           <LogoutButton />
         </div>
       </header>
-
       <main className="container flex-1 py-12">
         <h1 className="mb-2 text-3xl font-semibold tracking-tight">
           {t("title")}
@@ -49,16 +49,7 @@ export default async function PrivacidadDashboardPage() {
         <p className="mb-10 max-w-3xl text-sm text-muted-foreground">
           {t("subtitle")}
         </p>
-        {isAdmin && (
-          <div className="mb-8">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard/privacidad/rat-dpia">
-                {t("ratDpiaLink")}
-              </Link>
-            </Button>
-          </div>
-        )}
-        <ArcopPortal isAdmin={isAdmin} />
+        <RatDpiaPanel isAdmin={isAdmin} />
       </main>
     </div>
   );

@@ -1499,6 +1499,302 @@
         "title": "DiagnoseVeredicto",
         "type": "object"
       },
+      "DpiaCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "descripcion_tratamiento": {
+            "maxLength": 4000,
+            "minLength": 2,
+            "title": "Descripcion Tratamiento",
+            "type": "string"
+          },
+          "medidas_mitigacion": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Medidas Mitigacion",
+            "type": "array"
+          },
+          "necesidad_proporcionalidad": {
+            "maxLength": 4000,
+            "minLength": 2,
+            "title": "Necesidad Proporcionalidad",
+            "type": "string"
+          },
+          "nombre_evaluacion": {
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Nombre Evaluacion",
+            "type": "string"
+          },
+          "rat_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rat Id"
+          },
+          "riesgo_residual": {
+            "enum": [
+              "bajo",
+              "medio",
+              "alto"
+            ],
+            "title": "Riesgo Residual",
+            "type": "string"
+          },
+          "riesgos_identificados": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Riesgos Identificados",
+            "type": "array"
+          }
+        },
+        "required": [
+          "nombre_evaluacion",
+          "descripcion_tratamiento",
+          "necesidad_proporcionalidad",
+          "riesgo_residual"
+        ],
+        "title": "DpiaCreateRequest",
+        "type": "object"
+      },
+      "DpiaListResponse": {
+        "properties": {
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/DpiaResponse"
+            },
+            "title": "Records",
+            "type": "array"
+          }
+        },
+        "required": [
+          "records"
+        ],
+        "title": "DpiaListResponse",
+        "type": "object"
+      },
+      "DpiaResponse": {
+        "properties": {
+          "aprobado_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aprobado At"
+          },
+          "aprobado_por_dpo_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aprobado Por Dpo Email"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "descripcion_tratamiento": {
+            "title": "Descripcion Tratamiento",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "medidas_mitigacion": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Medidas Mitigacion",
+            "type": "array"
+          },
+          "necesidad_proporcionalidad": {
+            "title": "Necesidad Proporcionalidad",
+            "type": "string"
+          },
+          "nombre_evaluacion": {
+            "title": "Nombre Evaluacion",
+            "type": "string"
+          },
+          "rat_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rat Id"
+          },
+          "riesgo_residual": {
+            "enum": [
+              "bajo",
+              "medio",
+              "alto"
+            ],
+            "title": "Riesgo Residual",
+            "type": "string"
+          },
+          "riesgos_identificados": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Riesgos Identificados",
+            "type": "array"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "rat_id",
+          "nombre_evaluacion",
+          "descripcion_tratamiento",
+          "necesidad_proporcionalidad",
+          "riesgos_identificados",
+          "medidas_mitigacion",
+          "riesgo_residual",
+          "aprobado_por_dpo_email",
+          "aprobado_at",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DpiaResponse",
+        "type": "object"
+      },
+      "DpiaUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "aprobar": {
+            "default": false,
+            "title": "Aprobar",
+            "type": "boolean"
+          },
+          "descripcion_tratamiento": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion Tratamiento"
+          },
+          "medidas_mitigacion": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Medidas Mitigacion"
+          },
+          "necesidad_proporcionalidad": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Necesidad Proporcionalidad"
+          },
+          "nombre_evaluacion": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre Evaluacion"
+          },
+          "rat_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rat Id"
+          },
+          "riesgo_residual": {
+            "anyOf": [
+              {
+                "enum": [
+                  "bajo",
+                  "medio",
+                  "alto"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Riesgo Residual"
+          },
+          "riesgos_identificados": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Riesgos Identificados"
+          }
+        },
+        "title": "DpiaUpdateRequest",
+        "type": "object"
+      },
       "DryRunResponse": {
         "properties": {
           "cambian_elegibilidad": {
@@ -2522,6 +2818,384 @@
           "carga_total"
         ],
         "title": "ProjectionRow",
+        "type": "object"
+      },
+      "RatCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "base_legal": {
+            "enum": [
+              "consentimiento",
+              "contrato",
+              "interes_legitimo",
+              "obligacion_legal",
+              "interes_vital",
+              "interes_publico"
+            ],
+            "title": "Base Legal",
+            "type": "string"
+          },
+          "categorias_datos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Categorias Datos",
+            "type": "array"
+          },
+          "categorias_titulares": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Categorias Titulares",
+            "type": "array"
+          },
+          "datos_sensibles": {
+            "default": false,
+            "title": "Datos Sensibles",
+            "type": "boolean"
+          },
+          "encargados_referenciados": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Encargados Referenciados",
+            "type": "array"
+          },
+          "finalidad": {
+            "maxLength": 2000,
+            "minLength": 2,
+            "title": "Finalidad",
+            "type": "string"
+          },
+          "medidas_seguridad": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Medidas Seguridad",
+            "type": "array"
+          },
+          "nombre_actividad": {
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Nombre Actividad",
+            "type": "string"
+          },
+          "plazo_conservacion": {
+            "maxLength": 400,
+            "minLength": 2,
+            "title": "Plazo Conservacion",
+            "type": "string"
+          },
+          "responsable_email": {
+            "maxLength": 320,
+            "minLength": 3,
+            "title": "Responsable Email",
+            "type": "string"
+          },
+          "transferencias_internacionales": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Transferencias Internacionales",
+            "type": "array"
+          }
+        },
+        "required": [
+          "nombre_actividad",
+          "finalidad",
+          "base_legal",
+          "plazo_conservacion",
+          "responsable_email"
+        ],
+        "title": "RatCreateRequest",
+        "type": "object"
+      },
+      "RatListResponse": {
+        "properties": {
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/RatResponse"
+            },
+            "title": "Records",
+            "type": "array"
+          }
+        },
+        "required": [
+          "records"
+        ],
+        "title": "RatListResponse",
+        "type": "object"
+      },
+      "RatResponse": {
+        "properties": {
+          "archived_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived At"
+          },
+          "base_legal": {
+            "enum": [
+              "consentimiento",
+              "contrato",
+              "interes_legitimo",
+              "obligacion_legal",
+              "interes_vital",
+              "interes_publico"
+            ],
+            "title": "Base Legal",
+            "type": "string"
+          },
+          "categorias_datos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Categorias Datos",
+            "type": "array"
+          },
+          "categorias_titulares": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Categorias Titulares",
+            "type": "array"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "datos_sensibles": {
+            "title": "Datos Sensibles",
+            "type": "boolean"
+          },
+          "encargados_referenciados": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Encargados Referenciados",
+            "type": "array"
+          },
+          "finalidad": {
+            "title": "Finalidad",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "medidas_seguridad": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Medidas Seguridad",
+            "type": "array"
+          },
+          "nombre_actividad": {
+            "title": "Nombre Actividad",
+            "type": "string"
+          },
+          "plazo_conservacion": {
+            "title": "Plazo Conservacion",
+            "type": "string"
+          },
+          "responsable_email": {
+            "title": "Responsable Email",
+            "type": "string"
+          },
+          "transferencias_internacionales": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Transferencias Internacionales",
+            "type": "array"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "nombre_actividad",
+          "finalidad",
+          "base_legal",
+          "categorias_titulares",
+          "categorias_datos",
+          "datos_sensibles",
+          "encargados_referenciados",
+          "transferencias_internacionales",
+          "plazo_conservacion",
+          "medidas_seguridad",
+          "responsable_email",
+          "created_at",
+          "updated_at",
+          "archived_at"
+        ],
+        "title": "RatResponse",
+        "type": "object"
+      },
+      "RatUpdateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "base_legal": {
+            "anyOf": [
+              {
+                "enum": [
+                  "consentimiento",
+                  "contrato",
+                  "interes_legitimo",
+                  "obligacion_legal",
+                  "interes_vital",
+                  "interes_publico"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Legal"
+          },
+          "categorias_datos": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categorias Datos"
+          },
+          "categorias_titulares": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categorias Titulares"
+          },
+          "datos_sensibles": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datos Sensibles"
+          },
+          "encargados_referenciados": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encargados Referenciados"
+          },
+          "finalidad": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalidad"
+          },
+          "medidas_seguridad": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Medidas Seguridad"
+          },
+          "nombre_actividad": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre Actividad"
+          },
+          "plazo_conservacion": {
+            "anyOf": [
+              {
+                "maxLength": 400,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plazo Conservacion"
+          },
+          "responsable_email": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsable Email"
+          },
+          "transferencias_internacionales": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transferencias Internacionales"
+          }
+        },
+        "title": "RatUpdateRequest",
         "type": "object"
       },
       "RecomendacionListItem": {
@@ -5371,6 +6045,371 @@
         "summary": "Update Arcop",
         "tags": [
           "privacy"
+        ]
+      }
+    },
+    "/api/privacy/dpia": {
+      "get": {
+        "operationId": "list_dpia_api_privacy_dpia_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DpiaListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Dpia",
+        "tags": [
+          "privacy-compliance"
+        ]
+      },
+      "post": {
+        "operationId": "create_dpia_api_privacy_dpia_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DpiaCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DpiaResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Dpia",
+        "tags": [
+          "privacy-compliance"
+        ]
+      }
+    },
+    "/api/privacy/dpia.xlsx": {
+      "get": {
+        "operationId": "download_dpia_xlsx_api_privacy_dpia_xlsx_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download Dpia Xlsx",
+        "tags": [
+          "privacy-compliance"
+        ]
+      }
+    },
+    "/api/privacy/dpia/{dpia_id}": {
+      "patch": {
+        "operationId": "update_dpia_api_privacy_dpia__dpia_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dpia_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Dpia Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DpiaUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DpiaResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Dpia",
+        "tags": [
+          "privacy-compliance"
+        ]
+      }
+    },
+    "/api/privacy/rat": {
+      "get": {
+        "operationId": "list_rat_api_privacy_rat_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_archived",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Archived",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RatListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Rat",
+        "tags": [
+          "privacy-compliance"
+        ]
+      },
+      "post": {
+        "operationId": "create_rat_api_privacy_rat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RatCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RatResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Rat",
+        "tags": [
+          "privacy-compliance"
+        ]
+      }
+    },
+    "/api/privacy/rat.xlsx": {
+      "get": {
+        "operationId": "download_rat_xlsx_api_privacy_rat_xlsx_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download Rat Xlsx",
+        "tags": [
+          "privacy-compliance"
+        ]
+      }
+    },
+    "/api/privacy/rat/{rat_id}": {
+      "delete": {
+        "operationId": "archive_rat_api_privacy_rat__rat_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rat_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Rat Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Archive Rat",
+        "tags": [
+          "privacy-compliance"
+        ]
+      },
+      "patch": {
+        "operationId": "update_rat_api_privacy_rat__rat_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rat_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Rat Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RatUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RatResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Rat",
+        "tags": [
+          "privacy-compliance"
         ]
       }
     },

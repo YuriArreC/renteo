@@ -75,6 +75,84 @@ export interface LegalTextResponse {
   effective_from: string;
 }
 
+// RAT y DPIA (skill 5 — Ley 21.719).
+
+export type RatBaseLegal =
+  | "consentimiento"
+  | "contrato"
+  | "interes_legitimo"
+  | "obligacion_legal"
+  | "interes_vital"
+  | "interes_publico";
+
+export type RiesgoNivel = "bajo" | "medio" | "alto";
+
+export interface RatResponse {
+  id: string;
+  nombre_actividad: string;
+  finalidad: string;
+  base_legal: RatBaseLegal;
+  categorias_titulares: string[];
+  categorias_datos: string[];
+  datos_sensibles: boolean;
+  encargados_referenciados: string[];
+  transferencias_internacionales: Array<Record<string, unknown>>;
+  plazo_conservacion: string;
+  medidas_seguridad: string[];
+  responsable_email: string;
+  created_at: string;
+  updated_at: string;
+  archived_at: string | null;
+}
+
+export interface RatListResponse {
+  records: RatResponse[];
+}
+
+export interface RatCreateRequest {
+  nombre_actividad: string;
+  finalidad: string;
+  base_legal: RatBaseLegal;
+  categorias_titulares: string[];
+  categorias_datos: string[];
+  datos_sensibles: boolean;
+  encargados_referenciados: string[];
+  transferencias_internacionales: Array<Record<string, unknown>>;
+  plazo_conservacion: string;
+  medidas_seguridad: string[];
+  responsable_email: string;
+}
+
+export interface DpiaResponse {
+  id: string;
+  rat_id: string | null;
+  nombre_evaluacion: string;
+  descripcion_tratamiento: string;
+  necesidad_proporcionalidad: string;
+  riesgos_identificados: Array<Record<string, unknown>>;
+  medidas_mitigacion: string[];
+  riesgo_residual: RiesgoNivel;
+  aprobado_por_dpo_email: string | null;
+  aprobado_at: string | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DpiaListResponse {
+  records: DpiaResponse[];
+}
+
+export interface DpiaCreateRequest {
+  rat_id?: string | null;
+  nombre_evaluacion: string;
+  descripcion_tratamiento: string;
+  necesidad_proporcionalidad: string;
+  riesgos_identificados: Array<Record<string, unknown>>;
+  medidas_mitigacion: string[];
+  riesgo_residual: RiesgoNivel;
+}
+
 // ARCOP (skill 5).
 
 export type ArcopTipo =

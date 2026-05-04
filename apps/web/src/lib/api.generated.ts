@@ -561,6 +561,111 @@ export interface paths {
         patch: operations["update_arcop_api_privacy_arcop__arcop_id__patch"];
         trace?: never;
     };
+    "/api/privacy/dpia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Dpia */
+        get: operations["list_dpia_api_privacy_dpia_get"];
+        put?: never;
+        /** Create Dpia */
+        post: operations["create_dpia_api_privacy_dpia_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/privacy/dpia.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Dpia Xlsx */
+        get: operations["download_dpia_xlsx_api_privacy_dpia_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/privacy/dpia/{dpia_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Dpia */
+        patch: operations["update_dpia_api_privacy_dpia__dpia_id__patch"];
+        trace?: never;
+    };
+    "/api/privacy/rat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Rat */
+        get: operations["list_rat_api_privacy_rat_get"];
+        put?: never;
+        /** Create Rat */
+        post: operations["create_rat_api_privacy_rat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/privacy/rat.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Rat Xlsx */
+        get: operations["download_rat_xlsx_api_privacy_rat_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/privacy/rat/{rat_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Archive Rat */
+        delete: operations["archive_rat_api_privacy_rat__rat_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Rat */
+        patch: operations["update_rat_api_privacy_rat__rat_id__patch"];
+        trace?: never;
+    };
     "/api/public/encargados": {
         parameters: {
             query?: never;
@@ -1305,6 +1410,94 @@ export interface components {
              */
             regimen_recomendado: "14_a" | "14_d_3" | "14_d_8" | "renta_presunta";
         };
+        /** DpiaCreateRequest */
+        DpiaCreateRequest: {
+            /** Descripcion Tratamiento */
+            descripcion_tratamiento: string;
+            /** Medidas Mitigacion */
+            medidas_mitigacion?: string[];
+            /** Necesidad Proporcionalidad */
+            necesidad_proporcionalidad: string;
+            /** Nombre Evaluacion */
+            nombre_evaluacion: string;
+            /** Rat Id */
+            rat_id?: string | null;
+            /**
+             * Riesgo Residual
+             * @enum {string}
+             */
+            riesgo_residual: "bajo" | "medio" | "alto";
+            /** Riesgos Identificados */
+            riesgos_identificados?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** DpiaListResponse */
+        DpiaListResponse: {
+            /** Records */
+            records: components["schemas"]["DpiaResponse"][];
+        };
+        /** DpiaResponse */
+        DpiaResponse: {
+            /** Aprobado At */
+            aprobado_at: string | null;
+            /** Aprobado Por Dpo Email */
+            aprobado_por_dpo_email: string | null;
+            /** Created At */
+            created_at: string;
+            /** Descripcion Tratamiento */
+            descripcion_tratamiento: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Medidas Mitigacion */
+            medidas_mitigacion: string[];
+            /** Necesidad Proporcionalidad */
+            necesidad_proporcionalidad: string;
+            /** Nombre Evaluacion */
+            nombre_evaluacion: string;
+            /** Rat Id */
+            rat_id: string | null;
+            /**
+             * Riesgo Residual
+             * @enum {string}
+             */
+            riesgo_residual: "bajo" | "medio" | "alto";
+            /** Riesgos Identificados */
+            riesgos_identificados: {
+                [key: string]: unknown;
+            }[];
+            /** Updated At */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /** DpiaUpdateRequest */
+        DpiaUpdateRequest: {
+            /**
+             * Aprobar
+             * @default false
+             */
+            aprobar: boolean;
+            /** Descripcion Tratamiento */
+            descripcion_tratamiento?: string | null;
+            /** Medidas Mitigacion */
+            medidas_mitigacion?: string[] | null;
+            /** Necesidad Proporcionalidad */
+            necesidad_proporcionalidad?: string | null;
+            /** Nombre Evaluacion */
+            nombre_evaluacion?: string | null;
+            /** Rat Id */
+            rat_id?: string | null;
+            /** Riesgo Residual */
+            riesgo_residual?: ("bajo" | "medio" | "alto") | null;
+            /** Riesgos Identificados */
+            riesgos_identificados?: {
+                [key: string]: unknown;
+            }[] | null;
+        };
         /** DryRunResponse */
         DryRunResponse: {
             /** Cambian Elegibilidad */
@@ -1657,6 +1850,112 @@ export interface components {
             retiros: string;
             /** Rli */
             rli: string;
+        };
+        /** RatCreateRequest */
+        RatCreateRequest: {
+            /**
+             * Base Legal
+             * @enum {string}
+             */
+            base_legal: "consentimiento" | "contrato" | "interes_legitimo" | "obligacion_legal" | "interes_vital" | "interes_publico";
+            /** Categorias Datos */
+            categorias_datos?: string[];
+            /** Categorias Titulares */
+            categorias_titulares?: string[];
+            /**
+             * Datos Sensibles
+             * @default false
+             */
+            datos_sensibles: boolean;
+            /** Encargados Referenciados */
+            encargados_referenciados?: string[];
+            /** Finalidad */
+            finalidad: string;
+            /** Medidas Seguridad */
+            medidas_seguridad?: string[];
+            /** Nombre Actividad */
+            nombre_actividad: string;
+            /** Plazo Conservacion */
+            plazo_conservacion: string;
+            /** Responsable Email */
+            responsable_email: string;
+            /** Transferencias Internacionales */
+            transferencias_internacionales?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** RatListResponse */
+        RatListResponse: {
+            /** Records */
+            records: components["schemas"]["RatResponse"][];
+        };
+        /** RatResponse */
+        RatResponse: {
+            /** Archived At */
+            archived_at: string | null;
+            /**
+             * Base Legal
+             * @enum {string}
+             */
+            base_legal: "consentimiento" | "contrato" | "interes_legitimo" | "obligacion_legal" | "interes_vital" | "interes_publico";
+            /** Categorias Datos */
+            categorias_datos: string[];
+            /** Categorias Titulares */
+            categorias_titulares: string[];
+            /** Created At */
+            created_at: string;
+            /** Datos Sensibles */
+            datos_sensibles: boolean;
+            /** Encargados Referenciados */
+            encargados_referenciados: string[];
+            /** Finalidad */
+            finalidad: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Medidas Seguridad */
+            medidas_seguridad: string[];
+            /** Nombre Actividad */
+            nombre_actividad: string;
+            /** Plazo Conservacion */
+            plazo_conservacion: string;
+            /** Responsable Email */
+            responsable_email: string;
+            /** Transferencias Internacionales */
+            transferencias_internacionales: {
+                [key: string]: unknown;
+            }[];
+            /** Updated At */
+            updated_at: string;
+        };
+        /** RatUpdateRequest */
+        RatUpdateRequest: {
+            /** Base Legal */
+            base_legal?: ("consentimiento" | "contrato" | "interes_legitimo" | "obligacion_legal" | "interes_vital" | "interes_publico") | null;
+            /** Categorias Datos */
+            categorias_datos?: string[] | null;
+            /** Categorias Titulares */
+            categorias_titulares?: string[] | null;
+            /** Datos Sensibles */
+            datos_sensibles?: boolean | null;
+            /** Encargados Referenciados */
+            encargados_referenciados?: string[] | null;
+            /** Finalidad */
+            finalidad?: string | null;
+            /** Medidas Seguridad */
+            medidas_seguridad?: string[] | null;
+            /** Nombre Actividad */
+            nombre_actividad?: string | null;
+            /** Plazo Conservacion */
+            plazo_conservacion?: string | null;
+            /** Responsable Email */
+            responsable_email?: string | null;
+            /** Transferencias Internacionales */
+            transferencias_internacionales?: {
+                [key: string]: unknown;
+            }[] | null;
         };
         /**
          * RecomendacionListItem
@@ -3095,6 +3394,262 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArcopResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_dpia_api_privacy_dpia_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DpiaListResponse"];
+                };
+            };
+        };
+    };
+    create_dpia_api_privacy_dpia_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DpiaCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DpiaResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_dpia_xlsx_api_privacy_dpia_xlsx_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    update_dpia_api_privacy_dpia__dpia_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dpia_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DpiaUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DpiaResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_rat_api_privacy_rat_get: {
+        parameters: {
+            query?: {
+                include_archived?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RatListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_rat_api_privacy_rat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RatCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RatResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_rat_xlsx_api_privacy_rat_xlsx_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    archive_rat_api_privacy_rat__rat_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rat_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_rat_api_privacy_rat__rat_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rat_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RatUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RatResponse"];
                 };
             };
             /** @description Validation Error */

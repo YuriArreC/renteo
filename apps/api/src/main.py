@@ -27,6 +27,7 @@ from src.routers import legal as legal_router
 from src.routers import me as me_router
 from src.routers import papeles as papeles_router
 from src.routers import privacy as privacy_router
+from src.routers import privacy_compliance as privacy_compliance_router
 from src.routers import regime as regime_router
 from src.routers import scenario as scenario_router
 from src.routers import sii as sii_router
@@ -155,6 +156,7 @@ app.include_router(empresas_router.router)
 app.include_router(sii_router.router)
 app.include_router(papeles_router.router)
 app.include_router(privacy_router.router)
+app.include_router(privacy_compliance_router.router)
 app.include_router(alertas_router.router)
 app.include_router(cartera_router.router)
 app.include_router(admin_rules_router.router)
