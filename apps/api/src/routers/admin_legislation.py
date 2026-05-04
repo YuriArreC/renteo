@@ -141,6 +141,9 @@ async def list_alerts(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="limit debe estar entre 1 y 500",
         )
+    # Cast explícito de los parámetros opcionales: cuando son NULL,
+    # asyncpg necesita el tipo declarado para preparar el statement
+    # (AmbiguousParameterError si solo viaja `:st is null`).
     async with service_session() as svc:
         result = await svc.execute(
             text(
@@ -151,8 +154,10 @@ async def list_alerts(
                        reviewed_by, reviewed_at, review_note,
                        created_at, updated_at
                   from tax_rules.legislative_alerts
-                 where (:st is null or status = :st)
-                   and (:src is null or source = :src)
+                 where (cast(:st as text) is null
+                        or status = cast(:st as text))
+                   and (cast(:src as text) is null
+                        or source = cast(:src as text))
                  order by publication_date desc, created_at desc
                  limit :lim
                 """
