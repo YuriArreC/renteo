@@ -887,6 +887,96 @@
         "title": "CreateEmpresaRequest",
         "type": "object"
       },
+      "CreateEncargadoRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "contacto_dpo": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contacto Dpo"
+          },
+          "dpa_firmado_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dpa Firmado At"
+          },
+          "dpa_url": {
+            "anyOf": [
+              {
+                "maxLength": 400,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dpa Url"
+          },
+          "dpa_vigente_hasta": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dpa Vigente Hasta"
+          },
+          "nombre": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Nombre",
+            "type": "string"
+          },
+          "notas": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notas"
+          },
+          "pais_tratamiento": {
+            "default": "CL",
+            "maxLength": 4,
+            "minLength": 2,
+            "title": "Pais Tratamiento",
+            "type": "string"
+          },
+          "proposito": {
+            "maxLength": 600,
+            "minLength": 1,
+            "title": "Proposito",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nombre",
+          "proposito"
+        ],
+        "title": "CreateEncargadoRequest",
+        "type": "object"
+      },
       "CreateWorkspaceReq": {
         "additionalProperties": false,
         "properties": {
@@ -1595,6 +1685,167 @@
           "empresas"
         ],
         "title": "EmpresasListResponse",
+        "type": "object"
+      },
+      "EncargadoAdmin": {
+        "properties": {
+          "activo": {
+            "title": "Activo",
+            "type": "boolean"
+          },
+          "contacto_dpo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contacto Dpo"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "dpa_firmado_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dpa Firmado At"
+          },
+          "dpa_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dpa Url"
+          },
+          "dpa_vigente_hasta": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dpa Vigente Hasta"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "notas": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notas"
+          },
+          "pais_tratamiento": {
+            "title": "Pais Tratamiento",
+            "type": "string"
+          },
+          "proposito": {
+            "title": "Proposito",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "proposito",
+          "pais_tratamiento",
+          "dpa_firmado_at",
+          "dpa_vigente_hasta",
+          "dpa_url",
+          "contacto_dpo",
+          "notas",
+          "activo",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "EncargadoAdmin",
+        "type": "object"
+      },
+      "EncargadoListAdminResponse": {
+        "properties": {
+          "encargados": {
+            "items": {
+              "$ref": "#/components/schemas/EncargadoAdmin"
+            },
+            "title": "Encargados",
+            "type": "array"
+          }
+        },
+        "required": [
+          "encargados"
+        ],
+        "title": "EncargadoListAdminResponse",
+        "type": "object"
+      },
+      "EncargadoListPublicResponse": {
+        "properties": {
+          "encargados": {
+            "items": {
+              "$ref": "#/components/schemas/EncargadoPublic"
+            },
+            "title": "Encargados",
+            "type": "array"
+          }
+        },
+        "required": [
+          "encargados"
+        ],
+        "title": "EncargadoListPublicResponse",
+        "type": "object"
+      },
+      "EncargadoPublic": {
+        "properties": {
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "pais_tratamiento": {
+            "title": "Pais Tratamiento",
+            "type": "string"
+          },
+          "proposito": {
+            "title": "Proposito",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nombre",
+          "proposito",
+          "pais_tratamiento"
+        ],
+        "title": "EncargadoPublic",
         "type": "object"
       },
       "EvaluateAlertasRequest": {
@@ -3079,6 +3330,109 @@
         "title": "UpdateArcopRequest",
         "type": "object"
       },
+      "UpdateEncargadoRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "activo": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activo"
+          },
+          "contacto_dpo": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contacto Dpo"
+          },
+          "dpa_firmado_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dpa Firmado At"
+          },
+          "dpa_url": {
+            "anyOf": [
+              {
+                "maxLength": 400,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dpa Url"
+          },
+          "dpa_vigente_hasta": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dpa Vigente Hasta"
+          },
+          "notas": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notas"
+          },
+          "pais_tratamiento": {
+            "anyOf": [
+              {
+                "maxLength": 4,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pais Tratamiento"
+          },
+          "proposito": {
+            "anyOf": [
+              {
+                "maxLength": 600,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposito"
+          }
+        },
+        "title": "UpdateEncargadoRequest",
+        "type": "object"
+      },
       "ValidateSchemaRequest": {
         "additionalProperties": false,
         "properties": {
@@ -3201,6 +3555,175 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/admin/encargados": {
+      "get": {
+        "operationId": "list_admin_api_admin_encargados_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncargadoListAdminResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Admin",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "create_encargado_api_admin_encargados_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEncargadoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncargadoAdmin"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Encargado",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/encargados/{encargado_id}": {
+      "delete": {
+        "description": "Soft-delete: marca deleted_at = now(). El registro queda en BD\npara auditoría histórica (qué encargados tuvimos en cada momento).",
+        "operationId": "delete_encargado_api_admin_encargados__encargado_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "encargado_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Encargado Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Encargado",
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "description": "Actualiza campos no críticos. `nombre` no se cambia (mantener\nel log claro: si cambia el proveedor real, crear uno nuevo y\ndeactivar el anterior).",
+        "operationId": "update_encargado_api_admin_encargados__encargado_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "encargado_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Encargado Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEncargadoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncargadoAdmin"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Encargado",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/rules": {
       "get": {
         "operationId": "list_rules_api_admin_rules_get",
@@ -4308,6 +4831,28 @@
         "summary": "Update Arcop",
         "tags": [
           "privacy"
+        ]
+      }
+    },
+    "/api/public/encargados": {
+      "get": {
+        "description": "Lista pública: solo datos no sensibles (nombre, propósito, país).",
+        "operationId": "list_public_api_public_encargados_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncargadoListPublicResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Public",
+        "tags": [
+          "public"
         ]
       }
     },

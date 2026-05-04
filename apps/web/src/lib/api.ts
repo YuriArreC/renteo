@@ -306,6 +306,34 @@ export interface BatchDiagnoseResponse {
   disclaimer_version: string;
 }
 
+// Encargados de tratamiento (skill 5).
+
+export interface EncargadoPublic {
+  nombre: string;
+  proposito: string;
+  pais_tratamiento: string;
+}
+
+export interface EncargadoListPublicResponse {
+  encargados: EncargadoPublic[];
+}
+
+export interface EncargadoAdmin extends EncargadoPublic {
+  id: string;
+  dpa_firmado_at: string | null;
+  dpa_vigente_hasta: string | null;
+  dpa_url: string | null;
+  contacto_dpo: string | null;
+  notas: string | null;
+  activo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EncargadoListAdminResponse {
+  encargados: EncargadoAdmin[];
+}
+
 // ---------------------------------------------------------------------------
 // Tipos manuales del API mientras el pipeline shared-types no esté listo
 // (fase 1+). Mantener sincronizado con apps/api/src/routers/*.

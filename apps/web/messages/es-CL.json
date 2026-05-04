@@ -8,6 +8,31 @@
   "decisionRibbon": {
     "cta": "Solicitar revisión humana"
   },
+  "encargados": {
+    "title": "Encargados de tratamiento",
+    "subtitle": "Proveedores que tratan datos personales o tributarios en nombre de Renteo (Ley 21.719). El DPO mantiene la lista y los DPAs firmados.",
+    "header": "Encargados activos",
+    "empty": "Sin encargados publicados.",
+    "table": {
+      "nombre": "Encargado",
+      "proposito": "Propósito",
+      "pais": "País"
+    },
+    "admin": {
+      "title": "Panel de encargados",
+      "subtitle": "Gestión de DPAs (Data Processing Agreements). Solo el staff Renteo puede modificar.",
+      "forbidden": "No tienes permisos para gestionar encargados.",
+      "tableHeader": "Lista completa",
+      "dpaFirmado": "DPA firmado",
+      "dpaVigente": "Vigente hasta",
+      "dpaUrl": "URL",
+      "dpoContacto": "DPO contacto",
+      "activo": "Activo",
+      "noDate": "—",
+      "expiresSoon": "Vence pronto",
+      "expired": "Vencido"
+    }
+  },
   "adminRules": {
     "title": "Panel de reglas tributarias",
     "subtitle": "Reglas declarativas globales del motor (skill 11). Solo el staff Renteo (contador socio + admin técnico) puede gestionarlas. Los flujos de doble firma corren contra /api/admin/rules.",

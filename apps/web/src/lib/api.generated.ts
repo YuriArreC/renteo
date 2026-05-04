@@ -4,6 +4,51 @@
  */
 
 export interface paths {
+    "/api/admin/encargados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Admin */
+        get: operations["list_admin_api_admin_encargados_get"];
+        put?: never;
+        /** Create Encargado */
+        post: operations["create_encargado_api_admin_encargados_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/encargados/{encargado_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Encargado
+         * @description Soft-delete: marca deleted_at = now(). El registro queda en BD
+         *     para auditoría histórica (qué encargados tuvimos en cada momento).
+         */
+        delete: operations["delete_encargado_api_admin_encargados__encargado_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Encargado
+         * @description Actualiza campos no críticos. `nombre` no se cambia (mantener
+         *     el log claro: si cambia el proveedor real, crear uno nuevo y
+         *     deactivar el anterior).
+         */
+        patch: operations["update_encargado_api_admin_encargados__encargado_id__patch"];
+        trace?: never;
+    };
     "/api/admin/rules": {
         parameters: {
             query?: never;
@@ -441,6 +486,26 @@ export interface paths {
          *     ya está terminal, rechazar el PATCH.
          */
         patch: operations["update_arcop_api_privacy_arcop__arcop_id__patch"];
+        trace?: never;
+    };
+    "/api/public/encargados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Public
+         * @description Lista pública: solo datos no sensibles (nombre, propósito, país).
+         */
+        get: operations["list_public_api_public_encargados_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/public/legal/{key}": {
@@ -956,6 +1021,28 @@ export interface components {
             /** Rut */
             rut: string;
         };
+        /** CreateEncargadoRequest */
+        CreateEncargadoRequest: {
+            /** Contacto Dpo */
+            contacto_dpo?: string | null;
+            /** Dpa Firmado At */
+            dpa_firmado_at?: string | null;
+            /** Dpa Url */
+            dpa_url?: string | null;
+            /** Dpa Vigente Hasta */
+            dpa_vigente_hasta?: string | null;
+            /** Nombre */
+            nombre: string;
+            /** Notas */
+            notas?: string | null;
+            /**
+             * Pais Tratamiento
+             * @default CL
+             */
+            pais_tratamiento: string;
+            /** Proposito */
+            proposito: string;
+        };
         /** CreateWorkspaceReq */
         CreateWorkspaceReq: {
             /**
@@ -1208,6 +1295,55 @@ export interface components {
         EmpresasListResponse: {
             /** Empresas */
             empresas: components["schemas"]["EmpresaResponse"][];
+        };
+        /** EncargadoAdmin */
+        EncargadoAdmin: {
+            /** Activo */
+            activo: boolean;
+            /** Contacto Dpo */
+            contacto_dpo: string | null;
+            /** Created At */
+            created_at: string;
+            /** Dpa Firmado At */
+            dpa_firmado_at: string | null;
+            /** Dpa Url */
+            dpa_url: string | null;
+            /** Dpa Vigente Hasta */
+            dpa_vigente_hasta: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Notas */
+            notas: string | null;
+            /** Pais Tratamiento */
+            pais_tratamiento: string;
+            /** Proposito */
+            proposito: string;
+            /** Updated At */
+            updated_at: string;
+        };
+        /** EncargadoListAdminResponse */
+        EncargadoListAdminResponse: {
+            /** Encargados */
+            encargados: components["schemas"]["EncargadoAdmin"][];
+        };
+        /** EncargadoListPublicResponse */
+        EncargadoListPublicResponse: {
+            /** Encargados */
+            encargados: components["schemas"]["EncargadoPublic"][];
+        };
+        /** EncargadoPublic */
+        EncargadoPublic: {
+            /** Nombre */
+            nombre: string;
+            /** Pais Tratamiento */
+            pais_tratamiento: string;
+            /** Proposito */
+            proposito: string;
         };
         /** EvaluateAlertasRequest */
         EvaluateAlertasRequest: {
@@ -1746,6 +1882,25 @@ export interface components {
             /** Respuesta */
             respuesta?: string | null;
         };
+        /** UpdateEncargadoRequest */
+        UpdateEncargadoRequest: {
+            /** Activo */
+            activo?: boolean | null;
+            /** Contacto Dpo */
+            contacto_dpo?: string | null;
+            /** Dpa Firmado At */
+            dpa_firmado_at?: string | null;
+            /** Dpa Url */
+            dpa_url?: string | null;
+            /** Dpa Vigente Hasta */
+            dpa_vigente_hasta?: string | null;
+            /** Notas */
+            notas?: string | null;
+            /** Pais Tratamiento */
+            pais_tratamiento?: string | null;
+            /** Proposito */
+            proposito?: string | null;
+        };
         /** ValidateSchemaRequest */
         ValidateSchemaRequest: {
             /** Domain */
@@ -1793,6 +1948,123 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_admin_api_admin_encargados_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EncargadoListAdminResponse"];
+                };
+            };
+        };
+    };
+    create_encargado_api_admin_encargados_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEncargadoRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EncargadoAdmin"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_encargado_api_admin_encargados__encargado_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                encargado_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_encargado_api_admin_encargados__encargado_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                encargado_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEncargadoRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EncargadoAdmin"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_rules_api_admin_rules_get: {
         parameters: {
             query?: {
@@ -2519,6 +2791,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_public_api_public_encargados_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EncargadoListPublicResponse"];
                 };
             };
         };

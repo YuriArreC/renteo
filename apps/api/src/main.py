@@ -15,6 +15,7 @@ from src.routers import calculations as calculations_router
 from src.routers import cartera as cartera_router
 from src.routers import comparador as comparador_router
 from src.routers import empresas as empresas_router
+from src.routers import encargados as encargados_router
 from src.routers import legal as legal_router
 from src.routers import me as me_router
 from src.routers import privacy as privacy_router
@@ -116,3 +117,5 @@ app.include_router(privacy_router.router)
 app.include_router(alertas_router.router)
 app.include_router(cartera_router.router)
 app.include_router(admin_rules_router.router)
+app.include_router(encargados_router.router)
+app.include_router(encargados_router.public_router)
