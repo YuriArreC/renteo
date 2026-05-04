@@ -159,6 +159,11 @@ async def test_simulate_no_palancas_persists_with_zero_ahorro(
         "sueldo_empresarial",
         "credito_id",
         "apv",
+        "depreciacion_acelerada",
+        "credito_reinversion",
+        "ppm_extraordinario",
+        "postergacion_iva",
+        "cambio_regimen",
     }
 
 

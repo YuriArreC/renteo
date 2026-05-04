@@ -70,7 +70,7 @@ _COMPARE_MAX = 4
 
 @dataclass(frozen=True)
 class PalancaTopes:
-    """Topes paramétricos vigentes para `tax_year` (tracks 11b + 8b)."""
+    """Topes paramétricos vigentes para `tax_year` (tracks 11b + 8b + P7-P12)."""
 
     # P3 — Rebaja 14 E
     pct_max_14e: Decimal
@@ -86,6 +86,15 @@ class PalancaTopes:
     sence_tope_minimo_utm: Decimal
     # P9 — APV
     apv_tope_anual_uf: Decimal
+    # P7 — PPM extraordinario
+    ppm_extraordinario_max_factor: Decimal
+    # P10 — Crédito por reinversión (art. 33 bis LIR)
+    credito_reinversion_pct: Decimal
+    credito_reinversion_tope_utm: Decimal
+    # P11 — Depreciación acelerada (art. 31 N°5 LIR)
+    depreciacion_acelerada_factor: Decimal
+    # P8 — Postergación IVA
+    iva_postergacion_dias: Decimal
     # Conversiones
     uf_valor_clp: Decimal
     utm_valor_clp: Decimal
@@ -110,6 +119,10 @@ class PalancaTopes:
     def apv_tope_anual_pesos(self) -> Decimal:
         return self.apv_tope_anual_uf * self.uf_valor_clp
 
+    @property
+    def credito_reinversion_tope_pesos(self) -> Decimal:
+        return self.credito_reinversion_tope_utm * self.utm_valor_clp
+
 
 async def _load_topes(
     session: AsyncSession, tax_year: int
@@ -124,6 +137,11 @@ async def _load_topes(
         "sence_porcentaje_planilla",
         "sence_tope_minimo_utm",
         "apv_tope_anual_uf",
+        "ppm_extraordinario_max_factor",
+        "credito_reinversion_porcentaje",
+        "credito_reinversion_tope_utm",
+        "depreciacion_acelerada_factor",
+        "iva_postergacion_dias",
         "uf_valor_clp",
         "utm_valor_clp",
     ]
@@ -143,6 +161,19 @@ async def _load_topes(
         sence_pct_planilla=values["sence_porcentaje_planilla"],
         sence_tope_minimo_utm=values["sence_tope_minimo_utm"],
         apv_tope_anual_uf=values["apv_tope_anual_uf"],
+        ppm_extraordinario_max_factor=values[
+            "ppm_extraordinario_max_factor"
+        ],
+        credito_reinversion_pct=values[
+            "credito_reinversion_porcentaje"
+        ],
+        credito_reinversion_tope_utm=values[
+            "credito_reinversion_tope_utm"
+        ],
+        depreciacion_acelerada_factor=values[
+            "depreciacion_acelerada_factor"
+        ],
+        iva_postergacion_dias=values["iva_postergacion_dias"],
         uf_valor_clp=values["uf_valor_clp"],
         utm_valor_clp=values["utm_valor_clp"],
     )
@@ -212,6 +243,52 @@ class Palancas(BaseModel):
             "P9 — Aporte APV anual del dueño en CLP. Reduce la base "
             "imponible del IGC dentro del tope anual."
         ),
+    )
+    ppm_extraordinario_monto: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "P7 — PPM extraordinario adicional al PPM habitual del año. "
+            "Reduce el saldo a pagar en F22 al imputarse contra IDPC + "
+            "IGC. No afecta la carga total, pero sí el flujo y el riesgo "
+            "de PPMUA. Bandera amarilla si supera el factor máximo."
+        ),
+    )
+    iva_postergacion_aplicada: bool | None = Field(
+        default=None,
+        description=(
+            "P8 — Postergación IVA Pro PyME (60 días, art. 64 N°9 CT). "
+            "No mueve la carga anual; informa flujo y suma score de "
+            "oportunidad. Solo elegible para regímenes 14 D."
+        ),
+    )
+    credito_reinversion_monto: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "P10 — Inversión en activo fijo nuevo (PYME). 6% genera "
+            "crédito directo contra IDPC con tope 500 UTM. No reduce RLI."
+        ),
+    )
+    depreciacion_acelerada_monto: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "P11 — Cargo a gasto del ejercicio bajo depreciación "
+            "acelerada (art. 31 N°5 LIR). Equivale a 3x la depreciación "
+            "normal. Reduce RLI. Distinto de P1 (instantánea)."
+        ),
+    )
+    cambio_regimen_objetivo: Literal["14_a", "14_d_3", "14_d_8"] | None = (
+        Field(
+            default=None,
+            description=(
+                "P12 — Cambia el régimen del escenario simulado al destino "
+                "indicado y recalcula la carga sobre la nueva base. "
+                "Permite comparar 'mismo año, otro régimen' sin abrir "
+                "el comparador completo."
+            ),
+        )
     )
 
 
@@ -384,6 +461,41 @@ def _validate_eligibility(
             ),
         )
 
+    if palancas.iva_postergacion_aplicada and regimen == "14_a":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "P8 (postergación IVA Pro PyME) requiere régimen 14 D. "
+                "Fundamento: art. 64 N°9 CT — beneficio para PYMEs."
+            ),
+        )
+
+    if (
+        palancas.credito_reinversion_monto
+        and palancas.credito_reinversion_monto > 0
+        and regimen == "14_d_8"
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "P10 (crédito por reinversión, art. 33 bis LIR) no es "
+                "elegible en 14 D N°8 (transparente: la empresa no paga "
+                "IDPC, no hay impuesto contra el cual imputar el crédito)."
+            ),
+        )
+
+    if (
+        palancas.cambio_regimen_objetivo is not None
+        and palancas.cambio_regimen_objetivo == regimen
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "P12 (cambio de régimen) requiere un régimen objetivo "
+                "distinto del actual."
+            ),
+        )
+
 
 # ---------------------------------------------------------------------------
 # Aplicación de palancas (orden definido en skill 8)
@@ -400,6 +512,9 @@ class PalancasResult:
     deduccion_igc: Decimal
     impactos: list[PalancaImpacto]
     banderas: list[BanderaRoja]
+    # Track P7-P12: P12 puede cambiar el régimen sobre el que se calcula
+    # `simulado`. None = sin cambio; el caller usa el régimen original.
+    regimen_override: Regimen | None = None
 
 
 def _apply_palancas(
@@ -625,6 +740,155 @@ def _apply_palancas(
         )
     )
 
+    # --- P11 — Depreciación acelerada (art. 31 N°5 LIR) ----------------
+    # Distinta de P1: P1 deprecia 100% en el año (instantánea, art. 31
+    # N°5 bis); P11 acelera la depreciación normal por un factor (1/3
+    # vida útil) → el cargo a gasto del ejercicio aumenta `factor` veces.
+    dep_acel = p.depreciacion_acelerada_monto or Decimal("0")
+    if dep_acel > 0:
+        rli = max(Decimal("0"), rli - dep_acel)
+    impactos.append(
+        PalancaImpacto(
+            palanca_id="depreciacion_acelerada",
+            label="P11 — Depreciación acelerada",
+            aplicada=dep_acel > 0,
+            monto_aplicado=dep_acel,
+            fuente_legal="art. 31 N°5 LIR",
+            nota=(
+                "Cargo a gasto = depreciación normal x "
+                f"{topes.depreciacion_acelerada_factor}. "
+                "Distinta de P1 (instantánea); requiere bien nuevo y "
+                "vida útil mínima 3 años. Se revierte si el activo se "
+                "enajena antes del fin de la vida útil normal."
+            )
+            if dep_acel > 0
+            else None,
+        )
+    )
+
+    # --- P10 — Crédito por reinversión en activo fijo (art. 33 bis) ----
+    cred_rein_monto = p.credito_reinversion_monto or Decimal("0")
+    cred_rein = Decimal("0")
+    if cred_rein_monto > 0:
+        bruto = (cred_rein_monto * topes.credito_reinversion_pct).quantize(
+            Decimal("0.01")
+        )
+        cred_rein = min(bruto, topes.credito_reinversion_tope_pesos)
+        if bruto > topes.credito_reinversion_tope_pesos:
+            banderas.append(
+                BanderaRoja(
+                    severidad="warning",
+                    palanca_id="credito_reinversion",
+                    mensaje=(
+                        "Crédito por inversión en activo fijo excede el "
+                        f"tope anual {topes.credito_reinversion_tope_utm} "
+                        "UTM. Solo se imputa hasta el tope; el exceso no "
+                        "genera crédito (art. 33 bis LIR)."
+                    ),
+                )
+            )
+    impactos.append(
+        PalancaImpacto(
+            palanca_id="credito_reinversion",
+            label="P10 — Crédito por inversión en activo fijo",
+            aplicada=cred_rein > 0,
+            monto_aplicado=cred_rein,
+            fuente_legal="art. 33 bis LIR",
+            nota=(
+                "PYMEs aplican 6% del valor del activo nuevo como "
+                "crédito directo contra IDPC. Tope anual placeholder "
+                f"{topes.credito_reinversion_tope_utm} UTM. No reduce RLI."
+            )
+            if cred_rein > 0
+            else None,
+        )
+    )
+
+    # --- P7 — PPM extraordinario ---------------------------------------
+    # Caso especial: el PPM se imputa contra el saldo a pagar en F22, no
+    # contra el cálculo de carga total del año. Lo registramos como
+    # impacto informativo (mejora flujo, no reduce carga). Bandera
+    # amarilla si supera el factor máximo razonable sobre la tasa
+    # habitual del régimen.
+    ppm_extra = p.ppm_extraordinario_monto or Decimal("0")
+    if ppm_extra > 0:
+        # Heurística: si el PPM extraordinario supera ppm_max_factor x
+        # 1% de la RLI base, se considera fuera de rango razonable.
+        umbral = (
+            req.rli_base
+            * Decimal("0.01")
+            * topes.ppm_extraordinario_max_factor
+        )
+        if ppm_extra > umbral:
+            banderas.append(
+                BanderaRoja(
+                    severidad="warning",
+                    palanca_id="ppm_extraordinario",
+                    mensaje=(
+                        "PPM extraordinario excede el factor máximo "
+                        f"{topes.ppm_extraordinario_max_factor}x sobre la "
+                        "tasa habitual. Verifica con el contador socio "
+                        "que el sobrepago no genera PPMUA innecesario."
+                    ),
+                )
+            )
+    impactos.append(
+        PalancaImpacto(
+            palanca_id="ppm_extraordinario",
+            label="P7 — PPM extraordinario",
+            aplicada=ppm_extra > 0,
+            monto_aplicado=ppm_extra,
+            fuente_legal="art. 84 LIR",
+            nota=(
+                "No reduce la carga anual; mejora el flujo al imputarse "
+                "contra IDPC + IGC en F22. Útil cuando se anticipa un "
+                "saldo a pagar relevante."
+            )
+            if ppm_extra > 0
+            else None,
+        )
+    )
+
+    # --- P8 — Postergación IVA Pro PyME --------------------------------
+    iva_post = bool(p.iva_postergacion_aplicada)
+    impactos.append(
+        PalancaImpacto(
+            palanca_id="postergacion_iva",
+            label="P8 — Postergación IVA Pro PyME",
+            aplicada=iva_post,
+            monto_aplicado=Decimal("0"),
+            fuente_legal="Ley 21.210; art. 64 N°9 CT",
+            nota=(
+                f"Pago IVA postergable hasta {topes.iva_postergacion_dias} "
+                "días. No mueve la carga anual; mejora flujo de caja y "
+                "requiere F29 al día. Solo PYMEs Pro PyME (14 D)."
+            )
+            if iva_post
+            else None,
+        )
+    )
+
+    # --- P12 — Cambio de régimen ---------------------------------------
+    # No mueve nada en RLI / créditos; solo señaliza al caller que el
+    # cálculo `simulado` debe correrse contra el régimen objetivo.
+    cambio = p.cambio_regimen_objetivo
+    impactos.append(
+        PalancaImpacto(
+            palanca_id="cambio_regimen",
+            label="P12 — Cambio de régimen tributario",
+            aplicada=cambio is not None,
+            monto_aplicado=Decimal("0"),
+            fuente_legal="arts. 14 A, 14 D LIR; Circular SII 53/2025",
+            nota=(
+                f"Escenario simulado bajo {cambio}. La carga base sigue "
+                "calculándose con el régimen actual para el comparativo. "
+                "Coordina con contador socio el aviso al SII (Form. 3265)."
+            )
+            if cambio is not None
+            else None,
+        )
+    )
+
     # Bandera global: capacidad real -----------------------------------
     if retiros_total + sueldo_anual > req.rli_base * Decimal("1.5"):
         banderas.append(
@@ -642,10 +906,11 @@ def _apply_palancas(
     return PalancasResult(
         rli_ajustada=rli,
         retiros_total=retiros_total,
-        creditos_idpc=cid_credito + sence_credito,
+        creditos_idpc=cid_credito + sence_credito + cred_rein,
         deduccion_igc=apv_aplicado,
         impactos=impactos,
         banderas=banderas,
+        regimen_override=cambio,
     )
 
 
@@ -760,6 +1025,26 @@ def _plan_accion_for(
         "apv": (
             "Realizar el aporte APV antes del cierre del ejercicio del "
             "dueño. Conservar comprobante de la AFP/AGF."
+        ),
+        "ppm_extraordinario": (
+            "Pagar el PPM extraordinario en el F29 del mes "
+            "correspondiente para que se impute en el F22 anual."
+        ),
+        "postergacion_iva": (
+            "Marcar postergación al presentar el F29 del mes; pagar el "
+            "IVA postergado dentro del plazo legal para evitar multas."
+        ),
+        "credito_reinversion": (
+            "Adquirir el activo fijo nuevo dentro del ejercicio y "
+            "conservar factura. Imputar el crédito en el F22."
+        ),
+        "depreciacion_acelerada": (
+            "Optar por depreciación acelerada en el libro de "
+            "depreciación. Vida útil mínima 3 años."
+        ),
+        "cambio_regimen": (
+            "Avisar el cambio de régimen al SII (Form. 3265) en los "
+            "plazos legales. Reordenar SAC/RAI/REX si corresponde."
         ),
     }
     items: list[PlanAccionItem] = []
@@ -906,9 +1191,13 @@ async def simulate(
                 "de recomendaciones (skill 1, NGA arts. 4 bis/ter/quáter CT)"
             )
 
+    # P12: si el usuario activó cambio de régimen, el simulado se
+    # calcula contra el régimen objetivo. La carga base sigue siendo
+    # del régimen actual para que el ahorro represente el delta real.
+    simulado_regimen: Regimen = result.regimen_override or payload.regimen
     simulado = await _carga(
         session,
-        regimen=payload.regimen,
+        regimen=simulado_regimen,
         tax_year=payload.tax_year,
         rli=result.rli_ajustada,
         retiros_total=result.retiros_total,

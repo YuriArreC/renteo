@@ -454,6 +454,11 @@ export interface SimulatorPalancas {
   sueldo_empresarial_mensual?: string;
   credito_id_monto?: string;
   apv_monto?: string;
+  ppm_extraordinario_monto?: string;
+  iva_postergacion_aplicada?: boolean;
+  credito_reinversion_monto?: string;
+  depreciacion_acelerada_monto?: string;
+  cambio_regimen_objetivo?: SimulatorRegimen;
 }
 
 export interface ScenarioRequest {

@@ -64,6 +64,11 @@ const schema = z.object({
   sueldo_empresarial_mensual: z.coerce.number().min(0),
   credito_id_monto: z.coerce.number().min(0),
   apv_monto: z.coerce.number().min(0),
+  ppm_extraordinario_monto: z.coerce.number().min(0),
+  iva_postergacion_aplicada: z.boolean(),
+  credito_reinversion_monto: z.coerce.number().min(0),
+  depreciacion_acelerada_monto: z.coerce.number().min(0),
+  cambio_regimen_objetivo: z.enum(["", "14_a", "14_d_3", "14_d_8"]),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -80,6 +85,15 @@ function buildPalancas(v: FormValues): SimulatorPalancas {
   if (v.credito_id_monto > 0)
     p.credito_id_monto = String(v.credito_id_monto);
   if (v.apv_monto > 0) p.apv_monto = String(v.apv_monto);
+  if (v.ppm_extraordinario_monto > 0)
+    p.ppm_extraordinario_monto = String(v.ppm_extraordinario_monto);
+  if (v.iva_postergacion_aplicada) p.iva_postergacion_aplicada = true;
+  if (v.credito_reinversion_monto > 0)
+    p.credito_reinversion_monto = String(v.credito_reinversion_monto);
+  if (v.depreciacion_acelerada_monto > 0)
+    p.depreciacion_acelerada_monto = String(v.depreciacion_acelerada_monto);
+  if (v.cambio_regimen_objetivo !== "")
+    p.cambio_regimen_objetivo = v.cambio_regimen_objetivo;
   return p;
 }
 
@@ -106,6 +120,11 @@ export function ScenarioSimulator() {
       sueldo_empresarial_mensual: 0,
       credito_id_monto: 0,
       apv_monto: 0,
+      ppm_extraordinario_monto: 0,
+      iva_postergacion_aplicada: false,
+      credito_reinversion_monto: 0,
+      depreciacion_acelerada_monto: 0,
+      cambio_regimen_objetivo: "",
     },
   });
 
@@ -367,6 +386,96 @@ export function ScenarioSimulator() {
                         </FormControl>
                         <FormDescription>{tForm("p9Hint")}</FormDescription>
                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="ppm_extraordinario_monto"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{tForm("p7Label")}</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} {...field} />
+                        </FormControl>
+                        <FormDescription>{tForm("p7Hint")}</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="credito_reinversion_monto"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{tForm("p10Label")}</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} {...field} />
+                        </FormControl>
+                        <FormDescription>{tForm("p10Hint")}</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="depreciacion_acelerada_monto"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{tForm("p11Label")}</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} {...field} />
+                        </FormControl>
+                        <FormDescription>{tForm("p11Hint")}</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="cambio_regimen_objetivo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{tForm("p12Label")}</FormLabel>
+                        <FormControl>
+                          <select
+                            {...field}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          >
+                            <option value="">
+                              {tForm("p12None")}
+                            </option>
+                            <option value="14_a">14 A</option>
+                            <option value="14_d_3">14 D N°3</option>
+                            <option value="14_d_8">14 D N°8</option>
+                          </select>
+                        </FormControl>
+                        <FormDescription>{tForm("p12Hint")}</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="iva_postergacion_aplicada"
+                    render={({ field }) => (
+                      <FormItem className="flex items-start gap-3 md:col-span-2">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={(e) =>
+                              field.onChange(e.target.checked)
+                            }
+                            className="mt-1 h-4 w-4 rounded border-input"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="font-normal">
+                            {tForm("p8Label")}
+                          </FormLabel>
+                          <FormDescription>{tForm("p8Hint")}</FormDescription>
+                        </div>
                       </FormItem>
                     )}
                   />

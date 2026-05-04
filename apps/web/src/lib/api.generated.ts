@@ -1541,15 +1541,40 @@ export interface components {
              */
             apv_monto?: number | string | null;
             /**
+             * Cambio Regimen Objetivo
+             * @description P12 — Cambia el régimen del escenario simulado al destino indicado y recalcula la carga sobre la nueva base. Permite comparar 'mismo año, otro régimen' sin abrir el comparador completo.
+             */
+            cambio_regimen_objetivo?: ("14_a" | "14_d_3" | "14_d_8") | null;
+            /**
              * Credito Id Monto
              * @description P6 — Desembolso I+D certificado por CORFO en CLP. 35% se imputa como crédito IDPC (tope 15.000 UTM); 65% se reconoce como gasto deducible RLI.
              */
             credito_id_monto?: number | string | null;
             /**
+             * Credito Reinversion Monto
+             * @description P10 — Inversión en activo fijo nuevo (PYME). 6% genera crédito directo contra IDPC con tope 500 UTM. No reduce RLI.
+             */
+            credito_reinversion_monto?: number | string | null;
+            /**
              * Dep Instantanea
              * @description P1 — Monto del activo fijo a depreciar 100% en CLP.
              */
             dep_instantanea?: number | string | null;
+            /**
+             * Depreciacion Acelerada Monto
+             * @description P11 — Cargo a gasto del ejercicio bajo depreciación acelerada (art. 31 N°5 LIR). Equivale a 3x la depreciación normal. Reduce RLI. Distinto de P1 (instantánea).
+             */
+            depreciacion_acelerada_monto?: number | string | null;
+            /**
+             * Iva Postergacion Aplicada
+             * @description P8 — Postergación IVA Pro PyME (60 días, art. 64 N°9 CT). No mueve la carga anual; informa flujo y suma score de oportunidad. Solo elegible para regímenes 14 D.
+             */
+            iva_postergacion_aplicada?: boolean | null;
+            /**
+             * Ppm Extraordinario Monto
+             * @description P7 — PPM extraordinario adicional al PPM habitual del año. Reduce el saldo a pagar en F22 al imputarse contra IDPC + IGC. No afecta la carga total, pero sí el flujo y el riesgo de PPMUA. Bandera amarilla si supera el factor máximo.
+             */
+            ppm_extraordinario_monto?: number | string | null;
             /**
              * Rebaja 14E Pct
              * @description P3 — Porcentaje (0-0,5) de RLI a reinvertir bajo art. 14 E. Se aplica el menor entre pct*RLI y el tope absoluto 5.000 UF.

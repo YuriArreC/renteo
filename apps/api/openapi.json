@@ -2208,6 +2208,23 @@
             "description": "P9 — Aporte APV anual del dueño en CLP. Reduce la base imponible del IGC dentro del tope anual.",
             "title": "Apv Monto"
           },
+          "cambio_regimen_objetivo": {
+            "anyOf": [
+              {
+                "enum": [
+                  "14_a",
+                  "14_d_3",
+                  "14_d_8"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P12 — Cambia el régimen del escenario simulado al destino indicado y recalcula la carga sobre la nueva base. Permite comparar 'mismo año, otro régimen' sin abrir el comparador completo.",
+            "title": "Cambio Regimen Objetivo"
+          },
           "credito_id_monto": {
             "anyOf": [
               {
@@ -2225,6 +2242,23 @@
             "description": "P6 — Desembolso I+D certificado por CORFO en CLP. 35% se imputa como crédito IDPC (tope 15.000 UTM); 65% se reconoce como gasto deducible RLI.",
             "title": "Credito Id Monto"
           },
+          "credito_reinversion_monto": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P10 — Inversión en activo fijo nuevo (PYME). 6% genera crédito directo contra IDPC con tope 500 UTM. No reduce RLI.",
+            "title": "Credito Reinversion Monto"
+          },
           "dep_instantanea": {
             "anyOf": [
               {
@@ -2241,6 +2275,52 @@
             ],
             "description": "P1 — Monto del activo fijo a depreciar 100% en CLP.",
             "title": "Dep Instantanea"
+          },
+          "depreciacion_acelerada_monto": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P11 — Cargo a gasto del ejercicio bajo depreciación acelerada (art. 31 N°5 LIR). Equivale a 3x la depreciación normal. Reduce RLI. Distinto de P1 (instantánea).",
+            "title": "Depreciacion Acelerada Monto"
+          },
+          "iva_postergacion_aplicada": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P8 — Postergación IVA Pro PyME (60 días, art. 64 N°9 CT). No mueve la carga anual; informa flujo y suma score de oportunidad. Solo elegible para regímenes 14 D.",
+            "title": "Iva Postergacion Aplicada"
+          },
+          "ppm_extraordinario_monto": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "P7 — PPM extraordinario adicional al PPM habitual del año. Reduce el saldo a pagar en F22 al imputarse contra IDPC + IGC. No afecta la carga total, pero sí el flujo y el riesgo de PPMUA. Bandera amarilla si supera el factor máximo.",
+            "title": "Ppm Extraordinario Monto"
           },
           "rebaja_14e_pct": {
             "anyOf": [
