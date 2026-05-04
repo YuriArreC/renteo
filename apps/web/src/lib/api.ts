@@ -114,6 +114,51 @@ export interface ArcopListResponse {
   solicitudes: ArcopResponse[];
 }
 
+// Alertas pre-cierre.
+
+export type AlertaSeveridad = "info" | "warning" | "critical";
+export type AlertaEstado =
+  | "nueva"
+  | "vista"
+  | "descartada"
+  | "accionada";
+
+export interface AlertaResponse {
+  id: string;
+  empresa_id: string | null;
+  tipo: string;
+  severidad: AlertaSeveridad;
+  titulo: string;
+  descripcion: string;
+  accion_recomendada: string | null;
+  estado: AlertaEstado;
+  fecha_limite: string | null;
+  created_at: string;
+}
+
+export interface AlertasListResponse {
+  alertas: AlertaResponse[];
+}
+
+export interface EvaluateAlertasRequest {
+  empresa_id: string;
+  tax_year: number;
+  regimen: SimulatorRegimen;
+  rli_proyectada_pesos: string;
+  retiros_declarados_pesos?: string;
+  palancas_aplicadas?: string[];
+}
+
+export interface EvaluateAlertasResponse {
+  creadas: number;
+  ya_existentes: number;
+  alertas: AlertaResponse[];
+}
+
+export interface UpdateAlertaRequest {
+  estado: AlertaEstado;
+}
+
 // ---------------------------------------------------------------------------
 // Tipos manuales del API mientras el pipeline shared-types no esté listo
 // (fase 1+). Mantener sincronizado con apps/api/src/routers/*.

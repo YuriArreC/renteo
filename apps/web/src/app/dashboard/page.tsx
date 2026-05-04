@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { AlertasInbox } from "@/app/dashboard/AlertasInbox";
 import { LogoutButton } from "@/components/LogoutButton";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,6 +98,8 @@ export default async function DashboardPage() {
         </div>
 
         <EmpresasSection empresas={empresas.empresas} />
+
+        {hasEmpresas && <AlertasInbox empresas={empresas.empresas} />}
       </main>
     </div>
   );

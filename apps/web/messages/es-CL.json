@@ -8,6 +8,26 @@
   "decisionRibbon": {
     "cta": "Solicitar revisión humana"
   },
+  "alertas": {
+    "header": "Alertas pre-cierre",
+    "empty": "Sin alertas abiertas. Evalúa para detectar oportunidades.",
+    "evaluate": "Evaluar alertas para esta empresa",
+    "evaluating": "Evaluando…",
+    "createdToast": "Detectamos {count} oportunidades nuevas.",
+    "noNewToast": "Todo evaluado. Sin oportunidades nuevas.",
+    "needEmpresa": "Selecciona una empresa para evaluar alertas.",
+    "fechaLimite": "Plazo: {fecha}",
+    "actions": {
+      "vista": "Marcar leída",
+      "accionada": "Marcar accionada",
+      "descartada": "Descartar"
+    },
+    "severidad": {
+      "info": "Informativo",
+      "warning": "Importante",
+      "critical": "Crítico"
+    }
+  },
   "auth": {
     "signup": {
       "title": "Crear cuenta",
