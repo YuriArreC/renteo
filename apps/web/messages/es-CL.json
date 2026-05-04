@@ -8,6 +8,25 @@
   "decisionRibbon": {
     "cta": "Solicitar revisión humana"
   },
+  "adminRules": {
+    "title": "Panel de reglas tributarias",
+    "subtitle": "Reglas declarativas globales del motor (skill 11). Solo el staff Renteo (contador socio + admin técnico) puede gestionarlas. Los flujos de doble firma corren contra /api/admin/rules.",
+    "forbidden": "No tienes permisos para acceder al panel admin. Si crees que es un error, contacta al equipo Renteo.",
+    "table": {
+      "domain": "Dominio",
+      "key": "Key",
+      "version": "Versión",
+      "status": "Estado",
+      "vigencia": "Vigencia",
+      "firmado": "Firmas"
+    },
+    "statusLabel": {
+      "draft": "Borrador",
+      "pending_approval": "Pend. firma",
+      "published": "Publicada",
+      "deprecated": "Deprecada"
+    }
+  },
   "cartera": {
     "title": "Cartera",
     "subtitle": "Vista densa de las empresas asignadas. Ordenadas por score de oportunidad: priorizamos las que más ahorro tributario pueden generar.",

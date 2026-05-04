@@ -44,9 +44,26 @@ class Settings(BaseSettings):
     # browser, lo que es seguro por default).
     cors_allowed_origins: str = Field(default="http://localhost:3000")
 
+    # Skill 11 panel admin: solo estos emails pueden gestionar reglas
+    # globales. Default = los placeholder seedeados en track 11; en prod
+    # se setea con los emails reales del staff Renteo.
+    internal_admin_emails: str = Field(
+        default=(
+            "contador-socio@renteo.local,admin-tecnico@renteo.local"
+        )
+    )
+
     @property
     def cors_allowed_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]
+
+    @property
+    def internal_admin_emails_set(self) -> frozenset[str]:
+        return frozenset(
+            e.strip().lower()
+            for e in self.internal_admin_emails.split(",")
+            if e.strip()
+        )
 
 
 @lru_cache

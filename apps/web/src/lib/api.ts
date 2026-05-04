@@ -192,6 +192,32 @@ export interface CarteraResponse {
   ahorro_potencial_estimado_clp: string;
 }
 
+// Admin rules (skill 11 fase 6).
+
+export type RuleStatus =
+  | "draft"
+  | "pending_approval"
+  | "published"
+  | "deprecated";
+
+export interface RuleSetSummary {
+  id: string;
+  domain: string;
+  key: string;
+  version: number;
+  status: RuleStatus;
+  vigencia_desde: string;
+  vigencia_hasta: string | null;
+  published_by_contador: string | null;
+  published_by_admin: string | null;
+  published_at: string | null;
+  created_at: string;
+}
+
+export interface RuleSetListResponse {
+  rule_sets: RuleSetSummary[];
+}
+
 // ---------------------------------------------------------------------------
 // Tipos manuales del API mientras el pipeline shared-types no esté listo
 // (fase 1+). Mantener sincronizado con apps/api/src/routers/*.

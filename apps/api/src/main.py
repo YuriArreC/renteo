@@ -8,6 +8,7 @@ from src.config import settings
 from src.lib.errors import IneligibleForRegime, MissingRuleError, RedFlagBlocked
 from src.lib.legal_texts import LegalTextNotFound
 from src.lib.logging import configure_logging, get_logger
+from src.routers import admin_rules as admin_rules_router
 from src.routers import alertas as alertas_router
 from src.routers import calculations as calculations_router
 from src.routers import cartera as cartera_router
@@ -102,3 +103,4 @@ app.include_router(empresas_router.router)
 app.include_router(privacy_router.router)
 app.include_router(alertas_router.router)
 app.include_router(cartera_router.router)
+app.include_router(admin_rules_router.router)
