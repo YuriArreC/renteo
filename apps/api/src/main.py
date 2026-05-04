@@ -8,6 +8,7 @@ from src.config import settings
 from src.lib.errors import IneligibleForRegime, MissingRuleError, RedFlagBlocked
 from src.lib.legal_texts import LegalTextNotFound
 from src.lib.logging import configure_logging, get_logger
+from src.lib.observability import RequestIdMiddleware, init_sentry
 from src.routers import admin_rules as admin_rules_router
 from src.routers import alertas as alertas_router
 from src.routers import calculations as calculations_router
@@ -24,12 +25,22 @@ from src.routers import workspaces as workspaces_router
 configure_logging()
 logger = get_logger(__name__)
 
+init_sentry(
+    dsn=settings.sentry_dsn,
+    environment=settings.environment,
+    release=settings.app_version,
+)
+
 app = FastAPI(
     title="Renteo API",
     version=settings.app_version,
     docs_url="/docs" if settings.environment != "production" else None,
     redoc_url=None,
 )
+
+# RequestIdMiddleware antes que CORS para que el id viaje también en
+# las respuestas preflight OPTIONS.
+app.add_middleware(RequestIdMiddleware)
 
 if settings.cors_allowed_origins_list:
     app.add_middleware(
@@ -38,6 +49,7 @@ if settings.cors_allowed_origins_list:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"],
+        expose_headers=["X-Request-Id"],
     )
 
 

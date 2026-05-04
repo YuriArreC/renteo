@@ -25,6 +25,7 @@ dependencies = [
     "redis>=5.0",
     "jsonschema>=4.23",
     "pyyaml>=6.0",
+    "sentry-sdk[fastapi]>=2.18,<3.0",
 ]
 
 [project.optional-dependencies]
