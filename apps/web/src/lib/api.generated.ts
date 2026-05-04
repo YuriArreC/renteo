@@ -310,6 +310,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cartera/batch-diagnose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Batch Diagnose
+         * @description Ejecuta diagnose simplificado sobre N empresas con un mismo
+         *     template de inputs. Cada empresa queda con su recomendación
+         *     persistida (auditable como las del wizard individual).
+         */
+        post: operations["batch_diagnose_api_cartera_batch_diagnose_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/empresas": {
         parameters: {
             query?: never;
@@ -689,6 +711,68 @@ export interface components {
              */
             severidad: "warning" | "block";
         };
+        /** BatchDiagnoseFailure */
+        BatchDiagnoseFailure: {
+            /**
+             * Empresa Id
+             * Format: uuid
+             */
+            empresa_id: string;
+            /** Error */
+            error: string;
+        };
+        /** BatchDiagnoseItem */
+        BatchDiagnoseItem: {
+            /** Ahorro Estimado Clp */
+            ahorro_estimado_clp: string;
+            /**
+             * Empresa Id
+             * Format: uuid
+             */
+            empresa_id: string;
+            /** Error */
+            error?: string | null;
+            /** Razon Social */
+            razon_social: string;
+            /**
+             * Recomendacion Id
+             * Format: uuid
+             */
+            recomendacion_id: string;
+            /**
+             * Regimen Actual
+             * @enum {string}
+             */
+            regimen_actual: "14_a" | "14_d_3" | "14_d_8";
+            /**
+             * Regimen Recomendado
+             * @enum {string}
+             */
+            regimen_recomendado: "14_a" | "14_d_3" | "14_d_8";
+        };
+        /** BatchDiagnoseRequest */
+        BatchDiagnoseRequest: {
+            /** Empresa Ids */
+            empresa_ids: string[];
+            inputs: components["schemas"]["DiagnoseInputsTemplate"];
+        };
+        /** BatchDiagnoseResponse */
+        BatchDiagnoseResponse: {
+            /** Ahorro Total Clp */
+            ahorro_total_clp: string;
+            /** Creadas */
+            creadas: number;
+            /** Disclaimer Version */
+            disclaimer_version: string;
+            /** Failures */
+            failures: components["schemas"]["BatchDiagnoseFailure"][];
+            /** Fallidas */
+            fallidas: number;
+            /** Items */
+            items: components["schemas"]["BatchDiagnoseItem"][];
+            /** Procesadas */
+            procesadas: number;
+        };
         /** CalculationResponse */
         CalculationResponse: {
             /**
@@ -907,6 +991,48 @@ export interface components {
              * @enum {string}
              */
             type: "pyme" | "accounting_firm";
+        };
+        /**
+         * DiagnoseInputsTemplate
+         * @description Template aplicado a TODAS las empresas seleccionadas en el batch.
+         *
+         *     Cliente B usualmente atiende empresas con perfiles similares
+         *     (mismo giro, ingresos parecidos). Este template es el "first pass"
+         *     rápido; el contador refina cada caso después en el wizard.
+         */
+        DiagnoseInputsTemplate: {
+            /** Capital Efectivo Inicial Uf */
+            capital_efectivo_inicial_uf: number | string;
+            /** Ingresos Max Anual Uf */
+            ingresos_max_anual_uf: number | string;
+            /** Ingresos Promedio 3A Uf */
+            ingresos_promedio_3a_uf: number | string;
+            /**
+             * Participacion Empresas No 14D Sobre 10Pct
+             * @default false
+             */
+            participacion_empresas_no_14d_sobre_10pct: boolean;
+            /** Pct Ingresos Pasivos */
+            pct_ingresos_pasivos: number | string;
+            /** Plan Retiros Pct */
+            plan_retiros_pct: number | string;
+            /** Rli Proyectada Anual Uf */
+            rli_proyectada_anual_uf: number | string;
+            /**
+             * Sector
+             * @default comercio
+             * @enum {string}
+             */
+            sector: "comercio" | "servicios" | "agricola" | "transporte" | "mineria" | "otro";
+            /** Tax Year */
+            tax_year: number;
+            /**
+             * Todos Duenos Personas Naturales Chile
+             * @default true
+             */
+            todos_duenos_personas_naturales_chile: boolean;
+            /** Ventas Anuales Uf */
+            ventas_anuales_uf: number | string;
         };
         /**
          * DiagnoseRequest
@@ -2168,6 +2294,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CarteraResponse"];
+                };
+            };
+        };
+    };
+    batch_diagnose_api_cartera_batch_diagnose_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchDiagnoseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchDiagnoseResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

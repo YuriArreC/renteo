@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { BatchDiagnose } from "@/app/cartera/BatchDiagnose";
 import { LogoutButton } from "@/components/LogoutButton";
 import { Button } from "@/components/ui/button";
 import {
@@ -222,6 +223,17 @@ export default async function CarteraPage() {
             )}
           </CardContent>
         </Card>
+
+        {cartera.empresas.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Batch diagnóstico</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BatchDiagnose empresas={cartera.empresas} />
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );

@@ -231,6 +231,161 @@
         "title": "BanderaRoja",
         "type": "object"
       },
+      "BatchDiagnoseFailure": {
+        "properties": {
+          "empresa_id": {
+            "format": "uuid",
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          }
+        },
+        "required": [
+          "empresa_id",
+          "error"
+        ],
+        "title": "BatchDiagnoseFailure",
+        "type": "object"
+      },
+      "BatchDiagnoseItem": {
+        "properties": {
+          "ahorro_estimado_clp": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ahorro Estimado Clp",
+            "type": "string"
+          },
+          "empresa_id": {
+            "format": "uuid",
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "razon_social": {
+            "title": "Razon Social",
+            "type": "string"
+          },
+          "recomendacion_id": {
+            "format": "uuid",
+            "title": "Recomendacion Id",
+            "type": "string"
+          },
+          "regimen_actual": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen Actual",
+            "type": "string"
+          },
+          "regimen_recomendado": {
+            "enum": [
+              "14_a",
+              "14_d_3",
+              "14_d_8"
+            ],
+            "title": "Regimen Recomendado",
+            "type": "string"
+          }
+        },
+        "required": [
+          "empresa_id",
+          "razon_social",
+          "regimen_actual",
+          "regimen_recomendado",
+          "ahorro_estimado_clp",
+          "recomendacion_id"
+        ],
+        "title": "BatchDiagnoseItem",
+        "type": "object"
+      },
+      "BatchDiagnoseRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "empresa_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Empresa Ids",
+            "type": "array"
+          },
+          "inputs": {
+            "$ref": "#/components/schemas/DiagnoseInputsTemplate"
+          }
+        },
+        "required": [
+          "empresa_ids",
+          "inputs"
+        ],
+        "title": "BatchDiagnoseRequest",
+        "type": "object"
+      },
+      "BatchDiagnoseResponse": {
+        "properties": {
+          "ahorro_total_clp": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ahorro Total Clp",
+            "type": "string"
+          },
+          "creadas": {
+            "title": "Creadas",
+            "type": "integer"
+          },
+          "disclaimer_version": {
+            "title": "Disclaimer Version",
+            "type": "string"
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/BatchDiagnoseFailure"
+            },
+            "title": "Failures",
+            "type": "array"
+          },
+          "fallidas": {
+            "title": "Fallidas",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BatchDiagnoseItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "procesadas": {
+            "title": "Procesadas",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "procesadas",
+          "creadas",
+          "fallidas",
+          "items",
+          "failures",
+          "ahorro_total_clp",
+          "disclaimer_version"
+        ],
+        "title": "BatchDiagnoseResponse",
+        "type": "object"
+      },
       "CalculationResponse": {
         "properties": {
           "currency": {
@@ -802,6 +957,146 @@
           "role"
         ],
         "title": "CreateWorkspaceResp",
+        "type": "object"
+      },
+      "DiagnoseInputsTemplate": {
+        "additionalProperties": false,
+        "description": "Template aplicado a TODAS las empresas seleccionadas en el batch.\n\nCliente B usualmente atiende empresas con perfiles similares\n(mismo giro, ingresos parecidos). Este template es el \"first pass\"\nrápido; el contador refina cada caso después en el wizard.",
+        "properties": {
+          "capital_efectivo_inicial_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Capital Efectivo Inicial Uf"
+          },
+          "ingresos_max_anual_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Ingresos Max Anual Uf"
+          },
+          "ingresos_promedio_3a_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Ingresos Promedio 3A Uf"
+          },
+          "participacion_empresas_no_14d_sobre_10pct": {
+            "default": false,
+            "title": "Participacion Empresas No 14D Sobre 10Pct",
+            "type": "boolean"
+          },
+          "pct_ingresos_pasivos": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Pct Ingresos Pasivos"
+          },
+          "plan_retiros_pct": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Plan Retiros Pct"
+          },
+          "rli_proyectada_anual_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Rli Proyectada Anual Uf"
+          },
+          "sector": {
+            "default": "comercio",
+            "enum": [
+              "comercio",
+              "servicios",
+              "agricola",
+              "transporte",
+              "mineria",
+              "otro"
+            ],
+            "title": "Sector",
+            "type": "string"
+          },
+          "tax_year": {
+            "maximum": 2030.0,
+            "minimum": 2024.0,
+            "title": "Tax Year",
+            "type": "integer"
+          },
+          "todos_duenos_personas_naturales_chile": {
+            "default": true,
+            "title": "Todos Duenos Personas Naturales Chile",
+            "type": "boolean"
+          },
+          "ventas_anuales_uf": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Ventas Anuales Uf"
+          }
+        },
+        "required": [
+          "tax_year",
+          "ingresos_promedio_3a_uf",
+          "ingresos_max_anual_uf",
+          "capital_efectivo_inicial_uf",
+          "pct_ingresos_pasivos",
+          "ventas_anuales_uf",
+          "rli_proyectada_anual_uf",
+          "plan_retiros_pct"
+        ],
+        "title": "DiagnoseInputsTemplate",
         "type": "object"
       },
       "DiagnoseRequest": {
@@ -3689,6 +3984,53 @@
           }
         ],
         "summary": "Get Cartera",
+        "tags": [
+          "cartera"
+        ]
+      }
+    },
+    "/api/cartera/batch-diagnose": {
+      "post": {
+        "description": "Ejecuta diagnose simplificado sobre N empresas con un mismo\ntemplate de inputs. Cada empresa queda con su recomendación\npersistida (auditable como las del wizard individual).",
+        "operationId": "batch_diagnose_api_cartera_batch_diagnose_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchDiagnoseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchDiagnoseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Batch Diagnose",
         "tags": [
           "cartera"
         ]

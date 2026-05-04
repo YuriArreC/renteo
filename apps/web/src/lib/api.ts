@@ -260,6 +260,52 @@ export interface DryRunResponse {
   nota: string;
 }
 
+// Batch diagnose (cliente B v2).
+
+export interface DiagnoseInputsTemplate {
+  tax_year: number;
+  ingresos_promedio_3a_uf: string;
+  ingresos_max_anual_uf: string;
+  capital_efectivo_inicial_uf: string;
+  pct_ingresos_pasivos: string;
+  todos_duenos_personas_naturales_chile: boolean;
+  participacion_empresas_no_14d_sobre_10pct: boolean;
+  sector: Sector;
+  ventas_anuales_uf: string;
+  rli_proyectada_anual_uf: string;
+  plan_retiros_pct: string;
+}
+
+export interface BatchDiagnoseRequest {
+  empresa_ids: string[];
+  inputs: DiagnoseInputsTemplate;
+}
+
+export interface BatchDiagnoseItem {
+  empresa_id: string;
+  razon_social: string;
+  regimen_actual: "14_a" | "14_d_3" | "14_d_8";
+  regimen_recomendado: "14_a" | "14_d_3" | "14_d_8";
+  ahorro_estimado_clp: string;
+  recomendacion_id: string;
+  error: string | null;
+}
+
+export interface BatchDiagnoseFailure {
+  empresa_id: string;
+  error: string;
+}
+
+export interface BatchDiagnoseResponse {
+  procesadas: number;
+  creadas: number;
+  fallidas: number;
+  items: BatchDiagnoseItem[];
+  failures: BatchDiagnoseFailure[];
+  ahorro_total_clp: string;
+  disclaimer_version: string;
+}
+
 // ---------------------------------------------------------------------------
 // Tipos manuales del API mientras el pipeline shared-types no esté listo
 // (fase 1+). Mantener sincronizado con apps/api/src/routers/*.
