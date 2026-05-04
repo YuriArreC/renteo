@@ -119,6 +119,29 @@ def test_matches_regex_requires_string_value() -> None:
         evaluate(rule, {"rut": "12345678-9"})
 
 
+def test_matches_regex_returns_false_for_non_string_lhs() -> None:
+    """Si el contexto no provee string en el field, falla suavemente
+    (sin excepción) para permitir reglas que aplican a campos opcionales."""
+    rule = {"field": "rut", "op": "matches_regex", "value": "^[0-9]+$"}
+    assert not evaluate(rule, {"rut": 12345}).passed
+
+
+def test_not_in_membership() -> None:
+    rule = {
+        "field": "regimen",
+        "op": "not_in",
+        "value": ["presunta", "renta_atribuida"],
+    }
+    assert evaluate(rule, {"regimen": "14_d_3"}).passed
+    assert not evaluate(rule, {"regimen": "presunta"}).passed
+
+
+def test_not_in_rejects_string_value() -> None:
+    rule = {"field": "regimen", "op": "not_in", "value": "14_d_3"}
+    with pytest.raises(InvalidRuleError):
+        evaluate(rule, {"regimen": "14_a"})
+
+
 # ---------------------------------------------------------------------------
 # Combinadores
 # ---------------------------------------------------------------------------
@@ -242,7 +265,7 @@ def test_all_of_requires_non_empty_list() -> None:
 
 def test_clause_must_be_dict() -> None:
     with pytest.raises(InvalidRuleError):
-        evaluate({"all_of": ["not-a-dict"]}, {})  # type: ignore[list-item]
+        evaluate({"all_of": ["not-a-dict"]}, {})
 
 
 # ---------------------------------------------------------------------------
