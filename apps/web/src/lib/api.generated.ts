@@ -49,6 +49,66 @@ export interface paths {
         patch: operations["update_encargado_api_admin_encargados__encargado_id__patch"];
         trace?: never;
     };
+    "/api/admin/legislative-alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Alerts */
+        get: operations["list_alerts_api_admin_legislative_alerts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/legislative-alerts/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Watchdog
+         * @description Ejecuta el watchdog on-demand. Idempotente — la segunda
+         *     invocación no agrega filas duplicadas.
+         */
+        post: operations["run_watchdog_api_admin_legislative_alerts_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/legislative-alerts/{alert_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Patch Alert
+         * @description Transición de estado: open → dismissed | ignored | drafted.
+         *
+         *     El revisor queda registrado en reviewed_by + reviewed_at + nota.
+         */
+        patch: operations["patch_alert_api_admin_legislative_alerts__alert_id__patch"];
+        trace?: never;
+    };
     "/api/admin/rules": {
         parameters: {
             query?: never;
@@ -891,6 +951,69 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AlertListResponse */
+        AlertListResponse: {
+            /** Records */
+            records: components["schemas"]["AlertSummary"][];
+        };
+        /** AlertPatchRequest */
+        AlertPatchRequest: {
+            /** Review Note */
+            review_note?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "dismissed" | "ignored" | "drafted";
+        };
+        /** AlertSummary */
+        AlertSummary: {
+            /** Created At */
+            created_at: string;
+            /** Drafted Rule Set Id */
+            drafted_rule_set_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Propuesta Diff */
+            propuesta_diff: {
+                [key: string]: unknown;
+            };
+            /** Publication Date */
+            publication_date: string;
+            /** Review Note */
+            review_note: string | null;
+            /** Reviewed At */
+            reviewed_at: string | null;
+            /** Reviewed By */
+            reviewed_by: string | null;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "dof" | "sii_circular" | "sii_oficio" | "sii_resolucion" | "presupuestos";
+            /** Source Id */
+            source_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "dismissed" | "ignored" | "drafted";
+            /** Summary */
+            summary: string | null;
+            /** Target Domain */
+            target_domain: string | null;
+            /** Target Key */
+            target_key: string | null;
+            /** Title */
+            title: string;
+            /** Updated At */
+            updated_at: string;
+            /** Url */
+            url: string | null;
+        };
         /** AlertaResponse */
         AlertaResponse: {
             /** Accion Recomendada */
@@ -2483,6 +2606,15 @@ export interface components {
             /** Path */
             path: string;
         };
+        /** WatchdogRunResponse */
+        WatchdogRunResponse: {
+            /** Existentes */
+            existentes: number;
+            /** Monitor */
+            monitor: string;
+            /** Nuevos */
+            nuevos: number;
+        };
         /** WizardPrefillResponse */
         WizardPrefillResponse: {
             /** Anios Con Datos */
@@ -2622,6 +2754,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EncargadoAdmin"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_alerts_api_admin_legislative_alerts_get: {
+        parameters: {
+            query?: {
+                status_filter?: ("open" | "dismissed" | "ignored" | "drafted") | null;
+                source?: ("dof" | "sii_circular" | "sii_oficio" | "sii_resolucion" | "presupuestos") | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_watchdog_api_admin_legislative_alerts_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchdogRunResponse"];
+                };
+            };
+        };
+    };
+    patch_alert_api_admin_legislative_alerts__alert_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertPatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertSummary"];
                 };
             };
             /** @description Validation Error */

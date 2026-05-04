@@ -1,6 +1,220 @@
 {
   "components": {
     "schemas": {
+      "AlertListResponse": {
+        "properties": {
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/AlertSummary"
+            },
+            "title": "Records",
+            "type": "array"
+          }
+        },
+        "required": [
+          "records"
+        ],
+        "title": "AlertListResponse",
+        "type": "object"
+      },
+      "AlertPatchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "review_note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "dismissed",
+              "ignored",
+              "drafted"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "AlertPatchRequest",
+        "type": "object"
+      },
+      "AlertSummary": {
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "drafted_rule_set_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drafted Rule Set Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "propuesta_diff": {
+            "additionalProperties": true,
+            "title": "Propuesta Diff",
+            "type": "object"
+          },
+          "publication_date": {
+            "title": "Publication Date",
+            "type": "string"
+          },
+          "review_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "reviewed_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed By"
+          },
+          "source": {
+            "enum": [
+              "dof",
+              "sii_circular",
+              "sii_oficio",
+              "sii_resolucion",
+              "presupuestos"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "dismissed",
+              "ignored",
+              "drafted"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "target_domain": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Domain"
+          },
+          "target_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Key"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "source_id",
+          "title",
+          "summary",
+          "url",
+          "publication_date",
+          "status",
+          "target_domain",
+          "target_key",
+          "propuesta_diff",
+          "drafted_rule_set_id",
+          "reviewed_by",
+          "reviewed_at",
+          "review_note",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AlertSummary",
+        "type": "object"
+      },
       "AlertaResponse": {
         "properties": {
           "accion_recomendada": {
@@ -4643,6 +4857,29 @@
         "title": "ValidationFailureOut",
         "type": "object"
       },
+      "WatchdogRunResponse": {
+        "properties": {
+          "existentes": {
+            "title": "Existentes",
+            "type": "integer"
+          },
+          "monitor": {
+            "title": "Monitor",
+            "type": "string"
+          },
+          "nuevos": {
+            "title": "Nuevos",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "monitor",
+          "nuevos",
+          "existentes"
+        ],
+        "title": "WatchdogRunResponse",
+        "type": "object"
+      },
       "WizardPrefillResponse": {
         "properties": {
           "anios_con_datos": {
@@ -4921,6 +5158,185 @@
           }
         ],
         "summary": "Update Encargado",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/legislative-alerts": {
+      "get": {
+        "operationId": "list_alerts_api_admin_legislative_alerts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status_filter",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "open",
+                    "dismissed",
+                    "ignored",
+                    "drafted"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "dof",
+                    "sii_circular",
+                    "sii_oficio",
+                    "sii_resolucion",
+                    "presupuestos"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Alerts",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/legislative-alerts/run": {
+      "post": {
+        "description": "Ejecuta el watchdog on-demand. Idempotente — la segunda\ninvocación no agrega filas duplicadas.",
+        "operationId": "run_watchdog_api_admin_legislative_alerts_run_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchdogRunResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Run Watchdog",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/legislative-alerts/{alert_id}": {
+      "patch": {
+        "description": "Transición de estado: open → dismissed | ignored | drafted.\n\nEl revisor queda registrado en reviewed_by + reviewed_at + nota.",
+        "operationId": "patch_alert_api_admin_legislative_alerts__alert_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "alert_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Alert Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertPatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Patch Alert",
         "tags": [
           "admin"
         ]

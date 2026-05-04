@@ -16,6 +16,7 @@ from src.lib.errors import (
 from src.lib.legal_texts import LegalTextNotFound
 from src.lib.logging import configure_logging, get_logger
 from src.lib.observability import RequestIdMiddleware, init_sentry
+from src.routers import admin_legislation as admin_legislation_router
 from src.routers import admin_rules as admin_rules_router
 from src.routers import alertas as alertas_router
 from src.routers import calculations as calculations_router
@@ -162,5 +163,6 @@ app.include_router(privacy_compliance_router.router)
 app.include_router(alertas_router.router)
 app.include_router(cartera_router.router)
 app.include_router(admin_rules_router.router)
+app.include_router(admin_legislation_router.router)
 app.include_router(encargados_router.router)
 app.include_router(encargados_router.public_router)

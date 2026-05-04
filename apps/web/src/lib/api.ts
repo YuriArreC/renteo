@@ -270,6 +270,56 @@ export interface CarteraResponse {
   ahorro_potencial_estimado_clp: string;
 }
 
+// Watchdog legislativo (skill 11 closure).
+
+export type LegislativeAlertStatus =
+  | "open"
+  | "dismissed"
+  | "ignored"
+  | "drafted";
+
+export type LegislativeAlertSource =
+  | "dof"
+  | "sii_circular"
+  | "sii_oficio"
+  | "sii_resolucion"
+  | "presupuestos";
+
+export interface LegislativeAlertSummary {
+  id: string;
+  source: LegislativeAlertSource;
+  source_id: string;
+  title: string;
+  summary: string | null;
+  url: string | null;
+  publication_date: string;
+  status: LegislativeAlertStatus;
+  target_domain: string | null;
+  target_key: string | null;
+  propuesta_diff: Record<string, unknown>;
+  drafted_rule_set_id: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LegislativeAlertListResponse {
+  records: LegislativeAlertSummary[];
+}
+
+export interface LegislativeAlertPatchRequest {
+  status: LegislativeAlertStatus;
+  review_note?: string;
+}
+
+export interface WatchdogRunResponse {
+  monitor: string;
+  nuevos: number;
+  existentes: number;
+}
+
 // Admin rules (skill 11 fase 6).
 
 export type RuleStatus =

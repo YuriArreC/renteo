@@ -43,6 +43,14 @@ def _make_celery() -> Celery:
             "schedule": crontab(hour=3, minute=0),
             "options": {"queue": "default"},
         },
+        # Watchdog legislativo (skill 11 closure). 04:00 SCL para no
+        # solapar con el batch de alertas; mira ventana de 7 días para
+        # capturar publicaciones que puedan haberse caído.
+        "watchdog-legislativo": {
+            "task": "src.tasks.legislation.check_legislation",
+            "schedule": crontab(hour=4, minute=0),
+            "options": {"queue": "default"},
+        },
     }
     # Auto-discover tasks bajo src.tasks.*
     app.autodiscover_tasks(["src.tasks"])

@@ -33,6 +33,48 @@
       "expired": "Vencido"
     }
   },
+  "adminLegislation": {
+    "title": "Watchdog legislativo",
+    "subtitle": "Bitácora de cambios en DOF, SII (circulares/oficios/resoluciones) y Ley de Presupuestos. El worker corre cada noche; cada hit es un ticket que el staff revisa y, si corresponde, promueve a draft de regla.",
+    "forbidden": "Solo el staff Renteo puede revisar el watchdog legislativo.",
+    "runNow": "Correr watchdog ahora",
+    "running": "Corriendo…",
+    "ranOk": "Watchdog ({monitor}) ejecutado: {nuevos} nuevos, {existentes} ya conocidos.",
+    "patchedOk": "Alerta actualizada.",
+    "listHeader": "Alertas ({count})",
+    "empty": "Sin alertas registradas.",
+    "filters": {
+      "status": "Estado",
+      "source": "Fuente",
+      "any": "(todas)"
+    },
+    "statusLabel": {
+      "open": "Abierta",
+      "dismissed": "Descartada",
+      "ignored": "Ya cubierta",
+      "drafted": "Promovida a draft"
+    },
+    "sourceLabel": {
+      "dof": "Diario Oficial",
+      "sii_circular": "Circular SII",
+      "sii_oficio": "Oficio SII",
+      "sii_resolucion": "Resolución SII",
+      "presupuestos": "Ley de Presupuestos"
+    },
+    "cols": {
+      "publication": "Publicación",
+      "source": "Fuente",
+      "title": "Título / resumen",
+      "target": "Regla destino",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "actions": {
+      "draft": "Promover a draft",
+      "ignore": "Ya cubierta",
+      "dismiss": "Descartar"
+    }
+  },
   "adminRules": {
     "title": "Panel de reglas tributarias",
     "subtitle": "Reglas declarativas globales del motor (skill 11). Solo el staff Renteo (contador socio + admin técnico) puede gestionarlas. Los flujos de doble firma corren contra /api/admin/rules.",
