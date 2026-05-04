@@ -8,6 +8,38 @@
   "decisionRibbon": {
     "cta": "Solicitar revisión humana"
   },
+  "cartera": {
+    "title": "Cartera",
+    "subtitle": "Vista densa de las empresas asignadas. Ordenadas por score de oportunidad: priorizamos las que más ahorro tributario pueden generar.",
+    "empty": "Aún no hay empresas en la cartera. Registra la primera para empezar.",
+    "registerEmpresa": "Registrar empresa",
+    "kpis": {
+      "totalEmpresas": "Empresas",
+      "alertasAbiertas": "Alertas abiertas",
+      "ahorroPotencial": "Ahorro potencial 3a"
+    },
+    "table": {
+      "rut": "RUT",
+      "razonSocial": "Razón social",
+      "regimen": "Régimen",
+      "alertas": "Alertas",
+      "ultimoDiag": "Último diagnóstico",
+      "ultimaSim": "Última simulación",
+      "score": "Score",
+      "acciones": "Acciones",
+      "diagnosticar": "Diagnosticar",
+      "simular": "Simular",
+      "noDiag": "—",
+      "noSim": "—"
+    },
+    "regimenLabel": {
+      "desconocido": "—",
+      "14_a": "14 A",
+      "14_d_3": "14 D N°3",
+      "14_d_8": "14 D N°8",
+      "presunta": "Presunta"
+    }
+  },
   "alertas": {
     "header": "Alertas pre-cierre",
     "empty": "Sin alertas abiertas. Evalúa para detectar oportunidades.",

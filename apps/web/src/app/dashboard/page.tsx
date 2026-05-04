@@ -30,6 +30,11 @@ export default async function DashboardPage() {
     redirect("/onboarding/workspace");
   }
 
+  // Cliente B (accounting_firm) tiene su vista densa en /cartera.
+  if (me.workspace.type === "accounting_firm") {
+    redirect("/cartera");
+  }
+
   let empresas: EmpresasListResponse = { empresas: [] };
   try {
     empresas = await fetchApiServer<EmpresasListResponse>("/api/empresas");

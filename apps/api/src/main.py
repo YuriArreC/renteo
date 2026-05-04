@@ -10,6 +10,7 @@ from src.lib.legal_texts import LegalTextNotFound
 from src.lib.logging import configure_logging, get_logger
 from src.routers import alertas as alertas_router
 from src.routers import calculations as calculations_router
+from src.routers import cartera as cartera_router
 from src.routers import comparador as comparador_router
 from src.routers import empresas as empresas_router
 from src.routers import legal as legal_router
@@ -100,3 +101,4 @@ app.include_router(legal_router.public_router)
 app.include_router(empresas_router.router)
 app.include_router(privacy_router.router)
 app.include_router(alertas_router.router)
+app.include_router(cartera_router.router)

@@ -159,6 +159,39 @@ export interface UpdateAlertaRequest {
   estado: AlertaEstado;
 }
 
+// Cartera (cliente B).
+
+export interface UltimaSimulacion {
+  id: string;
+  ahorro_total_clp: string;
+  created_at: string;
+}
+
+export interface UltimaRecomendacion {
+  id: string;
+  regimen_recomendado: string;
+  ahorro_estimado_clp: string | null;
+  created_at: string;
+}
+
+export interface CarteraEmpresaItem {
+  empresa_id: string;
+  rut: string;
+  razon_social: string;
+  regimen_actual: RegimenActual;
+  alertas_abiertas: number;
+  ultima_simulacion: UltimaSimulacion | null;
+  ultima_recomendacion: UltimaRecomendacion | null;
+  score_oportunidad: number;
+}
+
+export interface CarteraResponse {
+  empresas: CarteraEmpresaItem[];
+  total_empresas: number;
+  total_alertas_abiertas: number;
+  ahorro_potencial_estimado_clp: string;
+}
+
 // ---------------------------------------------------------------------------
 // Tipos manuales del API mientras el pipeline shared-types no esté listo
 // (fase 1+). Mantener sincronizado con apps/api/src/routers/*.
