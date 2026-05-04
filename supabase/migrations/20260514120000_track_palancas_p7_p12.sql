@@ -13,6 +13,19 @@
 --            no edición de código (skill 11).
 -- =============================================================================
 
+-- Extender el dominio de `unidad` para soportar las nuevas palancas:
+--   * `factor` — multiplicador adimensional (P7 PPM extraordinario, P11
+--                depreciación acelerada).
+--   * `dias`   — duración en días corridos (P8 postergación IVA).
+-- El set previo (uf, utm, uta, clp, porcentaje) sigue vigente.
+alter table tax_params.beneficios_topes
+    drop constraint if exists beneficios_topes_unidad_check;
+alter table tax_params.beneficios_topes
+    add constraint beneficios_topes_unidad_check
+    check (unidad in (
+        'uf', 'utm', 'uta', 'clp', 'porcentaje', 'factor', 'dias'
+    ));
+
 insert into tax_params.beneficios_topes (
     key, tax_year, valor, unidad, fuente_legal, descripcion
 ) values
