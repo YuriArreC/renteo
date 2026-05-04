@@ -607,6 +607,19 @@ export interface SyncStatusResponse {
   f22_anios_total: number;
 }
 
+export interface WizardPrefillResponse {
+  empresa_id: string;
+  tax_year: number;
+  ventas_anuales_uf: string | null;
+  ingresos_promedio_3a_uf: string | null;
+  ingresos_max_anual_uf: string | null;
+  capital_efectivo_inicial_uf: string | null;
+  regimen_actual: "14_a" | "14_d_3" | "14_d_8" | null;
+  uf_valor_clp_usado: string;
+  anios_con_datos: number[];
+  warnings: string[];
+}
+
 // Diagnóstico de régimen (skill 7).
 
 export type RegimeKey = "14_a" | "14_d_3" | "14_d_8" | "renta_presunta";

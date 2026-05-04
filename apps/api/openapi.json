@@ -3663,6 +3663,106 @@
         ],
         "title": "ValidationFailureOut",
         "type": "object"
+      },
+      "WizardPrefillResponse": {
+        "properties": {
+          "anios_con_datos": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Anios Con Datos",
+            "type": "array"
+          },
+          "capital_efectivo_inicial_uf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capital Efectivo Inicial Uf"
+          },
+          "empresa_id": {
+            "format": "uuid",
+            "title": "Empresa Id",
+            "type": "string"
+          },
+          "ingresos_max_anual_uf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingresos Max Anual Uf"
+          },
+          "ingresos_promedio_3a_uf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingresos Promedio 3A Uf"
+          },
+          "regimen_actual": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regimen Actual"
+          },
+          "tax_year": {
+            "title": "Tax Year",
+            "type": "integer"
+          },
+          "uf_valor_clp_usado": {
+            "title": "Uf Valor Clp Usado",
+            "type": "string"
+          },
+          "ventas_anuales_uf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ventas Anuales Uf"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "empresa_id",
+          "tax_year",
+          "ventas_anuales_uf",
+          "ingresos_promedio_3a_uf",
+          "ingresos_max_anual_uf",
+          "capital_efectivo_inicial_uf",
+          "regimen_actual",
+          "uf_valor_clp_usado",
+          "anios_con_datos",
+          "warnings"
+        ],
+        "title": "WizardPrefillResponse",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -4861,6 +4961,64 @@
           }
         ],
         "summary": "Sync Status",
+        "tags": [
+          "sii"
+        ]
+      }
+    },
+    "/api/empresas/{empresa_id}/wizard-prefill": {
+      "get": {
+        "description": "Devuelve inputs derivables del RCV/empresa para precargar el\nwizard de régimen. Campos no derivables del RCV (sector, dueños,\npct_pasivos, plan_retiros) los sigue completando el usuario.",
+        "operationId": "wizard_prefill_api_empresas__empresa_id__wizard_prefill_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "empresa_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Empresa Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tax_year",
+            "required": true,
+            "schema": {
+              "title": "Tax Year",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WizardPrefillResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Wizard Prefill",
         "tags": [
           "sii"
         ]

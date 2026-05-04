@@ -36,6 +36,7 @@ from src.auth.tenancy import Tenancy, current_tenancy
 from src.db import get_db_session, service_session
 from src.domain.sii.adapter import RcvLine
 from src.domain.sii.factory import make_sii_client, resolve_sii_provider
+from src.domain.sii.wizard_prefill import build_wizard_prefill
 from src.lib.audit import log_audit, mask_rut
 from src.lib.errors import SiiAuthError, SiiTimeout, SiiUnavailable
 
@@ -68,6 +69,19 @@ class SyncStatusResponse(BaseModel):
     rcv_rows_total: int
     f29_periodos_total: int
     f22_anios_total: int
+
+
+class WizardPrefillResponse(BaseModel):
+    empresa_id: UUID
+    tax_year: int
+    ventas_anuales_uf: str | None
+    ingresos_promedio_3a_uf: str | None
+    ingresos_max_anual_uf: str | None
+    capital_efectivo_inicial_uf: str | None
+    regimen_actual: str | None
+    uf_valor_clp_usado: str
+    anios_con_datos: list[int]
+    warnings: list[str]
 
 
 _ALLOWED_SYNC_ROLES = frozenset(
@@ -394,4 +408,56 @@ async def sync_status(
         rcv_rows_total=counts["rcv"],
         f29_periodos_total=counts["f29"],
         f22_anios_total=counts["f22"],
+    )
+
+
+@router.get(
+    "/{empresa_id}/wizard-prefill",
+    response_model=WizardPrefillResponse,
+)
+async def wizard_prefill(
+    empresa_id: UUID,
+    tax_year: int,
+    _tenancy: Tenancy = Depends(current_tenancy),
+    session: AsyncSession = Depends(get_db_session),
+) -> WizardPrefillResponse:
+    """Devuelve inputs derivables del RCV/empresa para precargar el
+    wizard de régimen. Campos no derivables del RCV (sector, dueños,
+    pct_pasivos, plan_retiros) los sigue completando el usuario."""
+    if tax_year < 2024 or tax_year > 2030:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="tax_year fuera de rango (2024-2030)",
+        )
+    await _fetch_empresa(session, empresa_id)
+    pref = await build_wizard_prefill(
+        session, empresa_id=empresa_id, tax_year=tax_year
+    )
+    return WizardPrefillResponse(
+        empresa_id=pref.empresa_id,
+        tax_year=pref.tax_year,
+        ventas_anuales_uf=(
+            str(pref.ventas_anuales_uf)
+            if pref.ventas_anuales_uf is not None
+            else None
+        ),
+        ingresos_promedio_3a_uf=(
+            str(pref.ingresos_promedio_3a_uf)
+            if pref.ingresos_promedio_3a_uf is not None
+            else None
+        ),
+        ingresos_max_anual_uf=(
+            str(pref.ingresos_max_anual_uf)
+            if pref.ingresos_max_anual_uf is not None
+            else None
+        ),
+        capital_efectivo_inicial_uf=(
+            str(pref.capital_efectivo_inicial_uf)
+            if pref.capital_efectivo_inicial_uf is not None
+            else None
+        ),
+        regimen_actual=pref.regimen_actual,
+        uf_valor_clp_usado=str(pref.uf_valor_clp_usado),
+        anios_con_datos=pref.anios_con_datos,
+        warnings=pref.warnings,
     )

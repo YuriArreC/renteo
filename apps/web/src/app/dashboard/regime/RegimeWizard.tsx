@@ -7,6 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -36,6 +37,7 @@ import {
   type DiagnoseRequest,
   type DiagnoseResponse,
   type EmpresasListResponse,
+  type WizardPrefillResponse,
   fetchApiClient,
 } from "@/lib/api";
 
@@ -101,6 +103,72 @@ export function RegimeWizard() {
   });
   const empresas = empresasQuery.data?.empresas ?? [];
 
+  const [prefillState, setPrefillState] = useState<{
+    warnings: string[];
+    appliedFor: string | null;
+  }>({ warnings: [], appliedFor: null });
+  const empresaId = form.watch("empresa_id");
+  const taxYear = form.watch("tax_year");
+
+  const prefillMutation = useMutation({
+    mutationFn: ({
+      empresaIdValue,
+      taxYearValue,
+    }: {
+      empresaIdValue: string;
+      taxYearValue: number;
+    }) =>
+      fetchApiClient<WizardPrefillResponse>(
+        `/api/empresas/${empresaIdValue}/wizard-prefill?tax_year=${taxYearValue}`,
+      ),
+    onSuccess: (data) => {
+      const next: Partial<FormValues> = {};
+      if (data.ventas_anuales_uf !== null)
+        next.ventas_anuales_uf = Number(data.ventas_anuales_uf);
+      if (data.ingresos_promedio_3a_uf !== null)
+        next.ingresos_promedio_3a_uf = Number(data.ingresos_promedio_3a_uf);
+      if (data.ingresos_max_anual_uf !== null)
+        next.ingresos_max_anual_uf = Number(data.ingresos_max_anual_uf);
+      if (data.capital_efectivo_inicial_uf !== null)
+        next.capital_efectivo_inicial_uf = Number(
+          data.capital_efectivo_inicial_uf,
+        );
+      if (data.regimen_actual !== null)
+        next.regimen_actual = data.regimen_actual;
+      Object.entries(next).forEach(([k, v]) => {
+        form.setValue(k as keyof FormValues, v as never, {
+          shouldDirty: true,
+        });
+      });
+      setPrefillState({
+        warnings: data.warnings,
+        appliedFor: data.empresa_id,
+      });
+    },
+    onError: (err) => {
+      toast.error(err instanceof ApiError ? err.detail : String(err));
+      setPrefillState({ warnings: [], appliedFor: null });
+    },
+  });
+
+  useEffect(() => {
+    if (!empresaId) {
+      setPrefillState({ warnings: [], appliedFor: null });
+      return;
+    }
+    if (
+      prefillState.appliedFor === empresaId &&
+      !prefillMutation.isPending
+    ) {
+      return;
+    }
+    prefillMutation.mutate({
+      empresaIdValue: empresaId,
+      taxYearValue: taxYear,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empresaId, taxYear]);
+
   const mutation = useMutation({
     mutationFn: (req: DiagnoseRequest) =>
       fetchApiClient<DiagnoseResponse>("/api/regime/diagnose", {
@@ -147,6 +215,30 @@ export function RegimeWizard() {
           <CardTitle>{tForm("submit")}</CardTitle>
         </CardHeader>
         <CardContent>
+          {empresaId && prefillMutation.isPending && (
+            <p className="mb-3 text-xs text-muted-foreground">
+              {tForm("prefillLoading")}
+            </p>
+          )}
+          {prefillState.appliedFor === empresaId &&
+            prefillState.warnings.length === 0 && (
+              <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
+                {tForm("prefillApplied")}
+              </div>
+            )}
+          {prefillState.appliedFor === empresaId &&
+            prefillState.warnings.length > 0 && (
+              <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                <p className="mb-1 font-semibold">
+                  {tForm("prefillWarningHeader")}
+                </p>
+                <ul className="list-inside list-disc space-y-1">
+                  {prefillState.warnings.map((w) => (
+                    <li key={w}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}

@@ -432,6 +432,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/empresas/{empresa_id}/wizard-prefill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Wizard Prefill
+         * @description Devuelve inputs derivables del RCV/empresa para precargar el
+         *     wizard de régimen. Campos no derivables del RCV (sector, dueños,
+         *     pct_pasivos, plan_retiros) los sigue completando el usuario.
+         */
+        get: operations["wizard_prefill_api_empresas__empresa_id__wizard_prefill_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/legal/{key}": {
         parameters: {
             query?: never;
@@ -2021,6 +2043,32 @@ export interface components {
             /** Path */
             path: string;
         };
+        /** WizardPrefillResponse */
+        WizardPrefillResponse: {
+            /** Anios Con Datos */
+            anios_con_datos: number[];
+            /** Capital Efectivo Inicial Uf */
+            capital_efectivo_inicial_uf: string | null;
+            /**
+             * Empresa Id
+             * Format: uuid
+             */
+            empresa_id: string;
+            /** Ingresos Max Anual Uf */
+            ingresos_max_anual_uf: string | null;
+            /** Ingresos Promedio 3A Uf */
+            ingresos_promedio_3a_uf: string | null;
+            /** Regimen Actual */
+            regimen_actual: string | null;
+            /** Tax Year */
+            tax_year: number;
+            /** Uf Valor Clp Usado */
+            uf_valor_clp_usado: string;
+            /** Ventas Anuales Uf */
+            ventas_anuales_uf: string | null;
+            /** Warnings */
+            warnings: string[];
+        };
     };
     responses: never;
     parameters: never;
@@ -2791,6 +2839,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SyncStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    wizard_prefill_api_empresas__empresa_id__wizard_prefill_get: {
+        parameters: {
+            query: {
+                tax_year: number;
+            };
+            header?: never;
+            path: {
+                empresa_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WizardPrefillResponse"];
                 };
             };
             /** @description Validation Error */

@@ -376,7 +376,10 @@
       "submit": "Generar diagnóstico",
       "submitting": "Diagnosticando…",
       "empresaSelect": "Empresa",
-      "empresaSelectNone": "Sin empresa (workspace)"
+      "empresaSelectNone": "Sin empresa (workspace)",
+      "prefillLoading": "Trayendo datos de la empresa desde SII…",
+      "prefillApplied": "Inputs precargados desde el RCV sincronizado. Puedes ajustarlos antes de diagnosticar.",
+      "prefillWarningHeader": "Datos parciales — revisa antes de diagnosticar:"
     },
     "result": {
       "veredictoHeader": "Veredicto",
