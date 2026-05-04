@@ -21,6 +21,10 @@ export default async function PrivacidadDashboardPage() {
   const tCommon = await getTranslations("common");
   const t = await getTranslations("privacy");
 
+  const isAdmin =
+    me.workspace.role === "owner" ||
+    me.workspace.role === "accountant_lead";
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-border">
@@ -44,7 +48,7 @@ export default async function PrivacidadDashboardPage() {
         <p className="mb-10 max-w-3xl text-sm text-muted-foreground">
           {t("subtitle")}
         </p>
-        <ArcopPortal />
+        <ArcopPortal isAdmin={isAdmin} />
       </main>
     </div>
   );

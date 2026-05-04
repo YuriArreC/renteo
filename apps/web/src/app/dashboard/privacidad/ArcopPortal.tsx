@@ -31,12 +31,26 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
 import {
   ApiError,
+  type ArcopEstado,
   type ArcopListResponse,
   type ArcopResponse,
   type ArcopTipo,
   type CreateArcopRequest,
   fetchApiClient,
+  type UpdateArcopRequest,
 } from "@/lib/api";
+
+const ESTADOS = [
+  "recibida",
+  "en_proceso",
+  "cumplida",
+  "rechazada",
+] as const;
+
+const TERMINAL_ESTADOS: ReadonlySet<ArcopEstado> = new Set([
+  "cumplida",
+  "rechazada",
+]);
 
 const TIPOS = [
   "acceso",
@@ -61,15 +75,15 @@ function formatDate(iso: string): string {
   }).format(new Date(iso));
 }
 
-export function ArcopPortal() {
+export function ArcopPortal({ isAdmin = false }: { isAdmin?: boolean }) {
   return (
     <Suspense fallback={null}>
-      <ArcopPortalInner />
+      <ArcopPortalInner isAdmin={isAdmin} />
     </Suspense>
   );
 }
 
-function ArcopPortalInner() {
+function ArcopPortalInner({ isAdmin }: { isAdmin: boolean }) {
   const tForm = useTranslations("privacy.form");
   const tList = useTranslations("privacy.list");
   const tEstado = useTranslations("privacy.estadoLabel");
@@ -188,7 +202,9 @@ function ArcopPortalInner() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{tList("header")}</CardTitle>
+          <CardTitle className="text-base">
+            {isAdmin ? tList("headerAdmin") : tList("header")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
@@ -204,6 +220,9 @@ function ArcopPortalInner() {
                     <th className="p-3 font-medium">{tList("estado")}</th>
                     <th className="p-3 font-medium">{tList("recibida")}</th>
                     <th className="p-3 font-medium">{tList("respuesta")}</th>
+                    {isAdmin && (
+                      <th className="p-3 font-medium">{tList("acciones")}</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -224,6 +243,11 @@ function ArcopPortalInner() {
                       <td className="p-3 text-xs text-muted-foreground">
                         {s.respuesta ?? "—"}
                       </td>
+                      {isAdmin && (
+                        <td className="p-3 align-top">
+                          <DpoActions arcop={s} />
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -233,6 +257,81 @@ function ArcopPortalInner() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function DpoActions({ arcop }: { arcop: ArcopResponse }) {
+  const tList = useTranslations("privacy.list");
+  const queryClient = useQueryClient();
+  const isTerminal = TERMINAL_ESTADOS.has(arcop.estado);
+
+  const subSchema = z.object({
+    estado: z.enum(ESTADOS),
+    respuesta: z.string().trim().max(4000),
+  });
+  type SubValues = z.infer<typeof subSchema>;
+
+  const subForm = useForm<SubValues>({
+    resolver: zodResolver(subSchema),
+    defaultValues: {
+      estado: arcop.estado,
+      respuesta: arcop.respuesta ?? "",
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: (req: UpdateArcopRequest) =>
+      fetchApiClient<ArcopResponse>(`/api/privacy/arcop/${arcop.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(req),
+      }),
+    onSuccess: () => {
+      toast.success(tList("savedToast"));
+      queryClient.invalidateQueries({ queryKey: ["arcop-list"] });
+    },
+    onError: (err) =>
+      toast.error(err instanceof ApiError ? err.detail : String(err)),
+  });
+
+  if (isTerminal) {
+    return (
+      <span className="text-xs text-muted-foreground">
+        {tList("terminalNote")}
+      </span>
+    );
+  }
+
+  return (
+    <Form {...subForm}>
+      <form
+        onSubmit={subForm.handleSubmit((v) => mutation.mutate(v))}
+        className="flex flex-col gap-2"
+      >
+        <select
+          {...subForm.register("estado")}
+          className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+        >
+          {ESTADOS.map((e) => (
+            <option key={e} value={e}>
+              {e}
+            </option>
+          ))}
+        </select>
+        <Input
+          {...subForm.register("respuesta")}
+          placeholder={tList("responsePlaceholder")}
+          className="h-8 text-xs"
+        />
+        <Button
+          type="submit"
+          size="sm"
+          disabled={mutation.isPending}
+          className="h-8 text-xs"
+        >
+          {mutation.isPending ? tList("saving") : tList("saveResponse")}
+        </Button>
+      </form>
+    </Form>
   );
 }
 

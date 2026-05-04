@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,6 +48,15 @@ class CreateArcopRequest(BaseModel):
             "dato corregir y el valor solicitado."
         ),
     )
+
+
+class UpdateArcopRequest(BaseModel):
+    """PATCH del DPO (skill 5b). Cambia estado y/o registra respuesta."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    estado: ArcopEstado | None = None
+    respuesta: str | None = Field(default=None, max_length=4000)
 
 
 class ArcopResponse(BaseModel):
@@ -148,6 +157,10 @@ async def create_arcop(
 
 _ADMIN_ROLES = frozenset({"owner", "accountant_lead"})
 
+# Estados terminales: una vez cumplida o rechazada no se reabre. El DPO
+# debe crear una nota nueva si necesita reanudar la gestión.
+_TERMINAL_ESTADOS = frozenset({"cumplida", "rechazada"})
+
 
 @router.get("/arcop", response_model=ArcopListResponse)
 async def list_arcop(
@@ -193,3 +206,106 @@ async def list_arcop(
         )
     items = [_row_to_arcop(dict(r)) for r in result.mappings().all()]
     return ArcopListResponse(solicitudes=items)
+
+
+@router.patch("/arcop/{arcop_id}", response_model=ArcopResponse)
+async def update_arcop(
+    arcop_id: UUID,
+    payload: UpdateArcopRequest,
+    tenancy: Tenancy = Depends(current_tenancy),
+    session: AsyncSession = Depends(get_db_session),
+) -> ArcopResponse:
+    """PATCH para el DPO: avanza estado y registra respuesta.
+
+    Solo `owner` y `accountant_lead` pueden gestionar. Pasar a estado
+    terminal (cumplida / rechazada) setea `respondida_at = now()`. Si
+    ya está terminal, rechazar el PATCH.
+    """
+    if tenancy.role not in _ADMIN_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "Solo owner o accountant_lead pueden gestionar "
+                "solicitudes ARCOP (DPO interno)."
+            ),
+        )
+    if payload.estado is None and payload.respuesta is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Debes enviar estado o respuesta.",
+        )
+
+    current = await session.execute(
+        text(
+            """
+            select id, tipo, estado, descripcion, recibida_at,
+                   respondida_at, respuesta
+              from privacy.arcop_requests
+             where id = :id and workspace_id = :ws
+            """
+        ),
+        {"id": str(arcop_id), "ws": str(tenancy.workspace_id)},
+    )
+    current_row = current.mappings().one_or_none()
+    if current_row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"solicitud ARCOP {arcop_id} no encontrada.",
+        )
+    if current_row["estado"] in _TERMINAL_ESTADOS:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"La solicitud ya está {current_row['estado']!r} y no "
+                "puede reabrirse."
+            ),
+        )
+
+    nuevo_estado = payload.estado or current_row["estado"]
+    nueva_respuesta = (
+        payload.respuesta
+        if payload.respuesta is not None
+        else current_row["respuesta"]
+    )
+    es_terminal = nuevo_estado in _TERMINAL_ESTADOS
+
+    result = await session.execute(
+        text(
+            """
+            update privacy.arcop_requests
+               set estado = :estado,
+                   respuesta = :respuesta,
+                   respondida_at = case
+                        when :terminal then coalesce(respondida_at, now())
+                        else respondida_at
+                   end
+             where id = :id and workspace_id = :ws
+            returning id, tipo, estado, descripcion, recibida_at,
+                      respondida_at, respuesta
+            """
+        ),
+        {
+            "id": str(arcop_id),
+            "ws": str(tenancy.workspace_id),
+            "estado": nuevo_estado,
+            "respuesta": nueva_respuesta,
+            "terminal": es_terminal,
+        },
+    )
+    row = result.mappings().one()
+    arcop = _row_to_arcop(dict(row))
+
+    await log_audit(
+        session,
+        workspace_id=tenancy.workspace_id,
+        user_id=tenancy.user_id,
+        action="update",
+        resource_type="arcop",
+        resource_id=arcop.id,
+        metadata={
+            "estado_anterior": current_row["estado"],
+            "estado_nuevo": nuevo_estado,
+            "respondida": payload.respuesta is not None,
+        },
+    )
+    return arcop

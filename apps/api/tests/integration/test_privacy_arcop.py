@@ -239,3 +239,143 @@ async def test_create_arcop_logs_audit(
     assert len(rows) == 1
     assert rows[0]["action"] == "create"
     assert rows[0]["metadata"]["tipo"] == "cancelacion"
+
+
+# ---------------------------------------------------------------------------
+# PATCH (skill 5b — DPO interno)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+async def test_owner_marks_arcop_cumplida(
+    http_client_arcop: AsyncClient,
+    workspace_with_two_users: dict[str, UUID],
+) -> None:
+    ctx = workspace_with_two_users
+
+    # viewer crea
+    app.dependency_overrides[verify_jwt] = _override(
+        _claims(ctx["viewer_id"], ctx["workspace_id"], role="viewer")
+    )
+    created = await http_client_arcop.post(
+        "/api/privacy/arcop",
+        json={"tipo": "acceso"},
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert created.status_code == 201, created.text
+    arcop_id = created.json()["id"]
+
+    # owner marca cumplida con respuesta
+    app.dependency_overrides[verify_jwt] = _override(
+        _claims(ctx["owner_id"], ctx["workspace_id"])
+    )
+    response = await http_client_arcop.patch(
+        f"/api/privacy/arcop/{arcop_id}",
+        json={
+            "estado": "cumplida",
+            "respuesta": "Datos exportados al canal solicitado.",
+        },
+        headers={"Authorization": "Bearer fake"},
+    )
+
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["estado"] == "cumplida"
+    assert data["respuesta"] == "Datos exportados al canal solicitado."
+    assert data["respondida_at"] is not None
+
+
+@pytest.mark.integration
+async def test_viewer_cannot_patch_arcop(
+    http_client_arcop: AsyncClient,
+    workspace_with_two_users: dict[str, UUID],
+) -> None:
+    ctx = workspace_with_two_users
+    app.dependency_overrides[verify_jwt] = _override(
+        _claims(ctx["owner_id"], ctx["workspace_id"])
+    )
+    created = await http_client_arcop.post(
+        "/api/privacy/arcop",
+        json={"tipo": "acceso"},
+        headers={"Authorization": "Bearer fake"},
+    )
+    arcop_id = created.json()["id"]
+
+    app.dependency_overrides[verify_jwt] = _override(
+        _claims(ctx["viewer_id"], ctx["workspace_id"], role="viewer")
+    )
+    response = await http_client_arcop.patch(
+        f"/api/privacy/arcop/{arcop_id}",
+        json={"estado": "rechazada"},
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert response.status_code == 403
+
+
+@pytest.mark.integration
+async def test_patch_terminal_arcop_returns_409(
+    http_client_arcop: AsyncClient,
+    workspace_with_two_users: dict[str, UUID],
+) -> None:
+    ctx = workspace_with_two_users
+    app.dependency_overrides[verify_jwt] = _override(
+        _claims(ctx["owner_id"], ctx["workspace_id"])
+    )
+    created = await http_client_arcop.post(
+        "/api/privacy/arcop",
+        json={"tipo": "cancelacion"},
+        headers={"Authorization": "Bearer fake"},
+    )
+    arcop_id = created.json()["id"]
+
+    first = await http_client_arcop.patch(
+        f"/api/privacy/arcop/{arcop_id}",
+        json={"estado": "rechazada", "respuesta": "Fuera de alcance."},
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert first.status_code == 200, first.text
+
+    second = await http_client_arcop.patch(
+        f"/api/privacy/arcop/{arcop_id}",
+        json={"estado": "en_proceso"},
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert second.status_code == 409
+
+
+@pytest.mark.integration
+async def test_patch_arcop_logs_audit_with_estado_diff(
+    http_client_arcop: AsyncClient,
+    workspace_with_two_users: dict[str, UUID],
+    admin_session: AsyncSession,
+) -> None:
+    ctx = workspace_with_two_users
+    app.dependency_overrides[verify_jwt] = _override(
+        _claims(ctx["owner_id"], ctx["workspace_id"])
+    )
+    created = await http_client_arcop.post(
+        "/api/privacy/arcop",
+        json={"tipo": "oposicion"},
+        headers={"Authorization": "Bearer fake"},
+    )
+    arcop_id = created.json()["id"]
+
+    await http_client_arcop.patch(
+        f"/api/privacy/arcop/{arcop_id}",
+        json={"estado": "en_proceso"},
+        headers={"Authorization": "Bearer fake"},
+    )
+
+    async with admin_session.begin():
+        result = await admin_session.execute(
+            text(
+                "select metadata from security.audit_log "
+                "where workspace_id = :w and action = 'update' "
+                "  and resource_type = 'arcop'"
+            ),
+            {"w": str(ctx["workspace_id"])},
+        )
+        rows = [dict(r) for r in result.mappings().all()]
+    assert len(rows) == 1
+    assert rows[0]["metadata"]["estado_anterior"] == "recibida"
+    assert rows[0]["metadata"]["estado_nuevo"] == "en_proceso"

@@ -130,11 +130,18 @@
     },
     "list": {
       "header": "Mis solicitudes",
+      "headerAdmin": "Solicitudes del workspace (panel DPO)",
       "empty": "No has enviado solicitudes ARCOP todavía.",
       "tipo": "Tipo",
       "estado": "Estado",
       "recibida": "Recibida",
-      "respuesta": "Respuesta"
+      "respuesta": "Respuesta",
+      "acciones": "Gestión DPO",
+      "saveResponse": "Guardar",
+      "saving": "Guardando…",
+      "responsePlaceholder": "Respuesta del DPO…",
+      "savedToast": "Solicitud actualizada.",
+      "terminalNote": "Estado terminal: solicitud cerrada."
     },
     "estadoLabel": {
       "recibida": "Recibida",

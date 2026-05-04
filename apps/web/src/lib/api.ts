@@ -95,6 +95,11 @@ export interface CreateArcopRequest {
   descripcion?: string;
 }
 
+export interface UpdateArcopRequest {
+  estado?: ArcopEstado;
+  respuesta?: string;
+}
+
 export interface ArcopResponse {
   id: string;
   tipo: ArcopTipo;
