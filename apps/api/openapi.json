@@ -1099,6 +1099,61 @@
         "title": "DiagnoseVeredicto",
         "type": "object"
       },
+      "DryRunResponse": {
+        "properties": {
+          "cambian_elegibilidad": {
+            "title": "Cambian Elegibilidad",
+            "type": "integer"
+          },
+          "delta_ahorro_total_clp": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Delta Ahorro Total Clp",
+            "type": "string"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "evaluadas": {
+            "title": "Evaluadas",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "nota": {
+            "title": "Nota",
+            "type": "string"
+          },
+          "pasaban_antes": {
+            "title": "Pasaban Antes",
+            "type": "integer"
+          },
+          "pasan_ahora": {
+            "title": "Pasan Ahora",
+            "type": "integer"
+          },
+          "rule_id": {
+            "format": "uuid",
+            "title": "Rule Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "domain",
+          "key",
+          "evaluadas",
+          "pasaban_antes",
+          "pasan_ahora",
+          "cambian_elegibilidad",
+          "delta_ahorro_total_clp",
+          "nota"
+        ],
+        "title": "DryRunResponse",
+        "type": "object"
+      },
       "DualProjection": {
         "properties": {
           "base": {
@@ -2729,6 +2784,56 @@
         "title": "UpdateArcopRequest",
         "type": "object"
       },
+      "ValidateSchemaRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "domain": {
+            "minLength": 1,
+            "title": "Domain",
+            "type": "string"
+          },
+          "rules": {
+            "additionalProperties": true,
+            "title": "Rules",
+            "type": "object"
+          }
+        },
+        "required": [
+          "domain",
+          "rules"
+        ],
+        "title": "ValidateSchemaRequest",
+        "type": "object"
+      },
+      "ValidateSchemaResponse": {
+        "properties": {
+          "domains_disponibles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Domains Disponibles",
+            "type": "array"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationFailureOut"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid",
+          "domains_disponibles",
+          "errors"
+        ],
+        "title": "ValidateSchemaResponse",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -2767,6 +2872,24 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "ValidationFailureOut": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "message"
+        ],
+        "title": "ValidationFailureOut",
         "type": "object"
       }
     },
@@ -2898,6 +3021,53 @@
         ]
       }
     },
+    "/api/admin/rules/validate-schema": {
+      "post": {
+        "description": "Valida `rules` contra el JSON Schema del dominio. No persiste.",
+        "operationId": "validate_schema_api_admin_rules_validate_schema_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateSchemaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateSchemaResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Validate Schema",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/rules/{rule_id}": {
       "get": {
         "operationId": "get_rule_api_admin_rules__rule_id__get",
@@ -2989,6 +3159,55 @@
           }
         ],
         "summary": "Deprecate Rule",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/rules/{rule_id}/dry-run": {
+      "post": {
+        "description": "Evalúa la regla nueva sobre los inputs persistidos en\n`core.recomendaciones` y reporta cuántas cambiarían su veredicto.\n\nSolo aplica al dominio `regime_eligibility`; otros dominios\ndevuelven 422 con explicación. El motor recorre cada\nrecomendación de tipo `cambio_regimen` cuyo régimen recomendado\ncoincide con la `key` de la regla, y compara `pasaba_antes` (lo\nque registra el outputs.elegibilidad) contra `pasa_ahora`\n(resultado del evaluator con la regla nueva).",
+        "operationId": "dry_run_api_admin_rules__rule_id__dry_run_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rule_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Rule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DryRunResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Dry Run",
         "tags": [
           "admin"
         ]

@@ -200,6 +200,121 @@ async def test_publish_blocked_when_not_pending(
 
 
 @pytest.mark.integration
+async def test_validate_schema_accepts_well_formed_rule(
+    http_client_admin: AsyncClient,
+) -> None:
+    app.dependency_overrides[verify_jwt] = _override(_claims(_CONTADOR_ID))
+
+    response = await http_client_admin.post(
+        "/api/admin/rules/validate-schema",
+        json={
+            "domain": "regime_eligibility",
+            "rules": {
+                "all_of": [
+                    {"field": "ingresos_promedio_3a_uf",
+                     "op": "lte", "value": 75000}
+                ]
+            },
+        },
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["valid"] is True
+    assert data["errors"] == []
+    assert "regime_eligibility" in data["domains_disponibles"]
+
+
+@pytest.mark.integration
+async def test_validate_schema_rejects_malformed_rule(
+    http_client_admin: AsyncClient,
+) -> None:
+    app.dependency_overrides[verify_jwt] = _override(_claims(_CONTADOR_ID))
+
+    response = await http_client_admin.post(
+        "/api/admin/rules/validate-schema",
+        json={
+            "domain": "regime_eligibility",
+            "rules": {
+                "all_of": [
+                    {"field": "x", "op": "operador_invalido", "value": 1}
+                ]
+            },
+        },
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["valid"] is False
+    assert len(data["errors"]) >= 1
+
+
+@pytest.mark.integration
+async def test_validate_schema_unknown_domain(
+    http_client_admin: AsyncClient,
+) -> None:
+    app.dependency_overrides[verify_jwt] = _override(_claims(_CONTADOR_ID))
+
+    response = await http_client_admin.post(
+        "/api/admin/rules/validate-schema",
+        json={"domain": "no-existe", "rules": {}},
+        headers={"Authorization": "Bearer fake"},
+    )
+    data = response.json()
+    assert data["valid"] is False
+    assert "no schema file" in data["errors"][0]["message"]
+
+
+@pytest.mark.integration
+async def test_dry_run_rejects_non_eligibility_domain(
+    http_client_admin: AsyncClient,
+) -> None:
+    """Dry-run MVP solo soporta regime_eligibility."""
+    app.dependency_overrides[verify_jwt] = _override(_claims(_CONTADOR_ID))
+
+    # Buscar id de la regla recomendacion_whitelist seedeada.
+    listing = await http_client_admin.get(
+        "/api/admin/rules?domain=recomendacion_whitelist",
+        headers={"Authorization": "Bearer fake"},
+    )
+    rule_id = listing.json()["rule_sets"][0]["id"]
+
+    response = await http_client_admin.post(
+        f"/api/admin/rules/{rule_id}/dry-run",
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.integration
+async def test_dry_run_evaluates_eligibility_rule(
+    http_client_admin: AsyncClient,
+) -> None:
+    """Sobre la regla 14_d_3 publicada, dry-run no debe romper aunque
+    no haya recomendaciones persistidas (cuenta 0 evaluadas)."""
+    app.dependency_overrides[verify_jwt] = _override(_claims(_CONTADOR_ID))
+
+    listing = await http_client_admin.get(
+        "/api/admin/rules?domain=regime_eligibility&status_filter=published",
+        headers={"Authorization": "Bearer fake"},
+    )
+    rules = listing.json()["rule_sets"]
+    rule_14d3 = next(r for r in rules if r["key"] == "14_d_3")
+
+    response = await http_client_admin.post(
+        f"/api/admin/rules/{rule_14d3['id']}/dry-run",
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["domain"] == "regime_eligibility"
+    assert data["key"] == "14_d_3"
+    assert data["evaluadas"] >= 0
+    assert data["pasaban_antes"] >= 0
+    assert data["pasan_ahora"] >= 0
+
+
+@pytest.mark.integration
 async def test_deprecate_rule(
     http_client_admin: AsyncClient,
     cleanup_drafts: None,

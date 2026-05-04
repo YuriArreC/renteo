@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 from datetime import date
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -32,6 +33,11 @@ from sqlalchemy import text
 
 from src.auth.internal_admin import require_internal_admin
 from src.db import service_session
+from src.domain.tax_engine.rule_evaluator import evaluate
+from src.lib.rule_schema import (
+    list_known_domains,
+    validate_rule,
+)
 
 router = APIRouter(prefix="/api/admin/rules", tags=["admin"])
 
@@ -68,6 +74,36 @@ class CreateDraftRequest(BaseModel):
     vigencia_hasta: date | None = None
     rules: dict[str, Any]
     fuente_legal: list[dict[str, Any]] = Field(min_length=1)
+
+
+class ValidateSchemaRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    domain: str = Field(min_length=1)
+    rules: dict[str, Any]
+
+
+class ValidationFailureOut(BaseModel):
+    path: str
+    message: str
+
+
+class ValidateSchemaResponse(BaseModel):
+    valid: bool
+    domains_disponibles: list[str]
+    errors: list[ValidationFailureOut]
+
+
+class DryRunResponse(BaseModel):
+    rule_id: UUID
+    domain: str
+    key: str
+    evaluadas: int
+    pasaban_antes: int
+    pasan_ahora: int
+    cambian_elegibilidad: int
+    delta_ahorro_total_clp: Decimal
+    nota: str
 
 
 def _row_to_summary(row: dict[str, Any]) -> RuleSetSummary:
@@ -229,6 +265,164 @@ async def create_draft(
             "rules": row["rules"],
             "fuente_legal": row["fuente_legal"],
         }
+    )
+
+
+@router.post("/validate-schema", response_model=ValidateSchemaResponse)
+async def validate_schema(
+    payload: ValidateSchemaRequest,
+    _admin: UUID = Depends(require_internal_admin),
+) -> ValidateSchemaResponse:
+    """Valida `rules` contra el JSON Schema del dominio. No persiste."""
+    result = validate_rule(payload.domain, payload.rules)
+    return ValidateSchemaResponse(
+        valid=result.valid,
+        domains_disponibles=list_known_domains(),
+        errors=[
+            ValidationFailureOut(path=e.path, message=e.message)
+            for e in result.errors
+        ],
+    )
+
+
+def _flatten_inputs(payload: dict[str, Any]) -> dict[str, Any]:
+    """Aplana inputs_snapshot del wizard de régimen a un dict que el
+    evaluador pueda consumir como contexto. Track 11 oficial expone un
+    helper compartido; aquí replicamos el subset que ya usa
+    `eligibility._to_ctx`.
+    """
+    return {
+        "ingresos_promedio_3a_uf": float(
+            payload.get("ingresos_promedio_3a_uf", 0)
+        ),
+        "ingresos_max_anual_uf": float(
+            payload.get("ingresos_max_anual_uf", 0)
+        ),
+        "capital_efectivo_inicial_uf": float(
+            payload.get("capital_efectivo_inicial_uf", 0)
+        ),
+        "pct_ingresos_pasivos": float(
+            payload.get("pct_ingresos_pasivos", 0)
+        ),
+        "todos_duenos_personas_naturales_chile": bool(
+            payload.get("todos_duenos_personas_naturales_chile", False)
+        ),
+        "participacion_empresas_no_14d_sobre_10pct": bool(
+            payload.get(
+                "participacion_empresas_no_14d_sobre_10pct", False
+            )
+        ),
+        "sector": str(payload.get("sector", "")),
+        "ventas_anuales_uf": float(
+            payload.get("ventas_anuales_uf", 0)
+        ),
+        "supletorio": True,
+    }
+
+
+@router.post("/{rule_id}/dry-run", response_model=DryRunResponse)
+async def dry_run(
+    rule_id: UUID,
+    _admin: UUID = Depends(require_internal_admin),
+) -> DryRunResponse:
+    """Evalúa la regla nueva sobre los inputs persistidos en
+    `core.recomendaciones` y reporta cuántas cambiarían su veredicto.
+
+    Solo aplica al dominio `regime_eligibility`; otros dominios
+    devuelven 422 con explicación. El motor recorre cada
+    recomendación de tipo `cambio_regimen` cuyo régimen recomendado
+    coincide con la `key` de la regla, y compara `pasaba_antes` (lo
+    que registra el outputs.elegibilidad) contra `pasa_ahora`
+    (resultado del evaluator con la regla nueva).
+    """
+    async with service_session() as session:
+        rule_row = await session.execute(
+            text(
+                """
+                select id, domain, key, rules
+                  from tax_rules.rule_sets
+                 where id = :id
+                """
+            ),
+            {"id": str(rule_id)},
+        )
+        rule = rule_row.mappings().one_or_none()
+        if rule is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"rule_set {rule_id} no encontrado.",
+            )
+        if rule["domain"] != "regime_eligibility":
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "dry-run MVP solo soporta dominio "
+                    "'regime_eligibility'. Otros dominios entran en "
+                    "track 11d con muestras dedicadas."
+                ),
+            )
+
+        recs = await session.execute(
+            text(
+                """
+                select id, ahorro_estimado_clp, inputs_snapshot, outputs
+                  from core.recomendaciones
+                 where tipo = 'cambio_regimen'
+                """
+            )
+        )
+        rec_rows = recs.mappings().all()
+
+    pasaban = 0
+    pasan = 0
+    cambian = 0
+    delta_ahorro = Decimal("0")
+    target_key = str(rule["key"])
+
+    for rec in rec_rows:
+        outputs = rec["outputs"] or {}
+        elegibilidad = outputs.get("elegibilidad") or []
+        antes_entry = next(
+            (
+                e
+                for e in elegibilidad
+                if isinstance(e, dict) and e.get("regimen") == target_key
+            ),
+            None,
+        )
+        if antes_entry is None:
+            continue
+        antes = bool(antes_entry.get("elegible"))
+
+        ctx = _flatten_inputs(rec["inputs_snapshot"] or {})
+        result = evaluate(rule["rules"], ctx)
+        ahora = result.passed
+
+        pasaban += int(antes)
+        pasan += int(ahora)
+        if antes != ahora:
+            cambian += 1
+            ahorro = rec["ahorro_estimado_clp"] or Decimal("0")
+            # Si dejaba de ser elegible, el ahorro registrado deja de
+            # aplicar (signo negativo); si pasa a elegible suma.
+            delta_ahorro += ahorro if ahora else -ahorro
+
+    nota = (
+        "Dry-run sobre recomendaciones cambio_regimen del workspace "
+        "global. Cuenta cuántas pasarían a tener distinta elegibilidad "
+        "para la key de esta regla, y estima el delta de ahorro 3a "
+        "asumiendo que la elegibilidad determina si el ahorro aplica."
+    )
+    return DryRunResponse(
+        rule_id=UUID(str(rule["id"])),
+        domain=str(rule["domain"]),
+        key=target_key,
+        evaluadas=len(rec_rows),
+        pasaban_antes=pasaban,
+        pasan_ahora=pasan,
+        cambian_elegibilidad=cambian,
+        delta_ahorro_total_clp=delta_ahorro,
+        nota=nota,
     )
 
 

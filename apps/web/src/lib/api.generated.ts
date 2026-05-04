@@ -28,6 +28,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/rules/validate-schema": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Schema
+         * @description Valida `rules` contra el JSON Schema del dominio. No persiste.
+         */
+        post: operations["validate_schema_api_admin_rules_validate_schema_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/rules/{rule_id}": {
         parameters: {
             query?: never;
@@ -56,6 +76,34 @@ export interface paths {
         put?: never;
         /** Deprecate Rule */
         post: operations["deprecate_rule_api_admin_rules__rule_id__deprecate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/rules/{rule_id}/dry-run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dry Run
+         * @description Evalúa la regla nueva sobre los inputs persistidos en
+         *     `core.recomendaciones` y reporta cuántas cambiarían su veredicto.
+         *
+         *     Solo aplica al dominio `regime_eligibility`; otros dominios
+         *     devuelven 422 con explicación. El motor recorre cada
+         *     recomendación de tipo `cambio_regimen` cuyo régimen recomendado
+         *     coincide con la `key` de la regla, y compara `pasaba_antes` (lo
+         *     que registra el outputs.elegibilidad) contra `pasa_ahora`
+         *     (resultado del evaluator con la regla nueva).
+         */
+        post: operations["dry_run_api_admin_rules__rule_id__dry_run_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -962,6 +1010,30 @@ export interface components {
              */
             regimen_recomendado: "14_a" | "14_d_3" | "14_d_8" | "renta_presunta";
         };
+        /** DryRunResponse */
+        DryRunResponse: {
+            /** Cambian Elegibilidad */
+            cambian_elegibilidad: number;
+            /** Delta Ahorro Total Clp */
+            delta_ahorro_total_clp: string;
+            /** Domain */
+            domain: string;
+            /** Evaluadas */
+            evaluadas: number;
+            /** Key */
+            key: string;
+            /** Nota */
+            nota: string;
+            /** Pasaban Antes */
+            pasaban_antes: number;
+            /** Pasan Ahora */
+            pasan_ahora: number;
+            /**
+             * Rule Id
+             * Format: uuid
+             */
+            rule_id: string;
+        };
         /** DualProjection */
         DualProjection: {
             base: components["schemas"]["RegimeProjection"];
@@ -1548,6 +1620,24 @@ export interface components {
             /** Respuesta */
             respuesta?: string | null;
         };
+        /** ValidateSchemaRequest */
+        ValidateSchemaRequest: {
+            /** Domain */
+            domain: string;
+            /** Rules */
+            rules: {
+                [key: string]: unknown;
+            };
+        };
+        /** ValidateSchemaResponse */
+        ValidateSchemaResponse: {
+            /** Domains Disponibles */
+            domains_disponibles: string[];
+            /** Errors */
+            errors: components["schemas"]["ValidationFailureOut"][];
+            /** Valid */
+            valid: boolean;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -1560,6 +1650,13 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** ValidationFailureOut */
+        ValidationFailureOut: {
+            /** Message */
+            message: string;
+            /** Path */
+            path: string;
         };
     };
     responses: never;
@@ -1635,6 +1732,39 @@ export interface operations {
             };
         };
     };
+    validate_schema_api_admin_rules_validate_schema_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateSchemaRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateSchemaResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_rule_api_admin_rules__rule_id__get: {
         parameters: {
             query?: never;
@@ -1684,6 +1814,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RuleSetSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dry_run_api_admin_rules__rule_id__dry_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryRunResponse"];
                 };
             };
             /** @description Validation Error */
