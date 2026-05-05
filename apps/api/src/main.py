@@ -69,12 +69,63 @@ if settings.cors_allowed_origins_list:
 
 @app.get("/healthz", tags=["health"])
 async def healthz() -> dict[str, str]:
+    """Liveness: el proceso responde HTTP. No verifica dependencias."""
     return {"status": "ok"}
 
 
 @app.get("/readyz", tags=["health"])
-async def readyz() -> dict[str, str]:
-    return {"status": "ok"}
+async def readyz() -> JSONResponse:
+    """Readiness: verifica que el proceso puede servir tráfico real.
+    Hace SELECT 1 contra la DB; si Redis está configurado para Celery,
+    también lo prueba. Devuelve 503 si alguna dependencia falla.
+
+    Render usa este endpoint como `healthCheckPath` para decidir si
+    enrutar tráfico al deploy nuevo o hacer rollback automático.
+    """
+    from sqlalchemy import text as _sql_text
+
+    from src.config import settings as _settings
+    from src.db import SessionLocal
+
+    deps: dict[str, str] = {}
+    healthy = True
+
+    if SessionLocal is None:
+        deps["database"] = "not_configured"
+        healthy = False
+    else:
+        try:
+            async with SessionLocal() as session:
+                await session.execute(_sql_text("select 1"))
+            deps["database"] = "ok"
+        except Exception as exc:  # pragma: no cover — gated en deploy
+            deps["database"] = f"error: {type(exc).__name__}"
+            healthy = False
+
+    redis_url = _settings.redis_url
+    if redis_url:
+        try:
+            import redis.asyncio as redis_async
+
+            client = redis_async.from_url(redis_url)  # type: ignore[no-untyped-call]
+            await client.ping()
+            await client.aclose()
+            deps["redis"] = "ok"
+        except Exception as exc:  # pragma: no cover
+            deps["redis"] = f"error: {type(exc).__name__}"
+            healthy = False
+    else:
+        deps["redis"] = "not_configured"
+
+    body = {"status": "ok" if healthy else "degraded", "dependencies": deps}
+    return JSONResponse(
+        content=body,
+        status_code=(
+            status.HTTP_200_OK
+            if healthy
+            else status.HTTP_503_SERVICE_UNAVAILABLE
+        ),
+    )
 
 
 @app.exception_handler(RedFlagBlocked)

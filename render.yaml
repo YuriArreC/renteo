@@ -1,0 +1,141 @@
+# =============================================================================
+# Render Blueprint — Renteo (track despliegue prep).
+#
+# Levanta los tres servicios del backend desde un solo deploy:
+#   1. renteo-api          → FastAPI (uvicorn) sirve /api/* a la web.
+#   2. renteo-worker       → Celery worker procesa tasks (alertas batch,
+#                            watchdog, sync SII bajo demanda).
+#   3. renteo-beat         → Celery beat scheduler dispara los crons
+#                            (alertas 03:00 SCL, watchdog 04:00 SCL).
+#
+# Variables compartidas viven en `envVarGroup: renteo-shared`. Secrets
+# (DATABASE_URL, JWT, SimpleAPI tokens, KMS ARN) se setean a mano en el
+# dashboard al primer deploy — nunca commiteados al repo.
+#
+# Para deploy preview por PR (entorno ephemeral con DB ramificada),
+# `previews.generation` lo activa: cada PR clona los servicios + crea
+# una branch DB de Supabase. Se destruyen al cerrar el PR.
+#
+# El frontend (Next.js) NO va aquí — vive en Vercel para aprovechar el
+# edge runtime + ISR + Sentry frontend que ya configuramos.
+# =============================================================================
+
+previews:
+  generation: automatic
+
+services:
+  # ---------------------------------------------------------------------------
+  # API
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: renteo-api
+    runtime: python
+    region: oregon  # sa-east-1 no está disponible en Render starter; usamos
+                   # us-west-2 (oregon) y dejamos KMS+S3 en sa-east-1.
+    plan: starter
+    rootDir: apps/api
+    buildCommand: pip install -e .
+    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT --proxy-headers
+    healthCheckPath: /readyz
+    autoDeploy: true
+    envVars:
+      - fromGroup: renteo-shared
+      - key: PORT
+        value: "10000"
+      # Secrets (set vía dashboard, marcados sync:false):
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: SUPABASE_JWKS_URL
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: SII_KMS_KEY_ARN
+        sync: false
+      - key: SII_CERT_BUCKET
+        sync: false
+      - key: SII_SIMPLEAPI_TOKEN
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+
+  # ---------------------------------------------------------------------------
+  # Celery worker — corre tasks (alertas batch, watchdog, sync SII).
+  # ---------------------------------------------------------------------------
+  - type: worker
+    name: renteo-worker
+    runtime: python
+    region: oregon
+    plan: starter
+    rootDir: apps/api
+    buildCommand: pip install -e .
+    startCommand: celery -A src.worker worker --loglevel=info --concurrency=2
+    autoDeploy: true
+    envVars:
+      - fromGroup: renteo-shared
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: SII_KMS_KEY_ARN
+        sync: false
+      - key: SII_CERT_BUCKET
+        sync: false
+      - key: SII_SIMPLEAPI_TOKEN
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+
+  # ---------------------------------------------------------------------------
+  # Celery beat — scheduler que dispara los crons. Servicio aparte para
+  # que un restart del worker no pierda beats (--> dobles ejecuciones).
+  # ---------------------------------------------------------------------------
+  - type: worker
+    name: renteo-beat
+    runtime: python
+    region: oregon
+    plan: starter
+    rootDir: apps/api
+    buildCommand: pip install -e .
+    startCommand: celery -A src.worker beat --loglevel=info
+    autoDeploy: true
+    envVars:
+      - fromGroup: renteo-shared
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+# -----------------------------------------------------------------------------
+# Variables compartidas — todas las instancias las leen iguales.
+# Las que cambian por entorno (URL frontend, sii_provider) se setean
+# como secrets individuales arriba.
+# -----------------------------------------------------------------------------
+envVarGroups:
+  - name: renteo-shared
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: ENVIRONMENT
+        value: production
+      - key: APP_VERSION
+        value: "0.1.0"
+      - key: AWS_REGION
+        value: sa-east-1
+      - key: KMS_PROVIDER
+        value: aws
+      - key: CERT_STORAGE_PROVIDER
+        value: s3
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://renteo.cl,https://www.renteo.cl
+      - key: INTERNAL_ADMIN_EMAILS
+        value: contador-socio@renteo.cl,admin-tecnico@renteo.cl
