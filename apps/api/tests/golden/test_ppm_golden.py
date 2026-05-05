@@ -14,6 +14,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.tax_engine.ppm import compute_ppm
+from tests.golden import GOLDENS_STRICT
 
 XFAIL_REASON = (
     "awaiting CONTADOR_SOCIO signoff on PPM rates (ppm_pyme_rates seeds)"
@@ -21,7 +22,7 @@ XFAIL_REASON = (
 
 
 @pytest.mark.golden
-@pytest.mark.xfail(reason=XFAIL_REASON, strict=False)
+@pytest.mark.xfail(reason=XFAIL_REASON, strict=GOLDENS_STRICT)
 async def test_ppm_14d3_at2026_tasa_baja(
     admin_session: AsyncSession,
 ) -> None:
@@ -41,7 +42,7 @@ async def test_ppm_14d3_at2026_tasa_baja(
 
 
 @pytest.mark.golden
-@pytest.mark.xfail(reason=XFAIL_REASON, strict=False)
+@pytest.mark.xfail(reason=XFAIL_REASON, strict=GOLDENS_STRICT)
 async def test_ppm_14d3_at2026_tasa_alta(
     admin_session: AsyncSession,
 ) -> None:

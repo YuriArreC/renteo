@@ -21,6 +21,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.tax_engine.igc import compute_igc
+from tests.golden import GOLDENS_STRICT
 
 XFAIL_REASON = (
     "awaiting CONTADOR_SOCIO signoff on TODOS-CONTADOR.md #2 (igc_brackets) "
@@ -29,7 +30,7 @@ XFAIL_REASON = (
 
 
 @pytest.mark.golden
-@pytest.mark.xfail(reason=XFAIL_REASON, strict=False)
+@pytest.mark.xfail(reason=XFAIL_REASON, strict=GOLDENS_STRICT)
 async def test_igc_at2026_tramo_exento(
     admin_session: AsyncSession,
 ) -> None:
@@ -45,7 +46,7 @@ async def test_igc_at2026_tramo_exento(
 
 
 @pytest.mark.golden
-@pytest.mark.xfail(reason=XFAIL_REASON, strict=False)
+@pytest.mark.xfail(reason=XFAIL_REASON, strict=GOLDENS_STRICT)
 async def test_igc_at2026_tramo_3(
     admin_session: AsyncSession,
 ) -> None:
@@ -62,7 +63,7 @@ async def test_igc_at2026_tramo_3(
 
 
 @pytest.mark.golden
-@pytest.mark.xfail(reason=XFAIL_REASON, strict=False)
+@pytest.mark.xfail(reason=XFAIL_REASON, strict=GOLDENS_STRICT)
 async def test_igc_at2026_tramo_8_alto(
     admin_session: AsyncSession,
 ) -> None:

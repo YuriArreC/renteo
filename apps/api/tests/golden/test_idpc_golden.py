@@ -28,6 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.tax_engine.idpc import compute_idpc
 from src.lib.errors import MissingTaxYearParams
+from tests.golden import GOLDENS_STRICT
 
 XFAIL_REASON = (
     "awaiting CONTADOR_SOCIO signoff on TODOS-CONTADOR.md #1 (idpc_rates)"
@@ -35,7 +36,7 @@ XFAIL_REASON = (
 
 
 @pytest.mark.golden
-@pytest.mark.xfail(reason=XFAIL_REASON, strict=False)
+@pytest.mark.xfail(reason=XFAIL_REASON, strict=GOLDENS_STRICT)
 async def test_idpc_14a_at2026_rli_50000000(
     admin_session: AsyncSession,
 ) -> None:
@@ -54,7 +55,7 @@ async def test_idpc_14a_at2026_rli_50000000(
 
 
 @pytest.mark.golden
-@pytest.mark.xfail(reason=XFAIL_REASON, strict=False)
+@pytest.mark.xfail(reason=XFAIL_REASON, strict=GOLDENS_STRICT)
 async def test_idpc_14d3_at2026_transitoria(
     admin_session: AsyncSession,
 ) -> None:
@@ -74,7 +75,7 @@ async def test_idpc_14d3_at2026_transitoria(
 
 
 @pytest.mark.golden
-@pytest.mark.xfail(reason=XFAIL_REASON, strict=False)
+@pytest.mark.xfail(reason=XFAIL_REASON, strict=GOLDENS_STRICT)
 async def test_idpc_14d3_at2025_permanente(
     admin_session: AsyncSession,
 ) -> None:
@@ -93,7 +94,7 @@ async def test_idpc_14d3_at2025_permanente(
 
 
 @pytest.mark.golden
-@pytest.mark.xfail(reason=XFAIL_REASON, strict=False)
+@pytest.mark.xfail(reason=XFAIL_REASON, strict=GOLDENS_STRICT)
 async def test_idpc_14d8_es_cero(
     admin_session: AsyncSession,
 ) -> None:
