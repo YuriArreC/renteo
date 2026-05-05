@@ -106,7 +106,20 @@ export function RegimeWizard() {
   const [prefillState, setPrefillState] = useState<{
     warnings: string[];
     appliedFor: string | null;
-  }>({ warnings: [], appliedFor: null });
+    regimenOrigen: "f22" | "empresa" | "desconocido" | null;
+    regimenF22Year: number | null;
+    ppmPromedioPesos: string | null;
+    ppmMesesConDatos: number;
+    ivaPostergacionRecurrente: boolean;
+  }>({
+    warnings: [],
+    appliedFor: null,
+    regimenOrigen: null,
+    regimenF22Year: null,
+    ppmPromedioPesos: null,
+    ppmMesesConDatos: 0,
+    ivaPostergacionRecurrente: false,
+  });
   const empresaId = form.watch("empresa_id");
   const taxYear = form.watch("tax_year");
 
@@ -143,17 +156,38 @@ export function RegimeWizard() {
       setPrefillState({
         warnings: data.warnings,
         appliedFor: data.empresa_id,
+        regimenOrigen: data.regimen_origen,
+        regimenF22Year: data.regimen_f22_year,
+        ppmPromedioPesos: data.ppm_promedio_mensual_pesos,
+        ppmMesesConDatos: data.ppm_meses_con_datos,
+        ivaPostergacionRecurrente: data.iva_postergacion_recurrente,
       });
     },
     onError: (err) => {
       toast.error(err instanceof ApiError ? err.detail : String(err));
-      setPrefillState({ warnings: [], appliedFor: null });
+      setPrefillState({
+        warnings: [],
+        appliedFor: null,
+        regimenOrigen: null,
+        regimenF22Year: null,
+        ppmPromedioPesos: null,
+        ppmMesesConDatos: 0,
+        ivaPostergacionRecurrente: false,
+      });
     },
   });
 
   useEffect(() => {
     if (!empresaId) {
-      setPrefillState({ warnings: [], appliedFor: null });
+      setPrefillState({
+        warnings: [],
+        appliedFor: null,
+        regimenOrigen: null,
+        regimenF22Year: null,
+        ppmPromedioPesos: null,
+        ppmMesesConDatos: 0,
+        ivaPostergacionRecurrente: false,
+      });
       return;
     }
     if (
@@ -236,6 +270,37 @@ export function RegimeWizard() {
                   {prefillState.warnings.map((w) => (
                     <li key={w}>{w}</li>
                   ))}
+                </ul>
+              </div>
+            )}
+          {prefillState.appliedFor === empresaId &&
+            prefillState.regimenOrigen === "f22" &&
+            prefillState.regimenF22Year !== null && (
+              <div className="mb-4 rounded-md border border-sky-200 bg-sky-50 p-3 text-xs text-sky-900">
+                {tForm("prefillRegimenViaF22", {
+                  year: prefillState.regimenF22Year,
+                })}
+              </div>
+            )}
+          {prefillState.appliedFor === empresaId &&
+            (prefillState.ppmPromedioPesos !== null ||
+              prefillState.ivaPostergacionRecurrente) && (
+              <div className="mb-4 rounded-md border border-violet-200 bg-violet-50 p-3 text-xs text-violet-900">
+                <p className="mb-1 font-semibold">
+                  {tForm("palancaSuggestionsHeader")}
+                </p>
+                <ul className="list-inside list-disc space-y-1">
+                  {prefillState.ppmPromedioPesos !== null && (
+                    <li>
+                      {tForm("palancaP7Hint", {
+                        ppm: prefillState.ppmPromedioPesos,
+                        meses: prefillState.ppmMesesConDatos,
+                      })}
+                    </li>
+                  )}
+                  {prefillState.ivaPostergacionRecurrente && (
+                    <li>{tForm("palancaP8Hint")}</li>
+                  )}
                 </ul>
               </div>
             )}

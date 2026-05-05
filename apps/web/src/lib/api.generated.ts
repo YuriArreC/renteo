@@ -2568,6 +2568,12 @@ export interface components {
         };
         /** SyncSiiResponse */
         SyncSiiResponse: {
+            /** F22 Regimen Declarado */
+            f22_regimen_declarado: string | null;
+            /** F22 Year Synced */
+            f22_year_synced: number | null;
+            /** F29 Periodos Synced */
+            f29_periodos_synced: number;
             /** Period From */
             period_from: string;
             /** Period To */
@@ -2749,8 +2755,18 @@ export interface components {
             ingresos_max_anual_uf: string | null;
             /** Ingresos Promedio 3A Uf */
             ingresos_promedio_3a_uf: string | null;
+            /** Iva Postergacion Recurrente */
+            iva_postergacion_recurrente: boolean;
+            /** Ppm Meses Con Datos */
+            ppm_meses_con_datos: number;
+            /** Ppm Promedio Mensual Pesos */
+            ppm_promedio_mensual_pesos: string | null;
             /** Regimen Actual */
             regimen_actual: string | null;
+            /** Regimen F22 Year */
+            regimen_f22_year: number | null;
+            /** Regimen Origen */
+            regimen_origen: string;
             /** Tax Year */
             tax_year: number;
             /** Uf Valor Clp Usado */

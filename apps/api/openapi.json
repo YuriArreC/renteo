@@ -4619,6 +4619,32 @@
       },
       "SyncSiiResponse": {
         "properties": {
+          "f22_regimen_declarado": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "F22 Regimen Declarado"
+          },
+          "f22_year_synced": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "F22 Year Synced"
+          },
+          "f29_periodos_synced": {
+            "title": "F29 Periodos Synced",
+            "type": "integer"
+          },
           "period_from": {
             "title": "Period From",
             "type": "string"
@@ -4656,6 +4682,9 @@
           "period_to",
           "rcv_rows_inserted",
           "rcv_rows_total",
+          "f29_periodos_synced",
+          "f22_year_synced",
+          "f22_regimen_declarado",
           "status"
         ],
         "title": "SyncSiiResponse",
@@ -5165,6 +5194,25 @@
             ],
             "title": "Ingresos Promedio 3A Uf"
           },
+          "iva_postergacion_recurrente": {
+            "title": "Iva Postergacion Recurrente",
+            "type": "boolean"
+          },
+          "ppm_meses_con_datos": {
+            "title": "Ppm Meses Con Datos",
+            "type": "integer"
+          },
+          "ppm_promedio_mensual_pesos": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ppm Promedio Mensual Pesos"
+          },
           "regimen_actual": {
             "anyOf": [
               {
@@ -5175,6 +5223,21 @@
               }
             ],
             "title": "Regimen Actual"
+          },
+          "regimen_f22_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regimen F22 Year"
+          },
+          "regimen_origen": {
+            "title": "Regimen Origen",
+            "type": "string"
           },
           "tax_year": {
             "title": "Tax Year",
@@ -5213,7 +5276,12 @@
           "regimen_actual",
           "uf_valor_clp_usado",
           "anios_con_datos",
-          "warnings"
+          "warnings",
+          "regimen_origen",
+          "regimen_f22_year",
+          "ppm_promedio_mensual_pesos",
+          "ppm_meses_con_datos",
+          "iva_postergacion_recurrente"
         ],
         "title": "WizardPrefillResponse",
         "type": "object"

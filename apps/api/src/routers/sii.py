@@ -34,7 +34,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.tenancy import Tenancy, current_tenancy
 from src.db import get_db_session, service_session
-from src.domain.sii.adapter import RcvLine
+from src.domain.sii.adapter import F22Anio, F29Periodo, RcvLine
 from src.domain.sii.factory import make_sii_client, resolve_sii_provider
 from src.domain.sii.wizard_prefill import build_wizard_prefill
 from src.lib.audit import log_audit, mask_rut
@@ -58,6 +58,9 @@ class SyncSiiResponse(BaseModel):
     period_to: str
     rcv_rows_inserted: int
     rcv_rows_total: int
+    f29_periodos_synced: int
+    f22_year_synced: int | None
+    f22_regimen_declarado: str | None
     status: str
 
 
@@ -82,6 +85,12 @@ class WizardPrefillResponse(BaseModel):
     uf_valor_clp_usado: str
     anios_con_datos: list[int]
     warnings: list[str]
+    # Track F22/F29: enriquecimientos del SII completo.
+    regimen_origen: str
+    regimen_f22_year: int | None
+    ppm_promedio_mensual_pesos: str | None
+    ppm_meses_con_datos: int
+    iva_postergacion_recurrente: bool
 
 
 _ALLOWED_SYNC_ROLES = frozenset(
@@ -173,6 +182,86 @@ async def _persist_rcv(
             },
         )
     return len(lines)
+
+
+async def _persist_f29(
+    session: AsyncSession,
+    *,
+    workspace_id: UUID,
+    empresa_id: UUID,
+    periodos: list[F29Periodo],
+) -> int:
+    """Upsert F29 por (empresa_id, period). Idempotente: re-sincronizar
+    el mismo período actualiza la fila en lugar de duplicarla."""
+    if not periodos:
+        return 0
+    for p in periodos:
+        await session.execute(
+            text(
+                """
+                insert into tax_data.f29_periodos
+                    (workspace_id, empresa_id, period,
+                     iva_debito, iva_credito, ppm,
+                     retenciones, postergacion_iva)
+                values
+                    (:ws, :emp, :period,
+                     :iva_d, :iva_c, :ppm,
+                     :ret, :post)
+                on conflict (empresa_id, period) do update
+                set iva_debito = excluded.iva_debito,
+                    iva_credito = excluded.iva_credito,
+                    ppm = excluded.ppm,
+                    retenciones = excluded.retenciones,
+                    postergacion_iva = excluded.postergacion_iva,
+                    synced_at = now()
+                """
+            ),
+            {
+                "ws": str(workspace_id),
+                "emp": str(empresa_id),
+                "period": p.period,
+                "iva_d": p.iva_debito,
+                "iva_c": p.iva_credito,
+                "ppm": p.ppm,
+                "ret": p.retenciones,
+                "post": p.postergacion_iva,
+            },
+        )
+    return len(periodos)
+
+
+async def _persist_f22(
+    session: AsyncSession,
+    *,
+    workspace_id: UUID,
+    empresa_id: UUID,
+    f22: F22Anio,
+) -> None:
+    """Upsert F22 por (empresa_id, tax_year). Idempotente."""
+    await session.execute(
+        text(
+            """
+            insert into tax_data.f22_anios
+                (workspace_id, empresa_id, tax_year,
+                 regimen_declarado, rli_declarada, idpc_pagado)
+            values
+                (:ws, :emp, :year, :regimen, :rli, :idpc)
+            on conflict (empresa_id, tax_year) do update
+            set regimen_declarado = excluded.regimen_declarado,
+                rli_declarada = excluded.rli_declarada,
+                idpc_pagado = excluded.idpc_pagado,
+                synced_at = now()
+            """
+        ),
+        {
+            "ws": str(workspace_id),
+            "emp": str(empresa_id),
+            "year": f22.tax_year,
+            "regimen": f22.regimen_declarado,
+            "rli": f22.rli_declarada,
+            "idpc": f22.idpc_pagado,
+        },
+    )
 
 
 async def _open_sync_log(
@@ -290,10 +379,19 @@ async def sync_sii(
 
     client = make_sii_client(provider)
     all_lines: list[RcvLine] = []
+    f29_periodos: list[F29Periodo] = []
+    f22_year = date.today().year - 1
+    f22_data: F22Anio | None = None
     try:
         for period in periods:
             lines = await client.fetch_rcv(rut=rut, period=period)
             all_lines.extend(lines)
+            f29 = await client.fetch_f29(rut=rut, period=period)
+            if f29 is not None:
+                f29_periodos.append(f29)
+        # F22 del año tributario inmediatamente anterior — el mismo
+        # path que onboarding usa para detectar régimen real.
+        f22_data = await client.fetch_f22(rut=rut, tax_year=f22_year)
     except (SiiUnavailable, SiiAuthError, SiiTimeout) as exc:
         async with service_session() as svc:
             await _close_sync_log(
@@ -318,6 +416,19 @@ async def sync_sii(
             empresa_id=empresa_id,
             lines=all_lines,
         )
+        f29_inserted = await _persist_f29(
+            svc,
+            workspace_id=workspace_id,
+            empresa_id=empresa_id,
+            periodos=f29_periodos,
+        )
+        if f22_data is not None:
+            await _persist_f22(
+                svc,
+                workspace_id=workspace_id,
+                empresa_id=empresa_id,
+                f22=f22_data,
+            )
         await _close_sync_log(
             svc,
             sync_id=sync_id,
@@ -340,6 +451,10 @@ async def sync_sii(
             "period_from": period_from,
             "period_to": period_to,
             "rows_inserted": rows_inserted,
+            "f29_periodos_synced": f29_inserted,
+            "f22_year_synced": (
+                f22_data.tax_year if f22_data is not None else None
+            ),
         },
     )
 
@@ -357,6 +472,15 @@ async def sync_sii(
         period_to=period_to,
         rcv_rows_inserted=rows_inserted,
         rcv_rows_total=len(all_lines),
+        f29_periodos_synced=f29_inserted,
+        f22_year_synced=(
+            f22_data.tax_year if f22_data is not None else None
+        ),
+        f22_regimen_declarado=(
+            f22_data.regimen_declarado
+            if f22_data is not None
+            else None
+        ),
         status="success",
     )
 
@@ -460,4 +584,13 @@ async def wizard_prefill(
         uf_valor_clp_usado=str(pref.uf_valor_clp_usado),
         anios_con_datos=pref.anios_con_datos,
         warnings=pref.warnings,
+        regimen_origen=pref.regimen_origen,
+        regimen_f22_year=pref.regimen_f22_year,
+        ppm_promedio_mensual_pesos=(
+            str(pref.ppm_promedio_mensual_pesos)
+            if pref.ppm_promedio_mensual_pesos is not None
+            else None
+        ),
+        ppm_meses_con_datos=pref.ppm_meses_con_datos,
+        iva_postergacion_recurrente=pref.iva_postergacion_recurrente,
     )

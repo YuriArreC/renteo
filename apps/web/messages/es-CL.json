@@ -554,7 +554,11 @@
       "empresaSelectNone": "Sin empresa (workspace)",
       "prefillLoading": "Trayendo datos de la empresa desde SII…",
       "prefillApplied": "Inputs precargados desde el RCV sincronizado. Puedes ajustarlos antes de diagnosticar.",
-      "prefillWarningHeader": "Datos parciales — revisa antes de diagnosticar:"
+      "prefillWarningHeader": "Datos parciales — revisa antes de diagnosticar:",
+      "prefillRegimenViaF22": "Régimen detectado en F22 AT {year} (fuente fisco). Si la empresa cambió de régimen para el AT actual, ajústalo.",
+      "palancaSuggestionsHeader": "Sugerencias para el simulador (basadas en F29 sincronizados):",
+      "palancaP7Hint": "PPM mensual histórico ≈ {ppm} CLP (promedio de {meses} meses). Útil para calibrar P7 (PPM extraordinario).",
+      "palancaP8Hint": "La empresa posterga IVA habitualmente. Considera mantener P8 (postergación IVA Pro PyME) en el simulador."
     },
     "result": {
       "veredictoHeader": "Veredicto",

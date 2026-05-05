@@ -807,6 +807,9 @@ export interface SyncSiiResponse {
   period_to: string;
   rcv_rows_inserted: number;
   rcv_rows_total: number;
+  f29_periodos_synced: number;
+  f22_year_synced: number | null;
+  f22_regimen_declarado: string | null;
   status: string;
 }
 
@@ -831,6 +834,12 @@ export interface WizardPrefillResponse {
   uf_valor_clp_usado: string;
   anios_con_datos: number[];
   warnings: string[];
+  // Track F22/F29: origen del régimen + sugerencias para el simulador.
+  regimen_origen: "f22" | "empresa" | "desconocido";
+  regimen_f22_year: number | null;
+  ppm_promedio_mensual_pesos: string | null;
+  ppm_meses_con_datos: number;
+  iva_postergacion_recurrente: boolean;
 }
 
 // Diagnóstico de régimen (skill 7).

@@ -35,6 +35,14 @@ class WizardPrefill:
     uf_valor_clp_usado: Decimal
     anios_con_datos: list[int]
     warnings: list[str]
+    # Track F22/F29 prefill: enriquecimientos derivables del SII
+    # completo. Cada uno tiene su origen para que el wizard muestre
+    # de dónde viene (F22 fisco vs core.empresas vs default).
+    regimen_origen: str  # "f22" | "empresa" | "desconocido"
+    regimen_f22_year: int | None  # AT del F22 sincronizado (si lo hay)
+    ppm_promedio_mensual_pesos: Decimal | None
+    ppm_meses_con_datos: int
+    iva_postergacion_recurrente: bool
 
 
 async def _ventas_clp_por_anio(
@@ -131,7 +139,7 @@ async def build_wizard_prefill(
                 "menos representativo."
             )
 
-    # Capital + régimen vienen de core.empresas.
+    # Capital + régimen vienen de core.empresas como fallback.
     empresa_row = await session.execute(
         text(
             """
@@ -144,16 +152,81 @@ async def build_wizard_prefill(
         {"id": str(empresa_id)},
     )
     capital_uf: Decimal | None = None
-    regimen_actual: str | None = None
+    regimen_empresa: str | None = None
     row = empresa_row.first()
     if row is not None:
         if row[0] is not None:
             capital_uf = Decimal(str(row[0]))
         regimen_db = str(row[1])
-        regimen_actual = (
+        regimen_empresa = (
             regimen_db
             if regimen_db in ("14_a", "14_d_3", "14_d_8")
             else None
+        )
+
+    # F22 sincronizado overridea el régimen de empresa cuando existe:
+    # es la fuente de verdad del fisco para el último AT presentado.
+    f22_result = await session.execute(
+        text(
+            """
+            select tax_year, regimen_declarado
+              from tax_data.f22_anios
+             where empresa_id = :id
+               and regimen_declarado in ('14_a', '14_d_3', '14_d_8')
+             order by tax_year desc
+             limit 1
+            """
+        ),
+        {"id": str(empresa_id)},
+    )
+    f22_row = f22_result.first()
+    regimen_f22_year: int | None = None
+    if f22_row is not None:
+        regimen_actual = str(f22_row[1])
+        regimen_f22_year = int(f22_row[0])
+        regimen_origen = "f22"
+    elif regimen_empresa is not None:
+        regimen_actual = regimen_empresa
+        regimen_origen = "empresa"
+    else:
+        regimen_actual = None
+        regimen_origen = "desconocido"
+
+    # F29 últimos 12 meses → PPM promedio + bandera postergación
+    # IVA recurrente. Si la mayoría de los F29 marca postergación,
+    # el wizard sugiere P8 activado.
+    f29_result = await session.execute(
+        text(
+            """
+            select ppm, postergacion_iva
+              from tax_data.f29_periodos
+             where empresa_id = :id
+             order by period desc
+             limit 12
+            """
+        ),
+        {"id": str(empresa_id)},
+    )
+    f29_rows = list(f29_result.all())
+    ppm_values: list[Decimal] = [
+        Decimal(str(r[0])) for r in f29_rows if r[0] is not None
+    ]
+    ppm_promedio: Decimal | None = None
+    if ppm_values:
+        ppm_promedio = (
+            sum(ppm_values, Decimal("0")) / Decimal(len(ppm_values))
+        ).quantize(Decimal("0.01"))
+    iva_postergacion_count = sum(1 for r in f29_rows if r[1])
+    # Mayoría = postergación recurrente → sugerencia P8.
+    iva_postergacion_recurrente = (
+        len(f29_rows) > 0 and iva_postergacion_count * 2 > len(f29_rows)
+    )
+
+    if regimen_origen == "f22":
+        warnings.append(
+            f"Régimen detectado en F22 AT {regimen_f22_year}: "
+            f"{regimen_actual}. Si la empresa cambió de régimen para "
+            f"AT {tax_year}, ajústalo manualmente."
         )
 
     return WizardPrefill(
@@ -167,4 +240,9 @@ async def build_wizard_prefill(
         uf_valor_clp_usado=uf_clp,
         anios_con_datos=anios_con_datos,
         warnings=warnings,
+        regimen_origen=regimen_origen,
+        regimen_f22_year=regimen_f22_year,
+        ppm_promedio_mensual_pesos=ppm_promedio,
+        ppm_meses_con_datos=len(ppm_values),
+        iva_postergacion_recurrente=iva_postergacion_recurrente,
     )

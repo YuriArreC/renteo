@@ -135,12 +135,16 @@ async def empresa_with_rcv(
         await admin_session.execute(
             text("set local session_replication_role = 'replica'")
         )
-        await admin_session.execute(
-            text(
-                "delete from tax_data.rcv_lines where workspace_id = :w"
-            ),
-            {"w": str(workspace_id)},
-        )
+        for tbl in (
+            "tax_data.rcv_lines",
+            "tax_data.f22_anios",
+            "tax_data.f29_periodos",
+        ):
+            # `tbl` viene de un literal whitelist; no hay input externo.
+            sql = f"delete from {tbl} where workspace_id = :w"  # noqa: S608
+            await admin_session.execute(
+                text(sql), {"w": str(workspace_id)}
+            )
         await admin_session.execute(
             text("delete from core.empresas where workspace_id = :w"),
             {"w": str(workspace_id)},
@@ -176,6 +180,12 @@ async def test_prefill_computes_uf_from_rcv_ventas(
     # max
     assert Decimal(body["ingresos_max_anual_uf"]) == Decimal("20000.00")
     assert body["regimen_actual"] == "14_d_3"
+    # Sin F22 sincronizado, el régimen viene del row de empresa.
+    assert body["regimen_origen"] == "empresa"
+    assert body["regimen_f22_year"] is None
+    assert body["ppm_promedio_mensual_pesos"] is None
+    assert body["ppm_meses_con_datos"] == 0
+    assert body["iva_postergacion_recurrente"] is False
     assert Decimal(body["capital_efectivo_inicial_uf"]) == Decimal("5000")
     assert sorted(body["anios_con_datos"]) == [2024, 2025]
     # Solo 2 años de los 3 esperados → warning informativo.
@@ -240,3 +250,154 @@ async def test_prefill_rejects_out_of_range_year(
         headers={"Authorization": "Bearer fake"},
     )
     assert response.status_code == 422
+
+
+@pytest.mark.integration
+async def test_prefill_f22_overrides_empresa_regimen(
+    http_client_pf: AsyncClient,
+    empresa_with_rcv: dict[str, UUID],
+    admin_session: AsyncSession,
+) -> None:
+    """Si hay F22 sincronizado, su regimen_declarado overridea el
+    valor de core.empresas.regimen_actual y reporta `f22` como origen."""
+    ctx = empresa_with_rcv
+    # core.empresas tiene 14_d_3; plantamos F22 con 14_a (ej. la
+    # empresa cambió de régimen y el row de empresa quedó stale).
+    async with admin_session.begin():
+        await admin_session.execute(
+            text(
+                """
+                insert into tax_data.f22_anios
+                    (workspace_id, empresa_id, tax_year,
+                     regimen_declarado, rli_declarada, idpc_pagado)
+                values
+                    (:ws, :emp, 2025, '14_a', 50000000, 13500000)
+                """
+            ),
+            {
+                "ws": str(ctx["workspace_id"]),
+                "emp": str(ctx["empresa_id"]),
+            },
+        )
+    app.dependency_overrides[verify_jwt] = _override_jwt(
+        _claims(ctx["user_id"], ctx["workspace_id"])
+    )
+    response = await http_client_pf.get(
+        f"/api/empresas/{ctx['empresa_id']}"
+        f"/wizard-prefill?tax_year=2026",
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    # F22 overridea: empresa.regimen_actual era 14_d_3.
+    assert body["regimen_actual"] == "14_a"
+    assert body["regimen_origen"] == "f22"
+    assert body["regimen_f22_year"] == 2025
+    assert any("F22 AT 2025" in w for w in body["warnings"])
+
+
+@pytest.mark.integration
+async def test_prefill_f29_derives_ppm_y_postergacion(
+    http_client_pf: AsyncClient,
+    empresa_with_rcv: dict[str, UUID],
+    admin_session: AsyncSession,
+) -> None:
+    """F29 últimos 12m → PPM promedio + bandera postergación
+    recurrente cuando la mayoría de los meses la marca."""
+    ctx = empresa_with_rcv
+    async with admin_session.begin():
+        # 8 meses con PPM y postergación, 4 sin postergación.
+        for i in range(8):
+            await admin_session.execute(
+                text(
+                    """
+                    insert into tax_data.f29_periodos
+                        (workspace_id, empresa_id, period,
+                         iva_debito, iva_credito, ppm,
+                         postergacion_iva)
+                    values
+                        (:ws, :emp, :period,
+                         100000, 80000, 200000, true)
+                    """
+                ),
+                {
+                    "ws": str(ctx["workspace_id"]),
+                    "emp": str(ctx["empresa_id"]),
+                    "period": f"2025-{i + 1:02d}",
+                },
+            )
+        for i in range(4):
+            await admin_session.execute(
+                text(
+                    """
+                    insert into tax_data.f29_periodos
+                        (workspace_id, empresa_id, period,
+                         iva_debito, iva_credito, ppm,
+                         postergacion_iva)
+                    values
+                        (:ws, :emp, :period,
+                         100000, 80000, 100000, false)
+                    """
+                ),
+                {
+                    "ws": str(ctx["workspace_id"]),
+                    "emp": str(ctx["empresa_id"]),
+                    "period": f"2025-{i + 9:02d}",
+                },
+            )
+    app.dependency_overrides[verify_jwt] = _override_jwt(
+        _claims(ctx["user_id"], ctx["workspace_id"])
+    )
+    response = await http_client_pf.get(
+        f"/api/empresas/{ctx['empresa_id']}"
+        f"/wizard-prefill?tax_year=2026",
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    # PPM promedio = (8*200000 + 4*100000) / 12 = 166666.67
+    assert body["ppm_promedio_mensual_pesos"] is not None
+    assert Decimal(body["ppm_promedio_mensual_pesos"]) == Decimal(
+        "166666.67"
+    )
+    assert body["ppm_meses_con_datos"] == 12
+    # 8 de 12 con postergación → recurrente = True.
+    assert body["iva_postergacion_recurrente"] is True
+
+
+@pytest.mark.integration
+async def test_sync_sii_persists_f22_y_f29_with_mock(
+    http_client_pf: AsyncClient,
+    empresa_with_rcv: dict[str, UUID],
+    admin_session: AsyncSession,
+) -> None:
+    """El POST /sync-sii (mock) ahora también persiste F22 + F29."""
+    ctx = empresa_with_rcv
+    app.dependency_overrides[verify_jwt] = _override_jwt(
+        _claims(ctx["user_id"], ctx["workspace_id"])
+    )
+    response = await http_client_pf.post(
+        f"/api/empresas/{ctx['empresa_id']}/sync-sii",
+        json={"months": 3},
+        headers={"Authorization": "Bearer fake"},
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    # F22 año anterior y al menos un F29 del mock.
+    assert body["f22_year_synced"] is not None
+    assert body["f22_regimen_declarado"] in ("14_a", "14_d_3", "14_d_8")
+    # El mock simula "no presentado" cada 17 períodos; en 3 meses
+    # casi siempre habrá al menos 1 F29 sincronizado.
+    assert body["f29_periodos_synced"] >= 0
+
+    # Verificación directa en DB.
+    async with admin_session.begin():
+        f22 = await admin_session.execute(
+            text(
+                "select tax_year from tax_data.f22_anios "
+                "where empresa_id = :e"
+            ),
+            {"e": str(ctx["empresa_id"])},
+        )
+        rows = list(f22.all())
+    assert len(rows) >= 1
