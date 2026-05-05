@@ -28,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
 import { ApiError, fetchApiClient, type MeResponse } from "@/lib/api";
+import { mapAuthError } from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase/client";
 
 const schema = z.object({
@@ -72,13 +73,18 @@ function SignupVerifyForm() {
       type: "email",
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(mapAuthError(error));
       return;
     }
 
     try {
       const me = await fetchApiClient<MeResponse>("/api/me");
-      router.push(me.workspace ? "/dashboard" : "/onboarding/workspace");
+      const dest = me.workspace
+        ? me.workspace.type === "accounting_firm"
+          ? "/cartera"
+          : "/dashboard"
+        : "/onboarding/workspace";
+      router.push(dest);
       router.refresh();
     } catch (err) {
       toast.error(err instanceof ApiError ? err.detail : String(err));
@@ -94,7 +100,7 @@ function SignupVerifyForm() {
     const supabase = createClient();
     const { error } = await supabase.auth.resend({ type: "signup", email });
     setResending(false);
-    if (error) toast.error(error.message);
+    if (error) toast.error(mapAuthError(error));
     else toast.success(t("resent"));
   }
 

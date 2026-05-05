@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
+import { mapAuthError } from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase/client";
 
 const schema = z.object({
@@ -62,7 +63,7 @@ export default function SignupPage() {
       password: values.password,
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(mapAuthError(error));
       return;
     }
     router.push(`/signup/verify?email=${encodeURIComponent(values.email)}`);
