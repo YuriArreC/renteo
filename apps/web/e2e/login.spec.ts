@@ -49,9 +49,13 @@ test.describe("Login", () => {
       })
       .click();
 
-    // El feedback puede llegar via toast o por mensaje inline; aceptamos
-    // cualquiera que mencione "invalid" o "credenciales".
-    const feedback = page.getByText(/invalid|credenciales|no válid/i);
+    // El feedback llega como toast. Tras mapAuthError() el mensaje
+    // viaja en es-CL ("Correo o contraseña incorrectos."). El regex
+    // acepta tanto el inglés crudo (fallback) como las palabras
+    // clave de la traducción.
+    const feedback = page.getByText(
+      /invalid|credenciales|incorrect|no válid/i,
+    );
     await expect(feedback.first()).toBeVisible({ timeout: 5_000 });
   });
 });
