@@ -8050,6 +8050,7 @@
     },
     "/healthz": {
       "get": {
+        "description": "Liveness: el proceso responde HTTP. No verifica dependencias.",
         "operationId": "healthz_healthz_get",
         "responses": {
           "200": {
@@ -8075,18 +8076,13 @@
     },
     "/readyz": {
       "get": {
+        "description": "Readiness: verifica que el proceso puede servir tráfico real.\nHace SELECT 1 contra la DB; si Redis está configurado para Celery,\ntambién lo prueba. Devuelve 503 si alguna dependencia falla.\n\nRender usa este endpoint como `healthCheckPath` para decidir si\nenrutar tráfico al deploy nuevo o hacer rollback automático.",
         "operationId": "readyz_readyz_get",
         "responses": {
           "200": {
             "content": {
               "application/json": {
-                "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Readyz Readyz Get",
-                  "type": "object"
-                }
+                "schema": {}
               }
             },
             "description": "Successful Response"

@@ -957,7 +957,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Healthz */
+        /**
+         * Healthz
+         * @description Liveness: el proceso responde HTTP. No verifica dependencias.
+         */
         get: operations["healthz_healthz_get"];
         put?: never;
         post?: never;
@@ -974,7 +977,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Readyz */
+        /**
+         * Readyz
+         * @description Readiness: verifica que el proceso puede servir tráfico real.
+         *     Hace SELECT 1 contra la DB; si Redis está configurado para Celery,
+         *     también lo prueba. Devuelve 503 si alguna dependencia falla.
+         *
+         *     Render usa este endpoint como `healthCheckPath` para decidir si
+         *     enrutar tráfico al deploy nuevo o hacer rollback automático.
+         */
         get: operations["readyz_readyz_get"];
         put?: never;
         post?: never;
@@ -4586,9 +4597,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
+                    "application/json": unknown;
                 };
             };
         };
