@@ -1,5 +1,9 @@
 # Revisión por contador socio — checklist firmable
 
+> 🟢 **Sprint activo**: `firma-contador-socio-2026-05`.
+> Borradores SQL precargados en [`docs/firma-contador-2026-05/`](./firma-contador-2026-05/README.md).
+> Ver `README.md` de esa carpeta para el procedimiento paso a paso.
+
 **Objetivo**: convertir las cifras placeholder del motor en cifras
 firmadas. Sin esta revisión, los goldens viven en `xfail` y el motor
 no puede usarse para asesoría real, aunque la ingeniería esté completa.
