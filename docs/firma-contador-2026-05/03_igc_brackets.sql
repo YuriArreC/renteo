@@ -3,6 +3,19 @@
 -- Checklist §2 (REVISION_CONTADOR_SOCIO.md).
 -- Cierra TODOS-CONTADOR.md #2.
 --
+-- Firma EN SITIO (UPSERT) de tax_params.igc_brackets.
+--
+-- ⚠️ Por qué UPSERT y NO delete:
+--    El borrador anterior hacía `delete ... where tax_year in (2024,2025,2026)`
+--    — distinto del resto de las migraciones firmadas, que borraban todos los
+--    años placeholder. Eso dejaba los tramos AT 2027/2028 vivos mientras
+--    idpc_rates / tax_year_params perdían esos años: dataset inconsistente
+--    (compute_igc(2027) funcionaba pero compute_idpc(2027) fallaba) y, además,
+--    esos tramos 2027/2028 referencian tax_year_params(2027/2028) con
+--    ON DELETE RESTRICT, bloqueando el delete de 01. El UPSERT actualiza los
+--    tramos firmados (AT 2024-2026) sin borrar nada, así 2027/2028 quedan
+--    consistentes con el resto de las tablas.
+--
 -- ✍️ CONTADOR_SOCIO: confirmar 8 tramos en UTA de la tabla IGC.
 --    Verificar si los tramos cambian entre AT 2024, 2025 y 2026 —
 --    placeholder asume idéntica para los 3 AT.
@@ -17,14 +30,7 @@
 
 begin;
 
--- 1) Limpiar tramos placeholder.
---    NOTA: la seed original no marca fuente_legal por tramo (la tabla
---    no tiene esa columna). Usamos un DELETE limpio sobre los AT
---    que vamos a refirmar.
-delete from tax_params.igc_brackets
-where tax_year in (2024, 2025, 2026);
-
--- 2) Insertar tramos firmados.
+-- UPSERT de los tramos firmados (AT 2024-2026).
 --    Formato: (tax_year, tramo, desde_uta, hasta_uta, tasa, rebajar_uta)
 insert into tax_params.igc_brackets (
     tax_year, tramo, desde_uta, hasta_uta, tasa, rebajar_uta
@@ -64,10 +70,17 @@ insert into tax_params.igc_brackets (
     (2026, 5,   70.0000,   90.0000, 0.2300,  11.1400),
     (2026, 6,   90.0000,  120.0000, 0.3040,  17.8000),
     (2026, 7,  120.0000,  310.0000, 0.3500,  23.3200),
-    (2026, 8,  310.0000,  null,     0.4000,  38.8200);
+    (2026, 8,  310.0000,  null,     0.4000,  38.8200)
 
--- AT 2027-2028: ✍️ NO incluir hasta confirmar que SII / DOF mantienen
---                  la misma tabla. Una nueva versión se publica al
---                  cierre de cada AT.
+on conflict (tax_year, tramo) do update set
+    desde_uta   = excluded.desde_uta,
+    hasta_uta   = excluded.hasta_uta,
+    tasa        = excluded.tasa,
+    rebajar_uta = excluded.rebajar_uta;
+
+-- AT 2027-2028: los tramos placeholder se CONSERVAN (no se borran). Quedan
+-- consistentes con las demás tablas (que también conservan 2027/2028) y
+-- disponibles para la proyección del recomendador.
+-- ✍️ CONTADOR_SOCIO: refirmar por AT si SII/DOF cambian la tabla.
 
 commit;

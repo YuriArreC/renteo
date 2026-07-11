@@ -23,7 +23,10 @@ arriba a abajo:
 2. **Si difiere**: cambia el valor + completa `fuente_legal` con
    `'Ley X / Circular SII Y'` real (no `'PLACEHOLDER — ...'`).
 3. **Si la cifra todavía no existe** (típicamente AT 2027-2028 sin
-   DOF): borra la fila. Se publica cuando salga.
+   DOF): **deja la fila** tal cual (queda como proyección no
+   firmada). El recomendador la necesita para la proyección a 3
+   años; borrarla haría que `compute_idpc/igc` levante
+   `MissingTaxYearParams`. Se refirma cuando salga el DOF.
 
 Cuando el archivo está completo, se **renombra** al timestamp
 correspondiente y se mueve a `supabase/migrations/`:
@@ -33,19 +36,24 @@ mv docs/firma-contador-2026-05/01_tax_year_params.sql \
    supabase/migrations/20260518120000_tax_year_params_firmado.sql
 ```
 
-Los 6 SQL son **DELETE + INSERT atómicos** dentro de una `BEGIN/COMMIT`
-para evitar dejar filas placeholder huérfanas conviviendo con las
-firmadas. El motor no se rompe en el medio porque las migraciones
-se aplican en orden y dentro de transacción.
+Los 5 SQL de parámetros son **UPSERT** (`INSERT … ON CONFLICT DO
+UPDATE`) dentro de una `BEGIN/COMMIT`: firman en sitio los años
+2024-2026 sin borrar filas. Se usa UPSERT y **no** DELETE+INSERT
+porque `tax_year_params` es tabla padre con FK `ON DELETE RESTRICT`
+(un DELETE aborta por violación de FK) y porque borrar arrastraría
+las filas AT 2027-2028 y las constantes `uf_valor_clp` /
+`utm_valor_clp` / `sueldo_empresarial_tope_mensual_uf` que el
+simulador y el recomendador cargan en cada request. El 06 depreca
+las versiones previas de la whitelist y publica la firmada.
 
 | # | Archivo                              | Tabla / acción                          | Checklist §  |
 | - | ------------------------------------ | --------------------------------------- | ------------ |
-| 1 | `01_tax_year_params.sql`             | DELETE+INSERT `tax_params.tax_year_params` | §3        |
-| 2 | `02_idpc_rates.sql`                  | DELETE+INSERT `tax_params.idpc_rates`   | §1           |
-| 3 | `03_igc_brackets.sql`                | DELETE+INSERT `tax_params.igc_brackets` | §2           |
-| 4 | `04_ppm_pyme_rates.sql`              | DELETE+INSERT `tax_params.ppm_pyme_rates` | §4         |
-| 5 | `05_beneficios_topes.sql`            | DELETE+INSERT `tax_params.beneficios_topes` | §6       |
-| 6 | `06_whitelist_palancas_v2.sql`       | INSERT `tax_rules.rule_sets` v2 con doble firma | §5  |
+| 1 | `01_tax_year_params.sql`             | UPSERT `tax_params.tax_year_params`     | §3           |
+| 2 | `02_idpc_rates.sql`                  | UPSERT `tax_params.idpc_rates`          | §1           |
+| 3 | `03_igc_brackets.sql`                | UPSERT `tax_params.igc_brackets`        | §2           |
+| 4 | `04_ppm_pyme_rates.sql`              | UPSERT `tax_params.ppm_pyme_rates`      | §4           |
+| 5 | `05_beneficios_topes.sql`            | UPSERT `tax_params.beneficios_topes`    | §6           |
+| 6 | `06_whitelist_palancas_v2.sql`       | Depreca v1/v2 + publica **v3** `tax_rules.rule_sets` (`key='global'`, doble firma) | §5  |
 | 7 | `07_gate_flip.md`                  | Patch `.github/workflows/ci.yml`        | §9 paso 5    |
 
 ---
@@ -65,17 +73,19 @@ Uno por archivo. **No** convertirlos en migración todavía
 
 Tiempo estimado por archivo:
 - `01_tax_year_params.sql` — 20 min (UTM/UTA/UF AT 2024-2026; AT
-  2027-2028 borrar filas si no hay DOF).
+  2027-2028 se dejan como proyección, no se borran).
 - `02_idpc_rates.sql` — 15 min (5 filas × 3 regímenes; verificar
   rampa transitoria 12,5% vs 25% reversión).
 - `03_igc_brackets.sql` — 20 min (8 tramos × 3 AT; confirmar si
   cambia entre AT 2024-2026).
 - `04_ppm_pyme_rates.sql` — 10 min (2 regímenes × 3 AT).
-- `05_beneficios_topes.sql` — 30 min (15+ topes; algunos esperan
-  ítem #14 sueldo empresarial → dejar `null` si no hay).
-- `06_whitelist_palancas_v2.sql` — 45 min (12 palancas firmadas
-  individualmente, con `fuente_legal` JSON y `vigencia_hasta` en
-  v1).
+- `05_beneficios_topes.sql` — 30 min (15+ topes; `sueldo_empresarial_tope_mensual_uf`
+  (ítem #14), `uf_valor_clp` y `utm_valor_clp` **no** se firman acá:
+  se conservan intactas para no tumbar el simulador).
+- `06_whitelist_palancas_v2.sql` — 45 min (12 palancas + 3 items
+  complementarios; se depreca v1/v2 y se publica **v3** bajo
+  `key='global'` con shape `{"items": […]}`, `fuente_legal` JSON y
+  doble firma).
 
 ### Paso 3 — Renombrar a migraciones y aplicar local
 
@@ -123,7 +133,8 @@ desde acá un golden que falle = merge bloqueado.
 
    ### Changed
    - Tax params AT 2024-2026 firmados por <nombre contador socio>.
-   - Whitelist v2 de palancas P1-P12 publicada con doble firma.
+   - Whitelist v3 de palancas P1-P12 publicada con doble firma
+     (key=global); v1/v2 depreciadas.
    - Gate `RENTEO_GOLDENS_FIRMADOS=1` activo: goldens en strict mode.
    ```
 3. Tag en git: `v0.2.0-firma-contador`.
@@ -170,7 +181,9 @@ usuarios en `auth.users` antes de aplicar la migración:
 -- en local (supabase studio) o via auth-admin API en prod:
 -- 1. contador-socio@renteo.cl (rol CONTADOR_SOCIO)
 -- 2. admin-tecnico@renteo.cl  (rol INTERNAL_ADMIN)
--- ambos en INTERNAL_ADMIN_EMAILS de apps/api/src/config.py
+-- ambos emails en la env var INTERNAL_ADMIN_EMAILS (mapea al campo
+-- settings.internal_admin_emails), no un literal en config.py.
+-- Ver 07_gate_flip.md §"Después del flip" paso 2.
 ```
 
 Una vez creados, anotar sus UUIDs y reemplazar

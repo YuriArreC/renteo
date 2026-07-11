@@ -2,10 +2,15 @@
 
 🟡 **INSPECCIÓN INTERNA · No es asesoría tributaria**. Cifras
 calculadas sobre `tax_params` placeholder
-(`20260502120000_tax_params_placeholder_seeds.sql`). La firma del
-contador socio sigue pendiente. La proyección 3 años asume tasas
-estables; el escenario revertido por Ley 21.735 art. 4° transitorio
-queda señalizado más abajo como bandera amarilla.
+(`20260502120000_tax_params_placeholder_seeds.sql` + tracks 8b/11b).
+La firma del contador socio sigue pendiente. La proyección 3 años
+asume RLI y retiros estables; el escenario revertido por Ley 21.735
+art. 4° transitorio queda señalizado más abajo como bandera amarilla.
+
+Todos los montos de este documento se **reproducen con
+`scripts/case_study_ferreteria.py`**, que llama al motor real
+(`_load_topes`, `_apply_palancas`, `_carga`) sobre las seeds
+placeholder. Ver "Cómo reproducir estos números" al final.
 
 ## Perfil
 
@@ -43,7 +48,8 @@ años y recomienda el de menor total.
 
 ## Paso 2 — Status quo (14 A sin palancas)
 
-Cálculo año a año con los placeholders firmados a continuación:
+Cálculo año a año con los placeholders (sin firma del contador)
+cargados en `tax_params`:
 
 - Tasa IDPC 14 A AT 2026 → **27%**
   (`tax_params.idpc_rates.rate WHERE regimen='14_a' AND tax_year=2026`)
@@ -56,34 +62,43 @@ Cálculo año a año con los placeholders firmados a continuación:
 ```
 IDPC = 0,27 × $80.000.000               = $21.600.000
 Base IGC (retiros)                       =  $48.000.000
-$48.000.000 / $834.504 UTA               = 57,52 UTA
+$48.000.000 / $834.504 UTA               = 57,5192 UTA
 Tramo 4 (50–70 UTA): tasa 13,5% · rebajar 4,49 UTA
-impuesto_uta = 57,52 × 0,135 − 4,49      = 3,27 UTA
-IGC = 3,27 × $834.504                    =  $2.733.245
+impuesto_uta = 57,5192 × 0,135 − 4,49    = 3,2751 UTA
+IGC = 3,2751 × $834.504                  =  $2.733.077
 ─────────────────────────────────────────────────────
-Carga total año 1                          $24.333.245
+Carga total año 1                          $24.333.077
 ```
 
-### Proyección 3 años (asume RLI y retiros estables)
+### Proyección 3 años (RLI y retiros estables)
 
 | Año | RLI | IDPC | Retiros | IGC | **Total** |
 | --- | --- | ---- | ------- | --- | --------- |
-| 2026 | $80.000.000 | $21.600.000 | $48.000.000 | $2.733.245 | **$24.333.245** |
-| 2027 | $80.000.000 | $21.600.000 | $48.000.000 | $2.733.245 | **$24.333.245** |
-| 2028 | $80.000.000 | $21.600.000 | $48.000.000 | $2.733.245 | **$24.333.245** |
-| **Total 3 años** | | | | | **$72.999.735** |
+| 2026 | $80.000.000 | $21.600.000 | $48.000.000 | $2.733.077 | **$24.333.077** |
+| 2027 | $80.000.000 | $21.600.000 | $48.000.000 | $2.629.828 | **$24.229.828** |
+| 2028 | $80.000.000 | $21.600.000 | $48.000.000 | $2.522.512 | **$24.122.512** |
+| **Total 3 años** | | | | | **$72.685.417** |
+
+> **Nota — IGC no idéntico entre años**: el IGC baja levemente cada
+> año porque la UTA dic placeholder sube (2026 $834.504 → 2027
+> $857.500 → 2028 $881.400), así que los mismos $48M de retiros pesan
+> menos en UTA. El motor recalcula por año; por eso la proyección no
+> repite el mismo número tres veces.
 
 > **Nota — Crédito IDPC contra IGC**: el motor actual calcula IDPC
 > y IGC por separado y NO descuenta el crédito 65% del semi
-> integrado (art. 14 A) automáticamente. El comparador queda
-> conservador a favor del status quo (le da más carga al status
-> quo de la real). El item está pendiente de validación
-> contador socio (skill 3 §"créditos contra IDPC").
+> integrado (art. 14 A) contra el IGC del dueño. Eso **infla** la
+> carga del status quo respecto de la real, lo que **sobrestima** el
+> ahorro que Renteo reporta (el status quo se ve peor de lo que es).
+> Es una preocupación de disclosure (skill 1: no sobrestimar
+> beneficios); el crédito está pendiente de modelar/validar con
+> contador socio (skill 3 §"créditos contra IDPC"). Hasta entonces,
+> las cifras de ahorro de este caso son un techo optimista.
 
 ## Paso 3 — Recomendación Renteo: cambio a 14 D N°3
 
 El motor evalúa las 3 proyecciones elegibles, elige la menor total y
-verifica que `cambio_regimen` esté en la lista blanca v1.
+verifica que `cambio_regimen` esté en la lista blanca.
 
 ### 14 D N°3 puro (sin palancas), año 1
 
@@ -92,19 +107,19 @@ Tasa IDPC 14 D N°3 AT 2026 → 12,5% transitoria
   (tax_params.idpc_rates · Ley 21.755 · Circular SII 53/2025)
 IDPC = 0,125 × $80.000.000               = $10.000.000
 Base IGC (retiros)                        = $48.000.000
-IGC = $2.733.245                           (igual que 14 A)
+IGC = $2.733.077                           (igual base que 14 A)
 ─────────────────────────────────────────────────────
-Carga total año 1                          $12.733.245
+Carga total año 1                          $12.733.077
 ```
 
-### Proyección 3 años (asume tasa transitoria estable)
+### Proyección 3 años (tasa transitoria estable)
 
 | Año | IDPC | IGC | **Total** | Ahorro vs 14 A |
 | --- | ---- | --- | --------- | --------------- |
-| 2026 | $10.000.000 | $2.733.245 | $12.733.245 | $11.600.000 |
-| 2027 | $10.000.000 | $2.733.245 | $12.733.245 | $11.600.000 |
-| 2028 | $10.000.000 | $2.733.245 | $12.733.245 | $11.600.000 |
-| **Total 3 años** | | | **$38.199.735** | **$34.800.000** |
+| 2026 | $10.000.000 | $2.733.077 | $12.733.077 | $11.600.000 |
+| 2027 | $10.000.000 | $2.629.828 | $12.629.828 | $11.600.000 |
+| 2028 | $10.000.000 | $2.522.512 | $12.522.512 | $11.600.000 |
+| **Total 3 años** | | | **$37.885.417** | **$34.800.000** |
 
 > **🟡 Bandera amarilla — Ley 21.735 art. 4° transitorio**: la
 > tasa 12,5% queda condicionada al cumplimiento de cotizaciones
@@ -115,12 +130,16 @@ Carga total año 1                          $12.733.245
 
 ### Escenario revertido (mismo régimen, tasa 25% por incumplimiento)
 
+La tasa revertida 25% viene del feature flag
+`idpc_14d3_revertida_rate` (no de una fila de `idpc_rates`); el IGC
+es idéntico al 14 D N°3 puro porque los retiros no cambian.
+
 ```
 IDPC = 0,25 × $80.000.000                 = $20.000.000
-IGC                                        =  $2.733.245
+IGC año 1                                  =  $2.733.077
 ─────────────────────────────────────────────────────
-Carga total año 1                          $22.733.245
-Total 3 años                              ($68.199.735)
+Carga total año 1                          $22.733.077
+Total 3 años                               $67.885.417
 Ahorro vs 14 A en escenario revertido      $4.800.000
 ```
 
@@ -137,7 +156,7 @@ escenario base recomendado. Combinación elegida para este perfil:
 | -- | ------- | ------ | ---------- |
 | P1 | Depreciación instantánea | Compra y pone en uso $15M en estanterías + montacargas en 2026 | art. 31 N°5 bis LIR · Oficio SII 715/2025 |
 | P2 | SENCE | $720k en capacitación OTEC acreditada (= 1% planilla) | Ley 19.518 |
-| P9 | APV del dueño | Aporta el tope anual 600 UF = $23.568.000 régimen A | art. 42 bis LIR · DL 3.500 |
+| P9 | APV del dueño | Intención 600 UF ≈ $23.568.000 (UF dic $39.280); el simulador topa a 600 UF × `uf_valor_clp` | art. 42 bis LIR · DL 3.500 |
 
 ### Año 1 (AT 2026) con palancas
 
@@ -149,49 +168,61 @@ Calcular IDPC bruto (14 D N°3)
   IDPC bruto = 0,125 × $65.000.000        = $8.125.000
 
 Aplicar P2 — crédito SENCE contra IDPC
-  Tope SENCE = max(1% × $72.000.000, 9 UTM × $69.542)
-             = max($720.000, $625.878)
+  Tope SENCE = max(1% × $72.000.000, 9 UTM × $70.000)
+             = max($720.000, $630.000)          (utm_valor_clp $70.000)
              = $720.000
   Crédito aplicado = min($720.000, $720.000) = $720.000
   IDPC neto = $8.125.000 − $720.000        = $7.405.000
 
 Aplicar P9 — APV deduce base IGC
-  Base IGC = $48.000.000 − $23.568.000      = $24.432.000
-  $24.432.000 / $834.504 UTA                = 29,28 UTA
-  Tramo 2 (13,5–30 UTA): tasa 4% · rebajar 0,54 UTA
-  impuesto_uta = 29,28 × 0,04 − 0,54        = 0,63 UTA
-  IGC = 0,63 × $834.504                      =   $526.658
+  Tope APV = 600 UF × uf_valor_clp $38.000  = $22.800.000
+  Aplicado = min($23.568.000, $22.800.000)  = $22.800.000  (🟡 bandera P9: intención sobre el tope)
+  Base IGC = $48.000.000 − $22.800.000      = $25.200.000
+  $25.200.000 / $834.504 UTA                = 30,1976 UTA
+  Tramo 3 (30–50 UTA): tasa 8% · rebajar 1,74 UTA
+  impuesto_uta = 30,1976 × 0,08 − 1,74      = 0,6758 UTA
+  IGC = 0,6758 × $834.504                   =   $563.964
 ─────────────────────────────────────────────────────
-Carga total año 1                            $7.931.658
+Carga total año 1                            $7.968.964
 ```
+
+> **Nota — dos valores de UF en los placeholders**: el tope APV usa
+> `uf_valor_clp` ($38.000, constante de conversión placeholder,
+> track 11c la lleva a feed real), distinto de `uf_pesos_dic`
+> ($39.280, UF dic que deriva la UTA). Por eso la intención de "600
+> UF" ($23.568.000 con UF dic) supera el tope del simulador
+> ($22.800.000) y dispara la bandera P9. Al llegar el feed real de
+> UF ambos valores convergen y la asimetría desaparece.
 
 ### Proyección 3 años (P1 solo año 1; P2 y P9 todos los años)
 
 P1 es one-shot del año de la compra; P2 y P9 se sostienen
 mientras la empresa mantenga la planilla y el dueño siga con
-capacidad de aporte.
+capacidad de aporte. El IGC vuelve a variar por año (UTA dic): en
+2027-2028 la base $25,2M cae bajo 30 UTA y pasa al tramo 2.
 
 | Año | RLI ajustada | IDPC neto | Base IGC | IGC | **Total** |
 | --- | ------------ | --------- | -------- | --- | --------- |
-| 2026 | $65.000.000 (P1) | $7.405.000 | $24.432.000 | $526.658 | **$7.931.658** |
-| 2027 | $80.000.000 | $9.280.000 (− SENCE) | $24.432.000 | $526.658 | **$9.806.658** |
-| 2028 | $80.000.000 | $9.280.000 | $24.432.000 | $526.658 | **$9.806.658** |
-| **Total 3 años** | | | | | **$27.544.974** |
+| 2026 | $65.000.000 (P1) | $7.405.000 | $25.200.000 | $563.964 | **$7.968.964** |
+| 2027 | $80.000.000 | $9.280.000 (− SENCE) | $25.200.000 | $544.952 | **$9.824.952** |
+| 2028 | $80.000.000 | $9.280.000 | $25.200.000 | $532.045 | **$9.812.045** |
+| **Total 3 años** | | | | | **$27.605.961** |
 
 ## Paso 5 — Comparador final
 
 | Escenario | Total 3 años | Δ vs status quo | Δ % |
 | --------- | ------------ | --------------- | --- |
-| 14 A status quo, sin palancas | $72.999.735 | — | — |
-| 14 D N°3 puro (solo cambio régimen) | $38.199.735 | **−$34.800.000** | **−47,7%** |
-| 14 D N°3 + P1·P2·P9 (recomendación Renteo) | $27.544.974 | **−$45.454.761** | **−62,3%** |
-| 14 D N°3 revertido por Ley 21.735 | $68.199.735 | −$4.800.000 | −6,6% |
+| 14 A status quo, sin palancas | $72.685.417 | — | — |
+| 14 D N°3 puro (solo cambio régimen) | $37.885.417 | **−$34.800.000** | **−47,9%** |
+| 14 D N°3 + P1·P2·P9 (recomendación Renteo) | $27.605.961 | **−$45.079.456** | **−62,0%** |
+| 14 D N°3 revertido por Ley 21.735 | $67.885.417 | −$4.800.000 | −6,6% |
 
 **El beneficio bruto de Renteo para esta PYME es del orden de
 $45M en 3 años** — siempre que la condicionalidad de Ley 21.735
-se cumpla. Esa es la mitad del ahorro que el motor está
-proyectando y es donde el contador socio debe firmar la política
-de monitoreo del DT pagado.
+se cumpla. En el escenario revertido baja a ~$4,8M, y ahí es donde
+el contador socio debe firmar la política de monitoreo del DT
+pagado. Recordar además (Paso 2) que el ahorro es un techo
+optimista mientras no se modele el crédito IDPC del 14 A.
 
 ## Banderas y riesgos identificados por el motor
 
@@ -202,9 +233,11 @@ de monitoreo del DT pagado.
    2026-2028 el DT cae fuera de plazo, la tasa 12,5% revierte a
    25% y el ahorro baja a $4,8M en 3 años. Plan de acción
    obligatorio: agenda mensual + alerta automática del watchdog.
-3. **🟡 P9 APV sobre el tope**: el aporte sugerido ($23,57M) coincide
-   con el tope anual. Aportes mayores no generan crédito; el dueño
-   debe entender la asimetría antes de aportar de más.
+3. **🟡 P9 APV sobre el tope**: el aporte sugerido ($23,57M) supera
+   el tope del simulador ($22,8M = 600 UF × `uf_valor_clp`
+   placeholder). El exceso ($768k) no genera beneficio → el motor
+   dispara la bandera P9. El dueño debe entender la asimetría antes
+   de aportar de más (y ver la nota sobre los dos valores de UF).
 4. **🟡 P1 depreciación instantánea**: requiere bien nuevo en uso
    efectivo dentro del ejercicio. Si la compra se atrasa al 2027,
    el ahorro de $1,875M se desplaza un año (no se pierde, pero el
@@ -217,8 +250,8 @@ de monitoreo del DT pagado.
 Una PYME con perfil similar **sin** Renteo decide régimen al fundar
 la SpA, normalmente 14 A por desconocimiento, y queda ahí. La
 diferencia entre 14 A y 14 D N°3 transitoria es el grueso del
-ahorro: **47,7% en 3 años** sólo por cambiar de régimen + avisar al
-SII (Form. 3265). Las palancas suman otro 14,6%. Total ≈ 62%.
+ahorro: **47,9% en 3 años** sólo por cambiar de régimen + avisar al
+SII (Form. 3265). Las palancas suman otro 14,1%. Total ≈ 62,0%.
 
 PYMEs ya optimizadas (que ya están en 14 D N°3) verán números
 mucho más modestos — el techo se reduce a las palancas (5-15%).
@@ -238,11 +271,20 @@ $env:DATABASE_URL = "postgresql+asyncpg://postgres:postgres@127.0.0.1:54322/post
 python scripts/case_study_ferreteria.py
 ```
 
-El script llama al motor real:
-`compute_idpc`, `compute_igc`, `_load_topes`, `_apply_palancas`,
-`_carga`. Si los placeholders cambian (nuevas migraciones), el
-script detecta el hash y aborta con un mensaje pidiendo re-revisar
-este caso.
+El script llama al **motor real** del simulador —
+`_load_topes`, `_apply_palancas` y `_carga` de
+`src.routers.scenario`, los mismos que ejecuta
+`POST /api/scenario/simulate`— y a `compute_idpc` / `compute_igc`.
+No reimplementa aritmética tributaria: si el router cambia, cambian
+estos números.
+
+Además imprime el `rules_snapshot_hash` del set de reglas/parámetros
+(`build_snapshots`). Si fijas ese valor en la constante
+`EXPECTED_RULES_HASH` del script, cualquier corrida posterior en la
+que los placeholders o reglas cambien **aborta** con un mensaje
+pidiendo re-revisar este caso (las cifras de arriba dejarían de ser
+reproducibles). Fijar el hash tras la primera corrida en un entorno
+con Supabase local.
 
 ## Disclaimer (versión sandbox)
 

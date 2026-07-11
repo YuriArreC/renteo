@@ -26,8 +26,11 @@ ejecutar el sprint de firma profesional.
    monto cita el placeholder usado.
 2. **Reproducible end-to-end** con el script
    `scripts/case_study_ferreteria.py`, que abre sesión async contra
-   Supabase local y llama directamente a `compute_idpc`,
-   `compute_igc`, `_apply_palancas` y `_carga` del motor real.
+   Supabase local y llama al motor real del simulador —`_load_topes`,
+   `_apply_palancas`, `_carga` de `src.routers.scenario` (los mismos
+   que corre `POST /api/scenario/simulate`)— más `compute_idpc` /
+   `compute_igc`. No reimplementa la aritmética: si el router cambia,
+   cambian los números del caso.
 
 ### Correr el script
 
@@ -44,9 +47,12 @@ $env:DATABASE_URL = "postgresql+asyncpg://postgres:postgres@127.0.0.1:54322/post
 python scripts/case_study_ferreteria.py
 ```
 
-El script reproduce el comparador del caso 01 y deja claro si los
-placeholders cambiaron (los hash de seeds rompen el reporte para
-forzar re-revisión).
+El script reproduce el comparador del caso 01 e imprime el
+`rules_snapshot_hash` del set de reglas/parámetros. Si se fija ese
+valor en `EXPECTED_RULES_HASH` (constante del script), cualquier
+corrida en la que los placeholders o reglas cambien **aborta**
+pidiendo re-revisar el caso — así el markdown y el motor no se
+desincronizan en silencio.
 
 ### Por qué este formato y no flippear los gates
 

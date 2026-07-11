@@ -3,14 +3,20 @@
 -- Checklist §3 (REVISION_CONTADOR_SOCIO.md).
 -- Cierra TODOS-CONTADOR.md #3.
 --
--- Reemplaza la seed placeholder de
+-- Firma EN SITIO (UPSERT) de la seed placeholder
 -- 20260502120000_tax_params_placeholder_seeds.sql para
 -- tax_params.tax_year_params.
 --
+-- ⚠️ Por qué UPSERT y NO delete+insert:
+--    tax_year_params es tabla PADRE de idpc_rates / igc_brackets /
+--    ppm_pyme_rates / beneficios_topes, todas con FK ON DELETE RESTRICT.
+--    Un `delete from tax_year_params` aborta con violación de FK mientras
+--    existan filas hijas (siempre existen). El UPSERT actualiza los valores
+--    firmados sin borrar la fila, así la integridad referencial queda intacta.
+--
 -- ✍️ CONTADOR_SOCIO: para cada fila confirmar UTM dic, UTA dic, UF dic
 --    contra publicación oficial DOF / SII. Reemplazar 'fuente_legal'
---    con cita real (URL DOF + fecha). Borrar filas AT 2027/2028 si DOF
---    aún no publicó.
+--    con cita real (URL DOF + fecha).
 --
 -- Cuando esté firmado, mover a:
 --   supabase/migrations/YYYYMMDDHHMMSS_tax_year_params_firmado.sql
@@ -18,12 +24,7 @@
 
 begin;
 
--- 1) Limpiar placeholders existentes (atomicidad: la transacción asegura
---    que las filas firmadas reemplacen sin estado intermedio).
-delete from tax_params.tax_year_params
-where fuente_legal like 'PLACEHOLDER%';
-
--- 2) Insertar valores firmados.
+-- 1) UPSERT de los años firmados por el contador (AT 2024-2026).
 --    Formato: (tax_year, iva_rate, retencion_honorarios, uta_dic, utm_dic,
 --              uf_dic, fuente_legal, vigencia_inicio, vigencia_fin, obs)
 insert into tax_params.tax_year_params (
@@ -63,29 +64,26 @@ insert into tax_params.tax_year_params (
      39280.0000, -- ✍️ UF dic 2025
      'Ley 21.578 art. 1° / DOF dic 2025',
      '2026-01-01', '2026-12-31',
-     'Firmado por <nombre contador> <YYYY-MM-DD>');
+     'Firmado por <nombre contador> <YYYY-MM-DD>')
 
--- AT 2027-2028: ✍️ BORRAR ESTE BLOQUE si DOF aún no publicó.
--- Mantener solo si tenés UTM/UTA/UF dic oficiales.
+on conflict (tax_year) do update set
+    iva_rate             = excluded.iva_rate,
+    retencion_honorarios = excluded.retencion_honorarios,
+    uta_pesos_dic        = excluded.uta_pesos_dic,
+    utm_pesos_dic        = excluded.utm_pesos_dic,
+    uf_pesos_dic         = excluded.uf_pesos_dic,
+    fuente_legal         = excluded.fuente_legal,
+    vigencia_inicio      = excluded.vigencia_inicio,
+    vigencia_fin         = excluded.vigencia_fin,
+    observaciones        = excluded.observaciones;
+
+-- 2) AT 2027-2028: NO se firman todavía (DOF aún no publica UTM/UTA/UF dic).
+--    Las filas placeholder se CONSERVAN a propósito: el recomendador arma
+--    una proyección a 3 años (regime.py _HORIZONTE_AÑOS=3) y necesita que
+--    exista fila para AT 2027/2028 o compute_idpc/igc levantan
+--    MissingTaxYearParams. Quedan como proyección no firmada.
 --
---    (2027,
---     0.1900,
---     0.1600,
---     <UTA_DIC_2026>,
---     <UTM_DIC_2026>,
---     <UF_DIC_2026>,
---     'Ley 21.578 art. 1° / DOF dic 2026',
---     '2027-01-01', '2027-12-31',
---     'Firmado por <nombre> <YYYY-MM-DD>'),
---
---    (2028,
---     0.1900,
---     0.1700,
---     <UTA_DIC_2027>,
---     <UTM_DIC_2027>,
---     <UF_DIC_2027>,
---     'Ley 21.578 art. 1° / DOF dic 2027',
---     '2028-01-01', null,
---     'Firmado por <nombre> <YYYY-MM-DD>');
+-- ✍️ CONTADOR_SOCIO: al cierre de cada AT, refirmar con UPSERT (mismo patrón
+--    de arriba) reemplazando la cita PLACEHOLDER por la publicación oficial.
 
 commit;

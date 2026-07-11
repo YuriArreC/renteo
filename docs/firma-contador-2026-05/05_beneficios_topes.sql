@@ -1,16 +1,32 @@
 -- =============================================================================
 -- BORRADOR firma contador socio — 05_beneficios_topes
 -- Checklist §6 (REVISION_CONTADOR_SOCIO.md).
--- Cierra parcialmente TODOS-CONTADOR.md #14 (sueldo empresarial razonable
--- queda en `null` si no hay firma todavía).
 --
--- ✍️ CONTADOR_SOCIO: confirmar topes por (key, tax_year). Los más
---    sensibles son:
---      - sueldo_empresarial_tope_mensual_uf → TODO-CONTADOR #14
---        (dejar `null` o no insertar si no hay firma).
---      - credito_id_porcentaje_credito / gasto → Ley 20.241 art. 18
---      - apv_tope_anual_uf → DL 3.500 art. 42 bis
---      - depreciacion_acelerada_factor → art. 31 N°5 LIR (factor 3)
+-- Firma EN SITIO (UPSERT) de tax_params.beneficios_topes.
+--
+-- ⚠️ Por qué UPSERT y NO delete+insert:
+--    Un `delete ... where fuente_legal like 'PLACEHOLDER%'` borraba filas que
+--    NO se re-insertan en este archivo y que el simulador carga en CADA
+--    request vía scenario._load_topes (lista fija de keys). En particular:
+--
+--      * uf_valor_clp / utm_valor_clp — constantes de conversión CLP
+--        (seed track_11b / track_8b). Sin ellas, get_beneficio levanta
+--        MissingTaxYearParams y TODO POST al simulador, al comparador de
+--        cartera, a la tarea de alertas y al prefill del wizard SII → HTTP 500.
+--      * sueldo_empresarial_tope_mensual_uf — heurística MVP (seed track_11b).
+--        _load_topes la pide para TODA simulación (no solo cuando se elige P5),
+--        así que borrarla también tumba el simulador entero.
+--
+--    Por eso NO se borra nada: se hace UPSERT de los topes que el contador
+--    firma (AT 2024-2026) y se CONSERVAN uf_valor_clp / utm_valor_clp /
+--    sueldo_empresarial_tope_mensual_uf con su origen actual.
+--
+-- ✍️ CONTADOR_SOCIO — firma pendiente de tres keys que quedan como están:
+--      - sueldo_empresarial_tope_mensual_uf → TODO-CONTADOR #14 (rango
+--        razonable por industria + función). Sigue como heurística MVP 250 UF
+--        (seed track_11b) hasta la firma; el simulador queda operativo.
+--      - uf_valor_clp / utm_valor_clp → esperan feed oficial (track 11c). No
+--        son un tope tributario a firmar, sino conversores; se firman aparte.
 --
 -- Cuando esté firmado, mover a:
 --   supabase/migrations/YYYYMMDDHHMMSS_beneficios_topes_firmado.sql
@@ -18,11 +34,7 @@
 
 begin;
 
--- 1) Limpiar topes placeholder.
-delete from tax_params.beneficios_topes
-where fuente_legal like 'PLACEHOLDER%';
-
--- 2) Insertar topes firmados.
+-- UPSERT de los topes firmados (AT 2024-2026).
 insert into tax_params.beneficios_topes (
     key, tax_year, valor, unidad, fuente_legal, descripcion
 ) values
@@ -43,15 +55,6 @@ insert into tax_params.beneficios_topes (
      'art. 14 E LIR', 'Tope absoluto'),                              -- ✍️
     ('rebaja_14e_uf', 2026, 5000.0000, 'uf',
      'art. 14 E LIR', 'Tope absoluto'),                              -- ✍️
-
--- ───────────────────────────────────────────────────────────────────────
--- P5 — Sueldo empresarial al socio activo
--- ✍️ TODO-CONTADOR #14: dejar SIN insertar hasta tener tope por
---    industria + función. Si no se inserta, el motor rechaza la palanca
---    con MissingTaxYearParams en _validate_eligibility.
--- ───────────────────────────────────────────────────────────────────────
---    ('sueldo_empresarial_tope_mensual_uf', 2026, <UF>, 'uf',
---     '<fuente>', 'Sueldo empresarial razonable mensual'),
 
 -- ───────────────────────────────────────────────────────────────────────
 -- P6 — Crédito I+D (Ley 20.241)
@@ -160,6 +163,17 @@ insert into tax_params.beneficios_topes (
     ('credito_5pct_ultimo_tramo_igc', 2025, 0.0500, 'porcentaje',
      'art. 56 LIR', 'Crédito 5% último tramo'),                      -- ✍️
     ('credito_5pct_ultimo_tramo_igc', 2026, 0.0500, 'porcentaje',
-     'art. 56 LIR', 'Crédito 5% último tramo');                      -- ✍️
+     'art. 56 LIR', 'Crédito 5% último tramo')                       -- ✍️
+
+on conflict (tax_year, key) do update set
+    valor        = excluded.valor,
+    unidad       = excluded.unidad,
+    fuente_legal = excluded.fuente_legal,
+    descripcion  = excluded.descripcion;
+
+-- NOTA: uf_valor_clp, utm_valor_clp y sueldo_empresarial_tope_mensual_uf NO
+-- aparecen arriba a propósito (ver cabecera). Sus filas se conservan intactas
+-- desde track_11b / track_8b para que _load_topes no falle. Las filas AT
+-- 2027-2028 de los topes firmados también se conservan (proyección no firmada).
 
 commit;

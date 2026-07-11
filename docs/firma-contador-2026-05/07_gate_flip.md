@@ -69,20 +69,39 @@ Posibles resultados:
 
 Una vez que el PR esté en `main` con CI verde:
 
-1. **Quitar banner "preliminar"** del frontend.
-   - Archivo: `apps/web/src/components/legal/PlaceholderBanner_Shared.tsx`
-   - Setearlo para que retorne `null` o eliminarlo de los layouts.
-   - Verificar en `apps/web/messages/es-CL.json` que no queden copy
-     residuales "versión preliminar".
+1. **Banner "Versión preliminar" del frontend** — NO se toca en este
+   sprint.
+   - No existe `apps/web/src/components/legal/PlaceholderBanner_Shared.tsx`.
+     El copy es la clave `legal.placeholderBanner` en
+     `apps/web/messages/es-CL.json`, renderizada inline en un `<div>`
+     dentro de `apps/web/src/app/legal/terminos/page.tsx` y
+     `apps/web/src/app/legal/privacidad/page.tsx`.
+   - Ese texto dice "pendiente de revisión y firma por **estudio
+     jurídico**": está atado a la firma del ESTUDIO_JURIDICO (sprint
+     legal aparte, ver "Qué NO está en este sprint" del README), no a
+     la firma tributaria del contador socio. Se quita cuando el
+     abogado firme los textos legales, **no en este gate-flip**.
+   - (No hay un banner separado de "datos tributarios sandbox" en la
+     web que corresponda remover acá.)
 
-2. **Sumar `INTERNAL_ADMIN_EMAILS` reales** en
-   `apps/api/src/config.py`:
-   ```python
-   INTERNAL_ADMIN_EMAILS = [
-       "contador-socio@renteo.cl",
-       "admin-tecnico@renteo.cl",
-   ]
-   ```
+2. **Emails de admin interno reales** — setear la **variable de
+   entorno** `INTERNAL_ADMIN_EMAILS` en el entorno de deploy
+   (preview/staging/prod). **No** agregar un literal en `config.py`.
+   - El motor lee el campo Pydantic `settings.internal_admin_emails`
+     (lista separada por comas) vía la propiedad
+     `internal_admin_emails_set` (`apps/api/src/config.py`), que
+     consume `require_internal_admin`
+     (`apps/api/src/auth/internal_admin.py:48`). Un
+     `INTERNAL_ADMIN_EMAILS = [...]` a nivel de módulo en `config.py`
+     **no tiene efecto**: el código nunca lo lee.
+   - Valor a setear (reemplaza el default placeholder
+     `contador-socio@renteo.local,admin-tecnico@renteo.local`; si no
+     se reemplaza, esos usuarios `.local` conservan acceso admin):
+     ```
+     INTERNAL_ADMIN_EMAILS=contador-socio@renteo.cl,admin-tecnico@renteo.cl
+     ```
+   - Requisito: esos emails deben existir como usuarios en
+     `auth.users` (el check compara el email del JWT contra la lista).
 
 3. **Tag de release**:
    ```bash

@@ -4,6 +4,15 @@
 -- Cierra TODOS-CONTADOR.md #4 (factor SAC) parcial — la imputación
 -- del SAC se firma como regla en 06_whitelist_palancas_v2.sql.
 --
+-- Firma EN SITIO (UPSERT) de tax_params.ppm_pyme_rates.
+--
+-- ⚠️ Por qué UPSERT y NO delete+insert:
+--    (1) Conserva las filas AT 2027 placeholder que el recomendador usa en la
+--        proyección, sin borrarlas.
+--    (2) La fila (2024, '14_d_3') NO existe en la seed placeholder (que arranca
+--        el transitorio en 2025). Con delete+insert habría que garantizar el
+--        orden; el UPSERT la inserta si falta y actualiza el resto.
+--
 -- ✍️ CONTADOR_SOCIO: confirmar tasas PPM por régimen y AT. El umbral
 --    50.000 UF separa tasa baja (0,125%) de tasa alta (0,25%) para
 --    14 D N°3 en régimen transitorio Ley 21.755.
@@ -14,11 +23,7 @@
 
 begin;
 
--- 1) Limpiar placeholders.
-delete from tax_params.ppm_pyme_rates
-where fuente_legal like 'PLACEHOLDER%';
-
--- 2) Insertar tasas firmadas.
+-- UPSERT de las tasas firmadas.
 insert into tax_params.ppm_pyme_rates (
     tax_year, regimen, umbral_uf, tasa_bajo, tasa_alto,
     es_transitoria, fuente_legal
@@ -34,7 +39,7 @@ insert into tax_params.ppm_pyme_rates (
      'Ley 21.755; Circular SII 53/2025'),                    -- ✍️
 
 -- AT 2024: ✍️ confirmar — ¿ya estaba el PPM transitorio o tasa
--- permanente 0,25%?
+-- permanente 0,25%?  (fila nueva: no venía en la seed placeholder)
     (2024, '14_d_3', 50000.00, 0.00250, 0.00250, false,
      'art. 84 LIR — PPM permanente'),                        -- ✍️ verificar
 
@@ -48,8 +53,17 @@ insert into tax_params.ppm_pyme_rates (
     (2025, '14_d_8', 50000.00, 0.00000, 0.00000, false,
      'art. 14 D N°8 LIR'),                                            -- ✍️
     (2026, '14_d_8', 50000.00, 0.00000, 0.00000, false,
-     'art. 14 D N°8 LIR');                                            -- ✍️
+     'art. 14 D N°8 LIR')                                             -- ✍️
 
+on conflict (tax_year, regimen) do update set
+    umbral_uf      = excluded.umbral_uf,
+    tasa_bajo      = excluded.tasa_bajo,
+    tasa_alto      = excluded.tasa_alto,
+    es_transitoria = excluded.es_transitoria,
+    fuente_legal   = excluded.fuente_legal;
+
+-- AT 2027 (14_d_3) placeholder se CONSERVA para la proyección. Queda como
+-- proyección no firmada.
 -- 14 A: ✍️ confirmar si requiere fila aquí o si el PPM 14 A se calcula
 --      con tasa variable propia (no PyME) en otra tabla.
 
