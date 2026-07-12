@@ -5,6 +5,9 @@ motor tributario. Al merge de este branch, el motor pasa de
 ingeniería verde a asesoría firmada.
 
 **Branch**: `firma-contador-socio-2026-05`
+**Paquete de entrega al contador**: [`00_PAQUETE_REVISION.md`](./00_PAQUETE_REVISION.md)
+(documento autocontenido para el candidato; este README es el
+procedimiento técnico que ejecuta ingeniería).
 **Checklist firmable**: [`docs/REVISION_CONTADOR_SOCIO.md`](../REVISION_CONTADOR_SOCIO.md)
 **Tickets que cierra**: items 1, 2, 3, 4, 9 de
 [`TODOS-CONTADOR.md`](../../TODOS-CONTADOR.md). Items 5-8 quedan
