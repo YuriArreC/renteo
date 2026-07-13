@@ -1,0 +1,25 @@
+# CODEOWNERS — revisión del motor tributario (Renteo)
+#
+# Objetivo: que todo PR que toque el motor, los parámetros/reglas o el
+# bundle de firma requiera revisión de los firmantes designados.
+#
+# Fase 1 (repo con un solo colaborador): se usa al dueño @YuriArreC como
+# stopgap y la protección de `main` NO exige aún revisión de Code Owners
+# (evita bloquear el repo mientras no existan las otras cuentas).
+#
+# Fase 2 (cuando el CONTADOR_SOCIO y el ADMIN_TECNICO tengan cuenta de
+# GitHub y sean colaboradores): reemplazar @YuriArreC por sus usuarios,
+# subir la protección a 2 aprobaciones y activar "Require review from
+# Code Owners". Ver docs/firma-contador-2026-05/README.md §Paso 7.
+
+# --- Motor tributario (skills 3, 7, 8, 11) ---
+/apps/api/src/domain/tax_engine/            @YuriArreC
+/apps/api/src/routers/scenario.py           @YuriArreC
+/apps/api/src/routers/regime.py             @YuriArreC
+/apps/api/src/routers/comparador.py         @YuriArreC
+
+# --- Parámetros y reglas versionadas ---
+/supabase/migrations/                       @YuriArreC
+
+# --- Bundle de firma contador socio ---
+/docs/firma-contador-2026-05/               @YuriArreC
