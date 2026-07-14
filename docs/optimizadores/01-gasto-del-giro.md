@@ -493,10 +493,17 @@ Todo parámetro va a tablas, no a código:
   `resolve_rule` según año. Cada entrada: `{giro_code, categoria,
   fundamento, riesgo, requiere_doc}`. **No es doctrina SII** (§5): es un
   *prior* interno firmado por el contador.
-- `tax_rules.rule_sets` dominio **`gasto_giro_reglas_especiales`**: las
-  reglas **cualitativas** de §1.6 como predicados declarativos (autos +
-  leasing, relacionados, extranjero). No son números: son condiciones que
-  disparan 🔴/🟡. Vigencia `[2020-01-01, )`.
+- `tax_rules.rule_sets` dominio **`red_flag`** (el que ya existe — DDL y JSON
+  Schema `rule_schemas/red_flag.schema.json`, hasta ahora sin ninguna regla
+  publicada): las reglas **cualitativas** de §1.6 como predicados
+  declarativos (autos + leasing, relacionados, extranjero), una key por
+  bandera. No son números: son condiciones que disparan 🔴/🟡. Vigencia
+  `[2020-01-01, )`.
+
+  > El diseño original proponía un dominio nuevo `gasto_giro_reglas_especiales`.
+  > No hace falta: el schema de `red_flag` ya modela exactamente
+  > `{id, severidad, condicion, mensaje, fundamento}`. **Implementado** en
+  > `20260713120000_red_flags_gasto_giro.sql` (13 banderas: 6 block, 7 warn).
 - `tax_params.beneficios_topes` — los **topes numéricos reales** que el
   research sí encontró, por `tax_year` (`key, tax_year, valor, unidad,
   fuente_legal, descripcion`). Candidatos, **todos `TODO(contador)` para
@@ -693,9 +700,11 @@ como la palanca `optimizacion_gastos_giro`.
 - [ ] Catálogo `gasto_giro_catalogo` cargado en `tax_rules`, cada fila con
       su riesgo **firmado**, y **etiquetado como *prior* interno, no como
       lista SII** (§5).
-- [ ] Reglas especiales `gasto_giro_reglas_especiales` (§1.6) implementadas
-      como predicados declarativos versionados: autos **+ leasing**,
-      relacionados (4 reglas), extranjero.
+- [x] Reglas especiales de §1.6 implementadas como predicados declarativos
+      versionados en el dominio `red_flag`: autos **+ leasing**, relacionados
+      (4 reglas), extranjero. ✅ *13 banderas (6 block, 7 warn) —
+      `20260713120000_red_flags_gasto_giro.sql`. Firma placeholder: el
+      contenido está verificado, la firma no.*
 - [ ] Topes numéricos de §3.3 en `tax_params.beneficios_topes` por año,
       firmados — con la **vigencia 2024-11-01** correcta para los del art.
       100 bis.
