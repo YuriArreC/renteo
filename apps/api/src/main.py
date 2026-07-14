@@ -45,6 +45,32 @@ init_sentry(
     release=settings.app_version,
 )
 
+def _assert_demo_cerrado() -> None:
+    """En producción, la app NO arranca sin allowlist. Falla cerrada.
+
+    Renteo corre como DEMO CERRADO mientras el motor tributario no lo valide el
+    CONTADOR_SOCIO. Si se despliega a producción con `ALLOWED_USER_EMAILS` sin
+    setear, cualquiera que se registre recibiría recomendaciones tributarias
+    generadas por reglas sin firmar — que es exactamente lo que expone a Renteo
+    al art. 100 bis CT como diseñador/planificador (100-250 UTA; la exención del
+    art. 14 letra D ampara al contribuyente, no al asesor).
+
+    Ese olvido no puede degradar en silencio: es preferible un deploy que no
+    levanta a una app abierta emitiendo asesoría no validada.
+
+    Se retira cuando el motor esté firmado y Renteo abra a clientes reales.
+    """
+    if settings.environment == "production" and not settings.allowlist_enabled:
+        raise RuntimeError(
+            "ALLOWED_USER_EMAILS está vacía en producción. Renteo opera como "
+            "demo cerrado hasta la firma del contador socio: sin allowlist, "
+            "la app quedaría abierta emitiendo recomendaciones sobre reglas "
+            "no validadas. Ver docs/DEMO-PROD.md."
+        )
+
+
+_assert_demo_cerrado()
+
 app = FastAPI(
     title="Renteo API",
     version=settings.app_version,

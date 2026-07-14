@@ -55,6 +55,24 @@ async def tenant_session(
     if SessionLocal is None:
         raise RuntimeError("database is not configured (DATABASE_URL missing)")
     async with SessionLocal() as session, session.begin():
+        # 🔒 SET LOCAL role = authenticated — NO ES OPCIONAL.
+        #
+        # Los claims por sí solos NO activan RLS: Postgres omite las policies
+        # cuando el rol conectado es superusuario o tiene BYPASSRLS. Y el rol de
+        # DATABASE_URL es exactamente eso (`postgres` local, `service_role` en
+        # Supabase). Sin bajar de rol acá, TODA policy multi-tenant queda
+        # inerte y una query que confíe solo en RLS —como la de
+        # `/api/cartera`, que no filtra por workspace_id en SQL— devuelve las
+        # empresas de TODOS los tenants.
+        #
+        # Los tests de RLS pasaban igual porque su propio `tenant_session`
+        # (tests/integration/conftest.py) SÍ bajaba el rol: validaban las
+        # policies, no el wiring real de la app. Este era el hueco.
+        #
+        # El orden importa: primero el rol, después los claims.
+        await session.execute(
+            text("select set_config('role', 'authenticated', true)")
+        )
         # Postgres NO acepta parámetros bindable en `SET LOCAL`; usamos la
         # función `set_config(key, value, is_local=true)` para inyectar los
         # claims sin caer en `syntax error at or near "$1"`.

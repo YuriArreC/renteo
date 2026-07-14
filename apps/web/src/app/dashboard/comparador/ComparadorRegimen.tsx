@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { DecisionRibbon } from "@/components/DecisionRibbon";
+import { EngineNotValidatedBanner_Shared } from "@/components/EngineNotValidatedBanner_Shared";
 import { SnapshotTrace_Shared } from "@/components/SnapshotTrace_Shared";
 import { Button } from "@/components/ui/button";
 import {
@@ -252,6 +253,7 @@ export function ComparadorRegimen() {
             {mutation.data.disclaimer}
           </p>
 
+          <EngineNotValidatedBanner_Shared />
           <DecisionRibbon
             context={`Comparador multi-régimen AT ${mutation.data.tax_year}, RLI ${mutation.data.rli}`}
           />

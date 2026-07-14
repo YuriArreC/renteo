@@ -415,6 +415,7 @@ class CompareResponse(BaseModel):
     scenarios: list[CompareScenarioCard]
     plan_accion: list[PlanAccionItem]
     disclaimer: str = PLACEHOLDER_DISCLAIMER
+    disclaimer_version: str = "v1"
 
 
 # ---------------------------------------------------------------------------
@@ -1423,7 +1424,20 @@ async def compare(
         },
     )
 
-    return CompareResponse(scenarios=cards, plan_accion=plan)
+    # `plan_accion` es una RECOMENDACIÓN de acción (con fecha límite), no una
+    # simulación: CLAUDE.md exige `disclaimer-recomendacion` en toda
+    # recomendación entregada al usuario. Antes este endpoint devolvía el
+    # PLACEHOLDER hardcodeado —o sea, el string "Disclaimer pendiente de carga
+    # desde privacy.legal_texts." le llegaba tal cual al usuario—, porque nadie
+    # sobreescribía el default del modelo.
+    legal = await get_legal_text(session, "disclaimer-recomendacion")
+
+    return CompareResponse(
+        scenarios=cards,
+        plan_accion=plan,
+        disclaimer=legal.body,
+        disclaimer_version=legal.version,
+    )
 
 
 # ---------------------------------------------------------------------------

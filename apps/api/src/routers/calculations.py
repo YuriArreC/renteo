@@ -25,15 +25,28 @@ from src.db import get_db_session
 from src.domain.tax_engine.idpc import Regimen, compute_idpc
 from src.domain.tax_engine.igc import compute_igc
 from src.domain.tax_engine.ppm import PPMRegimen, compute_ppm
+from src.lib.legal_texts import get_legal_text
 
 router = APIRouter(prefix="/api/calc", tags=["calc"])
 
 
+# Fallback SOLO por si `disclaimer-simulacion` no estuviera publicado en
+# privacy.legal_texts. La response real siempre viene de get_legal_text: el
+# texto legal que ve el usuario debe ser el VERSIONADO (skill 2), nunca un
+# literal del código.
 PLACEHOLDER_DISCLAIMER = (
-    "🟡 Resultado calculado con parámetros tributarios PLACEHOLDER "
-    "pendientes de validación por contador socio. NO usar para decisiones "
-    "tributarias reales hasta que se publique la versión firmada."
+    "Disclaimer pendiente de carga desde privacy.legal_texts."
 )
+
+
+async def _disclaimer(session: AsyncSession) -> str:
+    """Texto de simulación versionado.
+
+    Estos endpoints devuelven un cálculo (IDPC/IGC/PPM), no una recomendación,
+    así que corresponde `disclaimer-simulacion` y no `disclaimer-recomendacion`.
+    """
+    legal = await get_legal_text(session, "disclaimer-simulacion")
+    return legal.body
 
 
 # ---------------------------------------------------------------------------
@@ -144,7 +157,10 @@ async def calc_idpc(
     )
     fuente = await _fuente_idpc(session, payload.regimen, payload.tax_year)
     return CalculationResponse(
-        value=value, tax_year=payload.tax_year, fuente_legal=fuente
+        value=value,
+        tax_year=payload.tax_year,
+        fuente_legal=fuente,
+        disclaimer=await _disclaimer(session),
     )
 
 
@@ -159,7 +175,10 @@ async def calc_igc(
     )
     fuente = await _fuente_igc(session, payload.tax_year)
     return CalculationResponse(
-        value=value, tax_year=payload.tax_year, fuente_legal=fuente
+        value=value,
+        tax_year=payload.tax_year,
+        fuente_legal=fuente,
+        disclaimer=await _disclaimer(session),
     )
 
 
@@ -178,5 +197,8 @@ async def calc_ppm(
     )
     fuente = await _fuente_ppm(session, payload.regimen, payload.tax_year)
     return CalculationResponse(
-        value=value, tax_year=payload.tax_year, fuente_legal=fuente
+        value=value,
+        tax_year=payload.tax_year,
+        fuente_legal=fuente,
+        disclaimer=await _disclaimer(session),
     )

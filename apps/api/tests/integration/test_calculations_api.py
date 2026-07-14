@@ -57,7 +57,18 @@ async def test_calc_idpc_returns_value_and_disclaimer(
     assert "value" in data
     assert data["currency"] == "CLP"
     assert data["tax_year"] == 2026
-    assert "PLACEHOLDER" in data["disclaimer"]
+    # El disclaimer ahora viene del texto VERSIONADO de privacy.legal_texts
+    # (`disclaimer-simulacion`), no de un literal del código: CLAUDE.md prohíbe
+    # texto legal en el código distinto del versionado en `disclaimers-and-legal`.
+    # Antes acá viajaba un string hardcodeado en calculations.py.
+    assert data["disclaimer"], "el disclaimer no puede venir vacío"
+    assert "PLACEHOLDER" not in data["disclaimer"], (
+        "el disclaimer debe resolverse desde privacy.legal_texts, no ser el "
+        "fallback del modelo"
+    )
+    assert "simulación" in data["disclaimer"].lower()
+    # `fuente_legal` sí sigue diciendo PLACEHOLDER: viene del seed de
+    # tax_params, que espera la firma del contador socio. Eso es correcto.
     assert "PLACEHOLDER" in data["fuente_legal"]
     # 14 A 2026 → 27% * 50.000.000 = 13.500.000.
     assert float(data["value"]) == 13500000.0

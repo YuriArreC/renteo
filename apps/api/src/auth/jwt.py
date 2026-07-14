@@ -39,7 +39,7 @@ def verify_jwt(
         signing_key = _jwks_client().get_signing_key_from_jwt(token).key
         # Supabase Auth firma con ES256 en proyectos nuevos y RS256 en
         # proyectos legacy. Aceptamos ambos para cubrir las dos cohortes.
-        return jwt.decode(
+        claims = jwt.decode(
             token,
             signing_key,
             algorithms=["RS256", "ES256"],
@@ -50,3 +50,42 @@ def verify_jwt(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid token",
         ) from exc
+
+    _enforce_allowlist(claims)
+    return claims
+
+
+def _enforce_allowlist(claims: dict[str, Any]) -> None:
+    """Demo cerrado: solo los emails de `ALLOWED_USER_EMAILS` entran.
+
+    Se aplica acá, en el verificador del token, y no en cada router, porque
+    `verify_jwt` es el único camino de entrada de TODO endpoint autenticado
+    (`current_user`, `current_tenancy` y `require_internal_admin` dependen de
+    él). Un guard por router se olvidaría en el próximo router que se agregue.
+
+    Motivo: el motor tributario todavía NO está validado por el CONTADOR_SOCIO
+    (firma diferida). Emitir recomendaciones a una persona real sobre reglas sin
+    validar expone a Renteo al art. 100 bis CT como diseñador/planificador
+    (100-250 UTA), y la exención del art. 14 letra D ampara al contribuyente, no
+    al asesor. Mientras eso siga así, la app solo la usan usuarios de prueba.
+
+    Falla CERRADA: si la allowlist está activa y el token no trae `email`, se
+    rechaza. Un token sin email no es prueba de estar en la lista.
+
+    Con la allowlist vacía no se hace nada — ver `settings.allowlist_enabled`.
+    """
+    if not settings.allowlist_enabled:
+        return
+
+    email = claims.get("email")
+    if not isinstance(email, str) or not email.strip():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="acceso restringido (demo cerrado)",
+        )
+
+    if email.strip().lower() not in settings.allowed_user_emails_set:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="acceso restringido (demo cerrado)",
+        )

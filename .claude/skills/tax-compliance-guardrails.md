@@ -19,13 +19,23 @@ escala.
 - Código Tributario, art. 100 (responsabilidad del contador).
 - Código Tributario, art. 100 bis (responsabilidad del asesor que diseñe
   o planifique abuso/simulación: multa 100-250 UTA).
+  ⚠️ Texto vigente = sustituido por la Ley 21.713 y, sus incisos 5° y 6°,
+  por la Ley 21.755 (D.O. 11-jul-2025). La multa al asesor **no es un
+  porcentaje**: son **100 UTA fijas** (250 con reiteración, o hasta el
+  total de los honorarios con tope de 250 UTA). La impone el **TTA** vía
+  art. 160 bis, no el SII. La exención del **art. 14 letra D ampara al
+  contribuyente, NO al asesor**: la exposición de Renteo como
+  diseñador/planificador no se atenúa porque el cliente sea PYME.
+  No confundir con el "100% al 300%", que es el art. 97 N°4 (defraudación).
 - Ley sobre Impuesto a la Renta (LIR), arts. 14 A, 14 D N°3, 14 D N°8,
   14 E, 21, 31, 33, 41 A, 41 C, 56, 84.
 - Ley 21.210 (Modernización Tributaria, 2020).
 - Ley 21.713 (Cumplimiento Tributario, 24-oct-2024).
 - Ley 21.716 ("ley corta" de corrección, nov-2024).
 - Ley 21.755 (extensión beneficios PyME y rebaja transitoria IDPC, 2025).
-- Circular SII N° 65/2015 (NGA y buena fe tributaria).
+- Circular SII N° 31/2025 (17-abr-2025) — **NGA vigente** (instruye las
+  Leyes 21.713 y 21.716). ⚠️ **Dejó sin efecto la Circular N° 65/2015**,
+  que era la cita anterior de este proyecto. No citar la 65/2015.
 - Circular SII N° 35/2022 (reserva tributaria).
 - Circular SII N° 53/2025 (rebaja transitoria tasa IDPC Pro Pyme).
 - Catálogo de Esquemas Tributarios SII (versión vigente al momento de
@@ -36,8 +46,8 @@ escala.
 ### Nivel 1 — Economía de opción (PERMITIDO ✅)
 Elegir entre alternativas EXPLÍCITAMENTE previstas por la ley para
 optimizar carga tributaria, sin alterar la realidad económica de la
-operación. La buena fe tributaria (Circular 65/2015) protege esta
-elección. **La app opera 100% en este nivel.**
+operación. La buena fe tributaria (Circular 31/2025, que reemplazó
+a la 65/2015) protege esta elección. **La app opera 100% en este nivel.**
 
 ### Nivel 2 — Elusión (PROHIBIDO ❌)
 Evitar el hecho gravado mediante:
