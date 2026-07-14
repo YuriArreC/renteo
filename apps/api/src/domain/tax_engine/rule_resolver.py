@@ -79,3 +79,45 @@ async def resolve_rule(
             f"No published rule for ({domain!r}, {key!r}) at tax_year {tax_year}"
         )
     return RuleSet.model_validate(dict(row))
+
+
+async def resolve_domain_rules(
+    session: AsyncSession,
+    domain: str,
+    tax_year: int,
+) -> list[RuleSet]:
+    """Retorna la versión vigente de CADA key publicada dentro de `domain`.
+
+    `resolve_rule` responde "¿cuál es la regla X?"; esta responde "¿cuáles son
+    todas las reglas de este dominio?". La necesitan los dominios donde el
+    conjunto de keys no se conoce a priori y crece sin redeploy — el caso de
+    `red_flag`: publicar una bandera nueva es un INSERT, no un release.
+
+    Misma resolución determinista que `resolve_rule`, aplicada por key: gana
+    `vigencia_desde` más reciente y, en empate, mayor `version`. Una key cuya
+    vigencia no cubre `tax_year` simplemente no aparece — así una bandera puede
+    nacer (art. 100 bis rige desde el 1-nov-2024) o retirarse sin tocar código.
+
+    A diferencia de `resolve_rule`, NO lanza `MissingRuleError` con dominio
+    vacío: cero banderas publicadas es un estado legítimo (significa "nada que
+    bloquear"), no una regla faltante. El llamador decide si eso es aceptable.
+    """
+    target_date = date(tax_year, 12, 31)
+    result = await session.execute(
+        text(
+            """
+            select distinct on (key)
+                   id, domain, key, version,
+                   vigencia_desde, vigencia_hasta,
+                   rules, fuente_legal
+              from tax_rules.rule_sets
+             where domain = :domain
+               and status = 'published'
+               and vigencia_desde <= :target_date
+               and (vigencia_hasta is null or vigencia_hasta >= :target_date)
+             order by key, vigencia_desde desc, version desc
+            """
+        ),
+        {"domain": domain, "target_date": target_date},
+    )
+    return [RuleSet.model_validate(dict(row)) for row in result.mappings()]
