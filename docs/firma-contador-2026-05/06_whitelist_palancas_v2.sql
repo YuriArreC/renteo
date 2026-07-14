@@ -134,7 +134,7 @@ with new_rule as (
                 {"tipo": "ct", "articulo": "art. 4 ter"},
                 {"tipo": "ct", "articulo": "art. 4 quáter"},
                 {"tipo": "ct", "articulo": "art. 100 bis"},
-                {"tipo": "circular_sii", "id": "65/2015"}
+                {"tipo": "circular_sii", "id": "31/2025"}
             ]
         $$ as jsonb),
         'published',
@@ -157,7 +157,8 @@ with new_rule as (
     union all select id, 'ley', '20.241', 'art. 4°' from new_rule
     union all select id, 'ley', '19.518', 'art. 36' from new_rule
     union all select id, 'circular_sii', '53/2025', '' from new_rule
-    union all select id, 'circular_sii', '65/2015', '' from new_rule
+    -- NGA: Circular 31/2025 (17-abr-2025), que DEJÓ SIN EFECTO la 65/2015.
+    union all select id, 'circular_sii', '31/2025', '' from new_rule
     union all select id, 'oficio_sii', '715/2025', '' from new_rule
     returning rule_set_id
 )

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { DecisionRibbon } from "@/components/DecisionRibbon";
+import { EngineNotValidatedBanner_Shared } from "@/components/EngineNotValidatedBanner_Shared";
 import { SnapshotTrace_Shared } from "@/components/SnapshotTrace_Shared";
 import {
   Card,
@@ -198,6 +199,7 @@ export function RegimeResult({ data }: { data: DiagnoseResponse }) {
         {data.disclaimer}
       </p>
 
+      <EngineNotValidatedBanner_Shared />
       <DecisionRibbon
         context={`Diagnóstico régimen #${data.id} (${data.veredicto.regimen_actual} → ${data.veredicto.regimen_recomendado}, AT ${data.tax_year})`}
       />

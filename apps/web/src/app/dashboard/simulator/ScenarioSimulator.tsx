@@ -12,6 +12,7 @@ import { z } from "zod";
 
 import { ScenarioHistorial } from "@/app/dashboard/simulator/ScenarioHistorial";
 import { DecisionRibbon } from "@/components/DecisionRibbon";
+import { EngineNotValidatedBanner_Shared } from "@/components/EngineNotValidatedBanner_Shared";
 import { SnapshotTrace_Shared } from "@/components/SnapshotTrace_Shared";
 
 import { Button } from "@/components/ui/button";
@@ -689,6 +690,7 @@ function ResultPanels({ data, tResult, tSeverity }: ResultPanelsProps) {
         {data.disclaimer}
       </p>
 
+      <EngineNotValidatedBanner_Shared />
       <DecisionRibbon
         context={`Escenario simulado #${data.id} (${data.regimen}, AT ${data.tax_year})`}
       />

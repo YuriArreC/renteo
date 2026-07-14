@@ -44,6 +44,10 @@ _ALLOWED_KEYS = frozenset(
         "terminos-servicio",
         "politica-privacidad",
         "ribbon-decisiones-automatizadas",
+        # Demo cerrado: aviso de que el motor aún no lo validó un contador
+        # socio. Se retira publicando una v2 con `effective_to` en la v1
+        # cuando llegue la firma.
+        "banner-motor-no-validado",
     }
 )
 

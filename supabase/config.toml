@@ -27,6 +27,18 @@ port = 54324
 enabled = true
 file_size_limit = "50MiB"
 
+# ⚠️ DEMO CERRADO — este archivo gobierna el stack LOCAL, no el proyecto cloud.
+#
+# `enable_signup` queda en `true` acá a propósito: los tests e2e
+# (apps/web/e2e/golden-flow.spec.ts) registran usuarios, y cerrarlo local los
+# rompe. En PRODUCCIÓN el signup debe estar CERRADO desde el dashboard de
+# Supabase (Authentication → Providers → Email → "Enable sign-ups" = off).
+# Paso obligatorio del runbook: docs/DEMO-PROD.md.
+#
+# Aun así, el gate REAL no es este: es la allowlist `ALLOWED_USER_EMAILS`, que
+# se aplica en `verify_jwt` (apps/api/src/auth/jwt.py). Aunque alguien lograra
+# registrarse en prod, recibiría 403 en todo endpoint autenticado. El cierre del
+# signup es defensa en profundidad, no la única barrera.
 [auth]
 enabled = true
 site_url = "http://localhost:3000"

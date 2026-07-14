@@ -28,7 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.tenancy import Tenancy, current_tenancy
 from src.config import settings
-from src.db import get_db_session
+from src.db import get_db_session, service_session
 from src.domain.security.custody import (
     revoke_certificate,
     store_certificate,
@@ -164,20 +164,34 @@ async def upload_certificate(
 
     kms = make_kms_adapter()
     storage = make_cert_storage()
+    # 🔒 Escritura privilegiada: la policy de `security.certificados_digitales`
+    # concede SELECT a `authenticated` pero reserva INSERT/UPDATE/DELETE a
+    # service_role ("flujo KMS", rls_policies.sql:272). Esta fila lleva el ARN
+    # de KMS y solo la crea el backend — que es este router.
+    #
+    # La AUTORIZACIÓN ya ocurrió arriba y no se pierde: `_require_role` valida
+    # el rol, y `_fetch_empresa` corrió con la sesión de tenant, o sea que RLS
+    # ya probó que la empresa pertenece al workspace del JWT. `workspace_id`
+    # sale de esa fila validada, nunca del payload del cliente.
+    #
+    # Antes esto escribía con la sesión de tenant y funcionaba solo porque RLS
+    # estaba de hecho apagada (el rol de DATABASE_URL tiene BYPASSRLS). Al
+    # cerrar ese hueco en `db.py`, la policy pasó a aplicarse de verdad.
     try:
-        meta = await store_certificate(
-            session,
-            kms=kms,
-            storage=storage,
-            workspace_id=workspace_id,
-            empresa_id=empresa_id,
-            rut_titular=rut_canonico,
-            pfx_bytes=pfx_bytes,
-            valido_desde=payload.valido_desde,
-            valido_hasta=payload.valido_hasta,
-            kms_key_arn=kms_key_arn,
-            nombre_titular=payload.nombre_titular,
-        )
+        async with service_session() as svc:
+            meta = await store_certificate(
+                svc,
+                kms=kms,
+                storage=storage,
+                workspace_id=workspace_id,
+                empresa_id=empresa_id,
+                rut_titular=rut_canonico,
+                pfx_bytes=pfx_bytes,
+                valido_desde=payload.valido_desde,
+                valido_hasta=payload.valido_hasta,
+                kms_key_arn=kms_key_arn,
+                nombre_titular=payload.nombre_titular,
+            )
     except CertificateError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -297,9 +311,13 @@ async def revoke_certificate_endpoint(
     cert_id = UUID(str(row[0]))
 
     storage = make_cert_storage()
-    revoked = await revoke_certificate(
-        session, storage=storage, cert_id=cert_id
-    )
+    # 🔒 Misma razón que en upload: el UPDATE de revocación está reservado a
+    # service_role. El SELECT de arriba corrió bajo RLS con la sesión de
+    # tenant, así que `cert_id` ya está probado como del workspace del JWT.
+    async with service_session() as svc:
+        revoked = await revoke_certificate(
+            svc, storage=storage, cert_id=cert_id
+        )
     if not revoked:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -358,29 +376,51 @@ async def register_mandato(
         },
     )
 
-    result = await session.execute(
-        text(
-            """
-            insert into security.mandatos_digitales
-                (workspace_id, empresa_id, contador_user_id,
-                 alcance, inicio, termino, sii_referencia)
-            values
-                (:ws, :emp, :uid, :alcance,
-                 :inicio, :termino, :sii_ref)
-            returning id
-            """
-        ),
-        {
-            "ws": str(tenancy.workspace_id),
-            "emp": str(empresa_id),
-            "uid": str(tenancy.user_id),
-            "alcance": payload.alcance,
-            "inicio": payload.inicio,
-            "termino": payload.termino,
-            "sii_ref": payload.sii_referencia,
-        },
-    )
-    mandato_id = UUID(str(result.scalar_one()))
+    # ⚠️ CONTRADICCIÓN DE DISEÑO — TODO(estudio_juridico + contador).
+    #
+    # Quién puede otorgar un mandato digital NO está definido de forma
+    # consistente:
+    #   - este router lo permite a owner | cfo | accountant_lead |
+    #     accountant_staff (`_ALLOWED_ROLES`), y así lo fijan los tests;
+    #   - la policy RLS `mandatos_modify` (rls_policies.sql:282) lo restringe
+    #     SOLO a `accountant_lead`.
+    #
+    # La contradicción estuvo oculta hasta ahora porque RLS no se aplicaba de
+    # hecho (ver `db.py`). Al cerrarse ese hueco, alguien tiene que ganar.
+    #
+    # Acá se PRESERVA el comportamiento vigente (la regla del router) usando la
+    # sesión de servicio, en vez de relajar la policy: aflojar una regla de
+    # seguridad para que compile es exactamente lo que no corresponde hacer sin
+    # revisión. El mandato digital es un instrumento con efectos legales ante el
+    # SII; quién puede otorgarlo lo deciden ESTUDIO_JURIDICO y CONTADOR_SOCIO,
+    # no este commit.
+    #
+    # La autorización sigue en pie: `_require_role` + `_fetch_empresa` bajo RLS
+    # de tenant, y `workspace_id` sale del JWT, nunca del payload.
+    async with service_session() as svc:
+        result = await svc.execute(
+            text(
+                """
+                insert into security.mandatos_digitales
+                    (workspace_id, empresa_id, contador_user_id,
+                     alcance, inicio, termino, sii_referencia)
+                values
+                    (:ws, :emp, :uid, :alcance,
+                     :inicio, :termino, :sii_ref)
+                returning id
+                """
+            ),
+            {
+                "ws": str(tenancy.workspace_id),
+                "emp": str(empresa_id),
+                "uid": str(tenancy.user_id),
+                "alcance": payload.alcance,
+                "inicio": payload.inicio,
+                "termino": payload.termino,
+                "sii_ref": payload.sii_referencia,
+            },
+        )
+        mandato_id = UUID(str(result.scalar_one()))
 
     await log_audit(
         session,

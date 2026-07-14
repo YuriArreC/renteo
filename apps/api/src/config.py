@@ -58,6 +58,21 @@ class Settings(BaseSettings):
         )
     )
 
+    # 🔒 Allowlist de acceso al PRODUCTO (env: ALLOWED_USER_EMAILS).
+    #
+    # Mientras el motor tributario no esté validado por el CONTADOR_SOCIO,
+    # Renteo corre como DEMO CERRADO: solo estos emails pueden usar la app.
+    # Se aplica en `verify_jwt` — o sea, cubre TODO endpoint autenticado de
+    # una sola vez, no endpoint por endpoint.
+    #
+    # Vacío = allowlist DESACTIVADA (cualquier usuario autenticado entra).
+    # Ese es el default a propósito: local y CI corren sin allowlist. En
+    # producción se SETEA, y `/readyz` avisa si quedó vacía en prod.
+    #
+    # Cerrar el signup en Supabase es la primera línea de defensa; esta es
+    # la segunda, por si alguien lo reabre desde el dashboard.
+    allowed_user_emails: str = Field(default="")
+
     @property
     def cors_allowed_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]
@@ -69,6 +84,25 @@ class Settings(BaseSettings):
             for e in self.internal_admin_emails.split(",")
             if e.strip()
         )
+
+    @property
+    def allowed_user_emails_set(self) -> frozenset[str]:
+        return frozenset(
+            e.strip().lower()
+            for e in self.allowed_user_emails.split(",")
+            if e.strip()
+        )
+
+    @property
+    def allowlist_enabled(self) -> bool:
+        """La allowlist solo actúa si hay al menos un email configurado.
+
+        Vacía = abierta. Es un default deliberado (local/CI corren sin
+        fricción), pero significa que en producción **olvidarse de setearla
+        deja la app abierta**. Por eso `/readyz` la reporta y hay un test
+        que exige que en `environment == "production"` no esté vacía.
+        """
+        return bool(self.allowed_user_emails_set)
 
 
 @lru_cache
